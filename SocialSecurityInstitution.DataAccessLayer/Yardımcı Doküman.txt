@@ -1,0 +1,4 @@
+﻿Data Access Layer (Veri Erişim Katmanı)
+	- Veritabanı bağlantısı ve işlemleri
+	- ORM (Object-Relational Mapping) aracı kullanımı
+	- Veritabanı işlemleri için Repository ve UnitOfWork deseni
