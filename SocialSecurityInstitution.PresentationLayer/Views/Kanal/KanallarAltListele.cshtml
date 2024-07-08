@@ -1,0 +1,264 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.KanallarAltDto>
+
+@{
+    int sira = 0;
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var kanalAltId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Kanal/KanallarAltSil",
+                    type: "GET",
+                    data: { kanalAltId: kanalAltId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Alt Kanal Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('#modalKanalAltGuncelle').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var kanalAltId = button.attr('data-bs-whatever');
+
+                $.ajax({
+                    url: "/Kanal/KanallarAltGetir",
+                    type: "GET",
+                    data: { kanalAltId: kanalAltId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalCenterTitle").text("Alt Kanal Düzenle");
+                        $("#modalGuncelleKanalAltId").val(kanalAltId);
+                        $("#modalGuncelleKanalAltAdi").val(result.kanalAltAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        $("#modalKanalAltGuncelle").modal("hide");
+                        $('#modalKanalAltGuncelle').on('hidden.bs.modal', function (e) {
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                        });
+                    }
+                });
+            });
+
+            $("#btnGuncelle").click(function () {
+                var kanalAltId = $("#modalGuncelleKanalAltId").val();
+                var yeniKanalAltAdi = $("#modalGuncelleKanalAltAdi").val();
+
+                $.ajax({
+                    url: "/Kanal/KanallarAltGuncelle",
+                    type: "POST",
+                    data: {
+                        kanalAltId: kanalAltId,
+                        kanalAltAdi: yeniKanalAltAdi
+                    },
+                    success: function (result) {
+                        toastr.success("Alt Kanal Güncelleme İşlemi Başarılı");
+                        $("#kanalAltAdi_" + kanalAltId).text(yeniKanalAltAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Alt Kanal Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $("#btnEkle").click(function () {
+                var kanalAltAdi = $("#modalEkleKanalAltAdi").val();
+
+                $.ajax({
+                    url: "/Kanal/KanallarAltEkle",
+                    type: "POST",
+                    data: {
+                        kanalAltAdi: kanalAltAdi
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Alt Kanal Ekleme İşlemi Başarılı");
+                        var sira = $("tbody tr").length + 1;
+                        var yeniSatir = '<tr>' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td>' + kanalAltAdi + '</td>' +
+                            '<td>' + (new Date()).toLocaleString() + '</td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result.kanalAltId + '" data-bs-toggle="modal" data-bs-target="#modalKanalAltGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-botton" href="#" data-bs-whatever="' + result.kanalAltId + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+
+                        // Yeni satırı tabloya ekledik
+                        $("tbody").append(yeniSatir);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Alt Kanal Ekleme İşlemi Başarısız!");
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="head-label text-left">
+            <h5 class="card-title mb-0">Alt Kanallar</h5>
+        </div>
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false"><span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span></button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalKanalAltEkle">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Alt Kanal Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive text-nowrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Alt Kanal Adı</th>
+                    <th>Düzenlenme Tarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var altKanal in Model)
+                    {
+                        { sira++; }
+                        <tr>
+                            <td class="sira">@sira</td>
+                            <td id="kanalAltAdi_@altKanal.KanalAltId">@altKanal.KanalAltAdi</td>
+                            <td>@altKanal.DuzenlenmeTarihi</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@altKanal.KanalAltId" data-bs-toggle="modal" data-bs-target="#modalKanalAltGuncelle">
+                                            <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
+                                        </a>
+
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@altKanal.KanalAltId">
+                                            <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalKanalAltEkle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Alt Kanal Ekle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Alt Kanal Adı</label>
+                        <input type="text"
+                               id="modalEkleKanalAltAdi"
+                               class="form-control"
+                               placeholder="Kanal Adı Giriniz" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEkle">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalKanalAltGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Alt Kanal Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Alt Kanal Adı</label>
+                        <input type="text"
+                               name="kanalAltAdi"
+                               id="modalGuncelleKanalAltAdi"
+                               class="form-control"
+                               placeholder="Kanal Adı" />
+                        <input type="hidden" id="modalGuncelleKanalAltId" name="kanalAltId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

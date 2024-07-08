@@ -1,20 +1,20 @@
-﻿using System;
+﻿using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices
 {
-    public interface IGenericService<TEntity> where TEntity : class
+    public interface IGenericService<TEntity, TDto> where TEntity : class where TDto : class
     {
-        Task<TEntity> TGetByIdAsync(int id);
-        Task<List<TEntity>> TGetAllAsync();
-        Task TInsertAsync(TEntity entity);
-        Task TUpdateAsync(TEntity entity);
-        Task TDeleteAsync(TEntity entity);
-        Task<bool> TContainsAsync(TEntity entity);
+        Task<InsertResult> TInsertAsync(TDto dto);
+        Task<bool> TUpdateAsync(TDto dto);
+        Task<bool> TDeleteAsync(TDto dto);
+        Task<TDto> TGetByIdAsync(int id);
+        Task<List<TDto>> TGetAllAsync();
+        Task<bool> TContainsAsync(TDto dto);
         Task<int> TCountAsync();
     }
 }

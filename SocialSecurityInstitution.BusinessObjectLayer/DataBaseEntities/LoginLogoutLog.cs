@@ -12,11 +12,10 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     {
         [Key]
         public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
+        public string? TcKimlikNo { get; set; }
         public DateTime LoginTime { get; set; }
         public DateTime LogoutTime { get; set; }
+        public string? SessionID { get; set; }
 
-        [ForeignKey("TcKimlikNo")]
-        public required Personeller Personel { get; set; }
     }
 }

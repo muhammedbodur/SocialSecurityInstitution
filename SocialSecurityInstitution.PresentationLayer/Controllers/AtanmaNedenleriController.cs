@@ -1,14 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
-using System.Linq.Expressions;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace SocialSecurityInstitution.PresentationLayer.Controllers
 {
@@ -16,16 +12,20 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
     public class AtanmaNedenleriController : Controller
     {
         private readonly IAtanmaNedenleriService _atanmaNedenleriService;
+        private readonly IMapper _mapper;
 
-        public AtanmaNedenleriController(IAtanmaNedenleriService atanmaNedenleriService)
+        public AtanmaNedenleriController(IAtanmaNedenleriService atanmaNedenleriService, IMapper mapper)
         {
             _atanmaNedenleriService = atanmaNedenleriService;
+            _mapper = mapper;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            List<AtanmaNedenleriDto> atanmaNedenleri = await _atanmaNedenleriService.TGetAllAsync();
-            return Ok(atanmaNedenleri);
+            var entities = await _atanmaNedenleriService.TGetAllAsync();
+            var dtoList = _mapper.Map<List<KanallarDto>>(entities);
+            return Ok(dtoList);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         Atanma Nedenleri artabileceğinden dolayı bunu tablo olarak tutmakta fayda var, şuan için 19 tane var 
         */
         [Key]
-        public int Id { get; set; }
+        public int AtanmaNedeniId { get; set; }
         public required string AtanmaNedeni { get; set; }
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;

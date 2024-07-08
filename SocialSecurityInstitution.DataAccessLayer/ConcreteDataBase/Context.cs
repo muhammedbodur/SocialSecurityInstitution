@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +19,14 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
 
         public DbSet<Personeller> Personeller { get; set; }
         public DbSet<PersonelCocuklari> PersonelCocuklari { get; set; }
-        public DbSet<PersonelYetkileri> PersonelYetkileri { get; set; }
         public DbSet<AtanmaNedenleri> AtanmaNedenleri { get; set; }
         public DbSet<BankoIslemleri> BankoIslemleri { get; set; }
         public DbSet<Bankolar> Bankolar { get; set; }
         public DbSet<BankolarKullanici> BankolarKullanici { get; set; }
         public DbSet<Departmanlar> Departmanlar { get; set; }
         public DbSet<HizmetBinalari> HizmetBinalari { get; set; }
+        public DbSet<Kanallar> Kanallar { get; set; }
+        public DbSet<KanallarAlt> KanallarAlt { get; set; }
         public DbSet<KanalAltIslemleri> KanalAltIslemleri { get; set; }
         public DbSet<KanalIslemleri> KanalIslemleri { get; set; }
         public DbSet<KanalPersonelleri> KanalPersonelleri { get; set; }
@@ -36,9 +38,26 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
         public DbSet<Iller> Iller { get; set; }
         public DbSet<Ilceler> Ilceler { get; set; }
         public DbSet<LoginLogoutLog> LoginLogoutLog { get; set; }
-
+        public DbSet<Moduller> Modul { get; set; }
+        public DbSet<ModulController> ModulController { get; set; }
+        public DbSet<ModulControllerIslemler> ModulControllerIslemler { get; set; }
+        public DbSet<PersonelYetkileri> PersonelYetkileri { get; set; }
+        public DbSet<KioskGruplari> KioskGruplari { get; set; }
+        public DbSet<KioskIslemGruplari> KioskIslemGruplari { get; set; }
+        public DbSet<Siralar> Siralar { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            /*Sıralar Tablosu için Entitylerde zorunlu düzenlemeler*/
+            /*MultiUnique işlemi*/
+            modelBuilder.Entity<Siralar>()
+                .HasIndex(s => new { s.Sira, s.KanalAltIslemId, s.SiraAlisTarihi })
+                .IsUnique();
+
+            modelBuilder.Entity<Siralar>()
+                .Property(s => s.BeklemeDurum)
+                .HasConversion<int>();
+            /*Sıralar Tablosu için Entitylerde zorunlu düzenlemeler*/
+
             /*Personeller Tablosu için Entity lerde zorunlu Tip Düzenlemeleri*/
             modelBuilder.Entity<Personeller>()
                 .Property(e => e.Cinsiyet)
@@ -85,6 +104,30 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
             modelBuilder.Entity<Personeller>()
                 .HasIndex(e => e.TcKimlikNo)
                 .IsUnique();
+
+            modelBuilder.Entity<Personeller>()
+                .HasOne(p => p.Il)
+                .WithMany()
+                .HasForeignKey(p => p.IlId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Personeller>()
+                .HasOne(p => p.Ilce)
+                .WithMany()
+                .HasForeignKey(p => p.IlceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Personeller>()
+                .HasOne(p => p.EsininIsIl)
+                .WithMany()
+                .HasForeignKey(p => p.EsininIsIlId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Personeller>()
+                .HasOne(p => p.EsininIsIlce)
+                .WithMany()
+                .HasForeignKey(p => p.EsininIsIlceId)
+                .OnDelete(DeleteBehavior.Restrict);
             /*Personeller Tablosu için Entity lerde zorunlu Tip Düzenlemeleri*/
 
             /*Personel Çocukları için Entity lerde zorunlu Tip Düzenlemesi*/
@@ -141,16 +184,39 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
                 .HasConversion<int>();
             /*Yetkiler Tablosu için Entitylerde zorunlu Düzenlemeler*/
 
-            /*PersonelYetkileri Tablosu için Entitylerde zorunlu Düzenlemeler*/
-            modelBuilder.Entity<PersonelYetkileri>()
-                .Property(e => e.YetkiTipi)
-                .HasConversion<string>();
-            /*PersonelYetkileri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            /*Kanallar Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<Kanallar>()
+                .HasIndex(e => e.KanalAdi)
+                .IsUnique();
+            /*Kanallar Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KanallarAlt Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            /*Unique işlemi*/
+            modelBuilder.Entity<KanallarAlt>()
+                .HasIndex(e => e.KanalAltAdi)
+                .IsUnique();
+            /*KanallarAlt Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KanalPersonelleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<KanalPersonelleri>()
+                .HasOne(b => b.Personel) // KanalPersonelleri tablosunda bir Personeller nesnesi var
+                .WithMany() // Personeller tablosunda birden fazla KanalPersonelleri nesnesi olabilir
+                .HasForeignKey(b => b.TcKimlikNo) // TcKimlikNo sütunuyla ilişkilendir
+                .OnDelete(DeleteBehavior.Restrict); // Eğer KanalPersonelleri tablosundan bir kayıt silinirse, Personeller tablosundan silme işlemi yapılmamalı
+            /*KanalPersonelleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*HizmetBinalari Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<HizmetBinalari>()
+                .HasOne(b => b.Departman) // HizmetBinalari tablosunda bir Departmanlar nesnesi var
+                .WithMany() // Departmanlar tablosunda birden fazla HizmetBinalari nesnesi olabilir
+                .HasForeignKey(b => b.DepartmanId)
+                .OnDelete(DeleteBehavior.Restrict); // Eğer HizmetBinalari tablosundan bir kayıt silinirse, Personeller tablosundan silme işlemi yapılmamalı
+            /*HizmetBinalari Tablosu için Entitylerde zorunlu Düzenlemeler*/
 
             /*Bankolar Tablosu için Entitylerde zorunlu Düzenlemeler*/
             /*MultiUnique işlemi*/
             modelBuilder.Entity<Bankolar>()
-                .HasIndex(e => new { e.DepartmanId, e.BankoNo , e.BankoAktiflik })
+                .HasIndex(e => new { e.HizmetBinasiId, e.BankoNo , e.BankoAktiflik })
                 .IsUnique();
 
             modelBuilder.Entity<Bankolar>()
@@ -159,6 +225,12 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
             /*Bankolar Tablosu için Entitylerde zorunlu Düzenlemeler*/
 
             /*BankolarKullanici Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<BankolarKullanici>()
+                .HasOne(b => b.Personel) // BankolarKullanici tablosunda bir Personeller nesnesi var
+                .WithMany() // Personeller tablosunda birden fazla BankolarKullanici nesnesi olabilir
+                .HasForeignKey(b => b.TcKimlikNo) // TcKimlikNo sütunuyla ilişkilendir
+                .OnDelete(DeleteBehavior.Restrict); // Eğer BankolarKullanici tablosundan bir kayıt silinirse, Personeller tablosundan silme işlemi yapılmamalı
+
             /*Unique işlemi*/
             modelBuilder.Entity<BankolarKullanici>()
                 .HasIndex(e => e.BankoId)
@@ -170,7 +242,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
                 .IsUnique();
 
             modelBuilder.Entity<BankolarKullanici>()
-                .HasKey(bk => bk.Id);
+                .HasKey(bk => bk.BankoKullaniciId);
             /*BankolarKullanici Tablosu için Entitylerde zorunlu Düzenlemeler*/
 
             /*BankoIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
@@ -187,7 +259,103 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
                 .Property(e => e.BankoGrup)
                 .HasConversion<string>();
             /*BankoIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
-            
+
+            /*KioskGruplari Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            /*Unique işlemi*/
+            modelBuilder.Entity<KioskGruplari>()
+                .HasIndex(e => e.KioskGrupAdi)
+                .IsUnique();
+            /*KioskGruplari Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KioskIslemGruplari Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            /*MultiUnique işlemi*/
+            modelBuilder.Entity<KioskIslemGruplari>()
+                .HasIndex(e => new { e.KioskGrupId, e.KioskIslemGrupAktiflik })
+                .IsUnique();
+            /*Unique işlemi*/
+            modelBuilder.Entity<KioskIslemGruplari>()
+                .HasIndex(e => e.KioskIslemGrupSira)
+                .IsUnique();
+            modelBuilder.Entity<KioskIslemGruplari>()
+                .Property(e => e.KioskIslemGrupAktiflik)
+                .HasConversion<int>();
+            /*KioskIslemGruplari Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KanalIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            // Kanallar ve KanalIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalIslemleri>()
+                .HasOne(ki => ki.Kanallar)
+                .WithMany(k => k.KanalIslemleri_)
+                .HasForeignKey(ki => ki.KanalId)
+                .OnDelete(DeleteBehavior.Restrict);
+            // HizmetBinalari ve KanalIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalIslemleri>()
+                .HasOne(ki => ki.HizmetBinalari)
+                .WithMany()
+                .HasForeignKey(ki => ki.HizmetBinasiId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            /*MultiUnique işlemi*/
+            modelBuilder.Entity<KanalIslemleri>()
+                .HasIndex(e => new { e.HizmetBinasiId, e.KanalId })
+                .IsUnique();
+
+            modelBuilder.Entity<KanalIslemleri>()
+                .Property(e => e.KanalIslemAktiflik)
+                .HasConversion<int>();
+            /*KanalIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KanalAltIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<KanalAltIslemleri>()
+                .HasIndex(e => new { e.HizmetBinasiId, e.KanalAltId })
+                .IsUnique();
+
+            // KanallarAlt ve KanalAltIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalAltIslemleri>()
+                .HasOne(kai => kai.KanallarAlt)
+                .WithMany(ka => ka.KanalAltIslemleri_)
+                .HasForeignKey(kai => kai.KanalAltId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // HizmetBinalari ve KanalAltIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalAltIslemleri>()
+                .HasOne(kai => kai.HizmetBinalari)
+                .WithMany()
+                .HasForeignKey(kai => kai.HizmetBinasiId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // KanalIslemleri ve KanalAltIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalAltIslemleri>()
+                .HasOne(kai => kai.KanalIslem)
+                .WithMany(ki => ki.KanalAltIslemleri_)
+                .HasForeignKey(kai => kai.KanalIslemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // KioskIslemGruplari ve KanalAltIslemleri arasındaki ilişkiyi yapılandırma
+            modelBuilder.Entity<KanalAltIslemleri>()
+                .HasOne(kai => kai.KioskIslemGruplari)
+                .WithMany()
+                .HasForeignKey(kai => kai.KioskIslemGrupId)
+                .OnDelete(DeleteBehavior.Restrict);
+            /*KanalAltIslemleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
+            /*KanalPersonelleri Tablosu için Entitylerde zorunlu Düzenlemeler*/
+            modelBuilder.Entity<KanalPersonelleri>()
+                .HasOne(b => b.Personel) // KanalPersonelleri tablosunda bir Personeller nesnesi var
+                .WithMany() // Personeller tablosunda birden fazla KanalPersonelleri nesnesi olabilir
+                .HasForeignKey(b => b.TcKimlikNo) // TcKimlikNo sütunuyla ilişkilendir
+                .OnDelete(DeleteBehavior.Restrict); // Eğer KanalPersonelleri tablosundan bir kayıt silinirse, Personeller tablosundan silme işlemi yapılmamalı
+
+            /*Unique işlemi*/
+            modelBuilder.Entity<KanalPersonelleri>()
+                .HasIndex(e => new { e.KanalAltIslemId, e.TcKimlikNo })
+                .IsUnique();
+
+
+            modelBuilder.Entity<KanalPersonelleri>()
+                .HasKey(bk => bk.KanalPersonelId);
+            /*BankolarKullanici Tablosu için Entitylerde zorunlu Düzenlemeler*/
+
             /*Sendikalar Tablosu için Entitylerde zorunlu Düzenlemeler*/
             /*Unique işlemi*/
             modelBuilder.Entity<Sendikalar>()

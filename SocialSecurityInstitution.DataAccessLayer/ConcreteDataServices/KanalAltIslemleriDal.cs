@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class KanalAltIslemleriDal : GenericRepository<KanalAltIslemleri>, IKanalAltIslemleriDal
+    public class KanalAltIslemleriDal : GenericRepository<KanalAltIslemleri, KanalAltIslemleriDto>, IKanalAltIslemleriDal
     {
-        public KanalAltIslemleriDal()
+        public KanalAltIslemleriDal(IMapper mapper) : base(mapper)
         {
         }
     }

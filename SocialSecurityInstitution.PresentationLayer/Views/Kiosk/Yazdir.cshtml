@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Test</title>
+</head>
+<body>
+    <button onclick="printDocument(3)">Yazdır</button>
+
+    <script>
+        async function printDocument(kanalAltIslemId) {
+            try {
+                // API çağrısı yaparak HTML içeriğini al
+                const response = await fetch(`/Kiosk/Yazdir?kanalAltIslemId=${kanalAltIslemId}`);
+                const htmlContent = await response.text();
+
+                // Yeni bir pencere aç ve içeriği yazdır
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+
+                // Pencere yüklendiğinde yazdırma işlemini başlat
+                printWindow.onload = function () {
+                    printWindow.print();
+                };
+            } catch (error) {
+                console.error('Yazdırma işlemi sırasında bir hata oluştu:', error);
+            }
+        }
+    </script>
+</body>
+</html>

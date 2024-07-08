@@ -1,0 +1,16 @@
+﻿using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService
+{
+    public interface IPersonelCustomService
+    {
+        Task<List<PersonelRequestDto>> GetPersonellerWithDetailsAsync();
+        Task<PersonellerDto> TGetByTcKimlikNoAsync(string tcKimlikNo);
+        Task<List<PersonellerDto>> GetPersonellerDepartmanIdAndHizmetBinasiIdAsync(int departmanId, int hizmetBinasiId);
+    }
+}

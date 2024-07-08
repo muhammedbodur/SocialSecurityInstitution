@@ -10,7 +10,8 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
 {
     public class Servisler
     {
-        public int Id { get; set; }
+        [Key]
+        public int ServisId { get; set; }
         public required string ServisAdi { get; set; }
         public Aktiflik ServisAktiflik { get; set; }
         public DateTime EklenmeTarihi { get; set; }

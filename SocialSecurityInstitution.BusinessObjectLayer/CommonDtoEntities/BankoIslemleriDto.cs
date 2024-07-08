@@ -9,7 +9,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class BankoIslemleriDto
     {
-        public int Id { get; set; }
+        public int BankoIslemId { get; set; }
         public required BankoGrup BankoGrup { get; set; }
         public int BankoUstIslemId { get; set; }
         public required string BankoIslemAdı { get; set; }

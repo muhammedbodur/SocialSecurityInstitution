@@ -11,15 +11,20 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
 {
     public class KanalPersonelleri
     {
+        public readonly object Enums;
+
         [Key]
-        public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
+        public int KanalPersonelId { get; set; }
+
+        public string TcKimlikNo { get; set; }
+        [ForeignKey("TcKimlikNo")]
+        public Personeller Personel { get; set; }
+        public int KanalAltIslemId { get; set; }
+        [ForeignKey("KanalAltIslemId")]
         public required KanalAltIslemleri KanalAltIslem { get; set; }
-        public Aktiflik PersonelKanalAltIslemAktiflik { get; set; }
+        public PersonelUzmanlik Uzmanlik { get; set; }
+        public Aktiflik KanalAltIslemPersonelAktiflik { get; set; }
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
-
-        [ForeignKey("TcKimlikNo")]
-        public required Personeller Personel { get; set; }
     }
 }

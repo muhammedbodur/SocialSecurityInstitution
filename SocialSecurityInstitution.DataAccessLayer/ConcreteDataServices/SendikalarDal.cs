@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class SendikalarDal : GenericRepository<Sendikalar>, ISendikalarDal
+    public class SendikalarDal : GenericRepository<Sendikalar, SendikalarDto>, ISendikalarDal
     {
-        public SendikalarDal()
+        public SendikalarDal(IMapper mapper) : base(mapper)
         {
         }
     }

@@ -9,9 +9,15 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class BankolarKullaniciDto
     {
-        public int Id { get; set; }
-        public Bankolar Banko { get; set; }
-        public required string TcKimlikNo { get; set; }
+        public int BankoKullaniciId { get; set; }
+
+        public int BankoId { get; set; }
+        [ForeignKey("BankoId")]
+        public BankolarDto Bankolar { get; set; }
+        public string TcKimlikNo { get; set; }
+        [ForeignKey("TcKimlikNo")]
+        public PersonellerDto Personel { get; set; }
+
         public DateTime EklenmeTarihi { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }
     }

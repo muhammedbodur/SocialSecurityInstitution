@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class PersonellerDal : GenericRepository<Personeller>, IPersonellerDal
+    public class PersonellerDal : GenericRepository<Personeller, PersonellerDto>, IPersonellerDal
     {
-        public PersonellerDal()
+        public PersonellerDal(IMapper mapper) : base(mapper)
         {
         }
     }

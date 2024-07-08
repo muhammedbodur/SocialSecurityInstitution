@@ -1,4 +1,5 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+﻿using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices
 {
-    public interface IPersonelCocuklariService : IGenericService<PersonelCocuklariDto>
+    public interface IPersonelCocuklariService : IGenericService<PersonelCocuklari, PersonelCocuklariDto>
     {
     }
 }

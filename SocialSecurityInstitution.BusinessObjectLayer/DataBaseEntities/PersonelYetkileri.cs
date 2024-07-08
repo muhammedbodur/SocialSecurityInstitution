@@ -7,21 +7,18 @@ using System.Text;
 using System.Threading.Tasks;
 using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
 
-namespace SocialSecurityInstitution.BusinessObjectLayer
+namespace SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities
 {
     public class PersonelYetkileri
     {
         [Key]
-        public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
-        public required Yetkiler Yetki { get; set; }
-
-        /* Gor, Gorme, Duzenle olarak 3 e ayrılır, bu verilen yetkiye göre kişi bu işlemlere hak kazanır*/
-        public required YetkiTipleri YetkiTipi { get; set; }
-        public DateTime EklenmeTarihi { get; set; }= DateTime.Now;
-        public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
-
+        public int PersonelYetkiId { get; set; }
+        public string TcKimlikNo { get; set; }
         [ForeignKey("TcKimlikNo")]
-        public required Personeller Personel { get; set; }
-    }  
+        public required Personeller Personeller { get; set; }
+        public required ModulControllerIslemler Yetki { get; set; }
+        public YetkiTipleri YetkiTipleri { get; set; }
+        public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
+        public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
+    }
 }

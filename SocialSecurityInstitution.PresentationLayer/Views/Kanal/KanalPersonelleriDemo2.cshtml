@@ -1,0 +1,153 @@
+﻿@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.KanalPersonelleriDto>
+
+@{
+    bool modelIsEmpty = Model == null || !Model.Any();
+}
+
+@section Styles {
+    <style>
+        .table {
+            overflow-x: hidden;
+        }
+
+        .table .custom-th,
+        .table .custom-td {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            padding: 0.2rem;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: hidden;
+            max-width: 100px;
+        }
+
+        .custom-td-button {
+            width: 100%;
+            height: 100%;
+            padding: 15px 5px;
+        }
+
+        .collapse-content {
+            background-color: #f9f9f9;
+            padding: 10px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#socialSecurityIsntution').addClass('layout-menu-collapsed');
+
+            $('.avatar').hover(function () {
+                $('.avatar').addClass('avatar-lg');
+            }, function () {
+                $('.avatar').removeClass('avatar-lg');
+            });
+
+            $('.accordion-toggle').click(function () {
+                var target = $(this).next('.collapse');
+                $('.collapse').not(target).removeClass('show');
+                target.toggleClass('show');
+            });
+
+            $(document).click(function (e) {
+                if (!$(e.target).closest('.table-responsive').length) {
+                    $('.collapse').removeClass('show');
+                }
+            });
+        });
+    </script>
+}
+
+<div class="card container-fluid mb-4">
+    <h5 class="card-header">Kanallar</h5>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-fixed">
+                <thead>
+                    <tr>
+                        <th class="custom-th">ID</th>
+                        <th class="custom-th">Name</th>
+                        <th class="custom-th">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="custom-td">1</td>
+                        <td class="custom-td">Kanal 1</td>
+                        <td class="custom-td">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#kanal1-details" aria-expanded="false" aria-controls="kanal1-details">Details</button>
+                        </td>
+                    </tr>
+                    <tr id="kanal1-details" class="collapse">
+                        <td colspan="3">
+                            <div class="collapse-content">
+                                1. Kanala Bağlı Alt Kanallar
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card container-fluid">
+    <h5 class="card-header">Kanal Personelleri</h5>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-fixed">
+                <thead>
+                    <tr>
+                        <th class="custom-th">Banko</th>
+                        <th class="personel-adi">Personel Adı</th>
+                        @for (int i = 1; i <= 21; i++)
+                        {
+                            <th class="custom-th">Header @i</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 1; i <= 21; i++)
+                    {
+                        <tr class="accordion-toggle" data-bs-toggle="collapse" data-bs-target="#collapse@(i)" aria-expanded="false" aria-controls="collapse@(i)">
+                            <td class="custom-td">@i</td>
+                            <td class="personel-adi">
+                                <div class="d-flex justify-content-start align-items-center user-name">
+                                    <div class="avatar-wrapper">
+                                        <div class="avatar avatar-md me-2 pull-up">
+                                            <img src="~/img/avatars/410351.jpeg" alt="Avatar" class="rounded-circle">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span class="emp_name text-truncate">Personel @i</span>
+                                        <small class="emp_post text-truncate text-muted">Pozisyon</small>
+                                    </div>
+                                </div>
+                            </td>
+                            @for (int j = 1; j <= 21; j++)
+                            {
+                                <td class="custom-td">
+                                    <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Action @j</button>
+                                </td>
+                            }
+                        </tr>
+                        <tr class="collapse" id="collapse@(i)">
+                            <td colspan="23">
+                                <div class="collapse-content">
+                                    <p>@i. Kanala Bağlı Alt Kanallar</p>
+                                    @for (int k = 1; k <= 5; k++)
+                                    {
+                                        <p>Sub-content for Channel @i, Row @k</p>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

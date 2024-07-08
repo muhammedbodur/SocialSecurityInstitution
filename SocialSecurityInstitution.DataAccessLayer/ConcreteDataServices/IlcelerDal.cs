@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class IlcelerDal : GenericRepository<Ilceler>, IIlcelerDal
+    public class IlcelerDal : GenericRepository<Ilceler, IlcelerDto>, IIlcelerDal
     {
-        public IlcelerDal()
+        public IlcelerDal(IMapper mapper) : base(mapper)
         {
         }
     }

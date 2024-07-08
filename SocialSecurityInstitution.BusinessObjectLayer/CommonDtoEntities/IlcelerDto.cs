@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
-    internal class IlcelerDto
+    public class IlcelerDto
     {
         public int Id { get; set; }
         public required Iller Il { get; set; }

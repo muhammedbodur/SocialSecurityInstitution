@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices
 {
-    public interface IAtanmaNedenleriService : IGenericService<AtanmaNedenleriDto>
+    public interface IAtanmaNedenleriService : IGenericService<AtanmaNedenleri, AtanmaNedenleriDto>
     {
     }
 }

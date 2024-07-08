@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class BankolarDal : GenericRepository<Bankolar>, IBankolarDal
+    public class BankolarDal : GenericRepository<Bankolar, BankolarDto>, IBankolarDal
     {
-        public BankolarDal()
+        public BankolarDal(IMapper mapper) : base(mapper)
         {
         }
     }

@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class YetkilerDal : GenericRepository<Yetkiler>, IYetkilerDal
+    public class YetkilerDal : GenericRepository<Yetkiler, YetkilerDto>, IYetkilerDal
     {
-        public YetkilerDal()
+        public YetkilerDal(IMapper mapper) : base(mapper)
         {
         }
     }

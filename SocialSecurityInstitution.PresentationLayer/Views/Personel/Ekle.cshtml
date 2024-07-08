@@ -1,0 +1,511 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.PersonellerViewDto
+
+@{
+
+}
+
+<div class="card mb-4">
+    <h5 class="card-header">Personel Ekle</h5>
+    <!-- Account -->
+    <hr class="my-0" />
+    <div class="card-body">
+        <div class="nav-align-top">
+            <ul class="nav nav-pills mb-3" role="tablist">
+                <li class="nav-item">
+                    <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-1" aria-controls="navs-pills-top-1" aria-selected="true">Personel</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-2" aria-controls="navs-pills-top-2" aria-selected="false">İletişim</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-3" aria-controls="navs-pills-top-3" aria-selected="false">Kişisel</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-4" aria-controls="navs-pills-top-4" aria-selected="false">Özlük</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-5" aria-controls="navs-pills-top-5" aria-selected="false">Eş ve Çocuk</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-6" aria-controls="navs-pills-top-6" aria-selected="false">Hizmet</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-7" aria-controls="navs-pills-top-7" aria-selected="false">Eğitim Durumu</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-8" aria-controls="navs-pills-top-8" aria-selected="false">Yetki</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-9" aria-controls="navs-pills-top-9" aria-selected="false">Ceza Durumu</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-10" aria-controls="navs-pills-top-10" aria-selected="false">Engel Bilgileri</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-11" aria-controls="navs-pills-top-11" aria-selected="false">Fotoğraf</button>
+                </li>
+            </ul>
+            <form id="formAccountSettings" method="POST" action="Kaydet">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="navs-pills-top-1" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="TcKimlikNo" class="form-label">T.C. KİMLİK NUMARASI</label>
+                                <input id="TcKimlikNo" asp-for="@Model.TcKimlikNo" class="form-control"
+                                       type="text"
+                                       placeholder="T.C. Kimlik No"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="AdSoyad" class="form-label">ADI SOYADI</label>
+                                <input id="AdSoyad" asp-for="@Model.AdSoyad" class="form-control"
+                                       type="text"
+                                       placeholder="Adı Soyadı"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="SicilNo" class="form-label">SİCİL NUMARASI</label>
+                                <input id="SicilNo" asp-for="@Model.SicilNo" class="form-control"
+                                       type="text"
+                                       placeholder="Sicil No"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="DepartmanId" class="form-label">DEPARTMAN</label>
+                                <select id="DepartmanId" asp-for="@Model.DepartmanId" class="select2 form-select">
+                                    @if(Model.Departmanlar != null)
+                                        @foreach (var departman in Model.Departmanlar)
+                                        {
+                                            <!option value="@departman.DepartmanId">@departman.DepartmanAdi</!option>
+                                        }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="birim_id" class="form-label">SERVİS</label>
+                                <select id="birim_id" asp-for="@Model.ServisId" class="select2 form-select">
+                                    @if (Model.Servisler != null)
+                                        @foreach (var servis in Model.Servisler)
+                                        {
+                                            <!option value="@servis.Id">@servis.ServisAdi</!option>
+                                        }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="UnvanId" class="form-label">ÜNVAN</label>
+                                <select id="UnvanId" asp-for="@Model.UnvanId" class="select2 form-select">
+                                    @if (Model.Unvanlar != null)
+                                        @foreach (var unvan in Model.Unvanlar)
+                                        {
+                                            <!option value="@unvan.Id">@unvan.UnvanAdi</!option>
+                                        }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Gorev" class="form-label">GÖREV</label>
+                                <input id="Gorev" asp-for="@Model.Gorev" class="form-control"
+                                       type="text"
+                                       placeholder="Peronelin Görevi"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="PersonelAktiflikDurum" class="form-label">AKTİFLİK DURUMU</label>
+                                <select id="PersonelAktiflikDurum" asp-for="@Model.PersonelAktiflikDurum" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.PersonelAktiflikDurum)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.PersonelAktiflikDurum)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-2" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="Email" class="form-label">E-MAİL</label>
+                                <input id="Email" asp-for="@Model.Email" class="form-control"
+                                       type="email"
+                                       placeholder="ad.soyad@example.com" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Dahili" class="form-label">DAHİLİ TELEFON</label>
+                                <input id="Dahili" asp-for="@Model.Dahili" class="form-control"
+                                       type="text"
+                                       placeholder="Dahili telefon"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label" for="CepTelefonu">CEP TELEFONU 1</label>
+                                <div class="input-group input-group-merge">
+                                    <input id="CepTelefonu" asp-for="@Model.CepTelefonu" class="form-control"
+                                           type="tel"
+                                           placeholder="0541 234 56 78"
+                                           autofocus />
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label" for="CepTelefonu2">CEP TELEFONU 2</label>
+                                <div class="input-group input-group-merge">
+                                    <input id="CepTelefonu2" asp-for="@Model.CepTelefonu2" class="form-control"
+                                           type="tel"
+                                           placeholder="0542 345 67 89"
+                                           autofocus />
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="form-label" for="EvTelefonu">EV TELEFONU</label>
+                                <div class="input-group input-group-merge">
+                                    <input id="EvTelefonu" asp-for="@Model.EvTelefonu" class="form-control"
+                                           type="tel"
+                                           placeholder="0232 345 67 89"
+                                           autofocus />
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Adres" class="form-label">ADRES</label>
+                                <input id="Adres" asp-for="@Model.Adres" class="form-control"
+                                       type="text"
+                                       placeholder="Adres"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Il" class="form-label">İL</label>
+                                <select id="Il" asp-for="@Model.Iller" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Ilce" class="form-label">İLÇE</label>
+                                <select id="Ilce" asp-for="@Model.Ilceler" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Semt" class="form-label">SEMT</label>
+                                <input id="Semt" asp-for="@Model.Semt" class="form-control"
+                                       type="text"
+                                       placeholder="Semt"
+                                       autofocus />
+                            </div>
+
+                            <div class="mb-3 col-md-6">
+                                <label for="language" class="form-label">Language</label>
+                                <select id="language" class="select2 form-select">
+                                    <option value="">Select Language</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">French</option>
+                                    <option value="de">German</option>
+                                    <option value="pt">Portuguese</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="timeZones" class="form-label">Timezone</label>
+                                <select id="timeZones" class="select2 form-select">
+                                    <option value="">Select Timezone</option>
+                                    <option value="-12">(GMT-12:00) International Date Line West</option>
+                                    <option value="-11">(GMT-11:00) Midway Island, Samoa</option>
+                                    <option value="-10">(GMT-10:00) Hawaii</option>
+                                    <option value="-9">(GMT-09:00) Alaska</option>
+                                    <option value="-8">(GMT-08:00) Pacific Time (US & Canada)</option>
+                                    <option value="-8">(GMT-08:00) Tijuana, Baja California</option>
+                                    <option value="-7">(GMT-07:00) Arizona</option>
+                                    <option value="-7">(GMT-07:00) Chihuahua, La Paz, Mazatlan</option>
+                                    <option value="-7">(GMT-07:00) Mountain Time (US & Canada)</option>
+                                    <option value="-6">(GMT-06:00) Central America</option>
+                                    <option value="-6">(GMT-06:00) Central Time (US & Canada)</option>
+                                    <option value="-6">(GMT-06:00) Guadalajara, Mexico City, Monterrey</option>
+                                    <option value="-6">(GMT-06:00) Saskatchewan</option>
+                                    <option value="-5">(GMT-05:00) Bogota, Lima, Quito, Rio Branco</option>
+                                    <option value="-5">(GMT-05:00) Eastern Time (US & Canada)</option>
+                                    <option value="-5">(GMT-05:00) Indiana (East)</option>
+                                    <option value="-4">(GMT-04:00) Atlantic Time (Canada)</option>
+                                    <option value="-4">(GMT-04:00) Caracas, La Paz</option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="currency" class="form-label">Currency</label>
+                                <select id="currency" class="select2 form-select">
+                                    <option value="">Select Currency</option>
+                                    <option value="usd">USD</option>
+                                    <option value="euro">Euro</option>
+                                    <option value="pound">Pound</option>
+                                    <option value="bitcoin">Bitcoin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-3" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="DogumTarihi" class="form-label">DOĞUM TARİHİ</label>
+                                <input id="DogumTarihi" asp-for="@Model.DogumTarihi" class="form-control"
+                                       type="date"
+                                       placeholder="01-01-1984" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Cinsiyet" class="form-label">CİNSİYET</label>
+                                <select id="Cinsiyet" asp-for="@Model.Cinsiyet" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.Cinsiyet)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.Cinsiyet)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="medeni_durumu" class="form-label">MEDENİ DURUMU</label>
+                                <select id="medeni_durumu" asp-for="@Model.MedeniDurumu" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.MedeniDurumu)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.MedeniDurumu)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="KanGrubu" class="form-label">KAN GRUBU</label>
+                                <select id="KanGrubu" asp-for="@Model.KanGrubu" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.KanGrubu)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.KanGrubu)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EvDurumu" class="form-label">EV DURUMU(SAHİPLİK)</label>
+                                <select id="EvDurumu" asp-for="@Model.EvDurumu" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.EvDurumu)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.EvDurumu)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="UlasimServis1" class="form-label">ULAŞIM SERVİS 1</label>
+                                <select id="UlasimServis1" asp-for="@Model.UlasimServis1" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="UlasimServis2" class="form-label">ULAŞIM SERVİS 2</label>
+                                <select id="UlasimServis2" asp-for="@Model.UlasimServis2" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Tabldot" class="form-label">TABLDOT</label>
+                                <select id="Tabldot" asp-for="@Model.Tabldot" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-3">
+                                <label for="KartNo" class="form-label">KART NUMARASI</label>
+                                <input id="KartNo" asp-for="@Model" class="form-control"
+                                       type="text"
+                                       placeholder="Kart Numarası"
+                                       autofocus />
+                            </div>
+                            <div class="mb-3 col-md-3">
+                                <label for="KartNoAktiflikTarihi" class="form-label">KART AKTİFLİK TARİHİ</label>
+                                <input id="KartNoAktiflikTarihi" asp-for="@Model" class="form-control"
+                                       type="date"
+                                       placeholder="01-01-2023"
+                                       autofocus />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-4" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="EmekliSicilNo" class="form-label">EMEKLİ SİCİL NO</label>
+                                <input id="EmekliSicilNo" asp-for="@Model.EmekliSicilNo" class="form-control"
+                                       type="text"
+                                       placeholder="12.345.678.9" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="OgrenimDurumu" class="form-label">ÖĞRENİM DURUMU</label>
+                                <select id="OgrenimDurumu" asp-for="@Model.OgrenimDurumu" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.OgrenimDurumu)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.OgrenimDurumu)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="BitirdigiOkul" class="form-label">BİTİRDİĞİ OKUL</label>
+                                <input id="BitirdigiOkul" asp-for="@Model.BitirdigiOkul" class="form-control"
+                                       type="text"
+                                       placeholder="..... ÜNİVERSİTESİ" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="BitirdigiBolum" class="form-label">BİTİRDİĞİ BÖLÜM</label>
+                                <input id="BitirdigiBolum" asp-for="@Model.BitirdigiBolum" class="form-control"
+                                       type="text"
+                                       placeholder="..... BÖLÜMÜ" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="OgrenimSuresi" class="form-label">ÖĞRENİM SÜRESİ</label>
+                                <input id="OgrenimSuresi" asp-for="@Model.OgrenimSuresi" class="form-control"
+                                       type="number"
+                                       placeholder="4" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Bransi" class="form-label">BRANŞI</label>
+                                <input id="Bransi" asp-for="@Model.Bransi" class="form-control"
+                                       type="text"
+                                       placeholder="BRANŞI" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="Sendika" class="form-label">SENDİKA DURUMU</label>
+                                <select id="Sendika" asp-for="@Model" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="SehitYakinligi" class="form-label">ŞEHİT YAKINLIĞI</label>
+                                <select id="SehitYakinligi" asp-for="@Model.SehitYakinligi" class="select2 form-select">
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.SehitYakinligi)))
+                                    {
+                                        <!option value="@item">@EnumExtensions.GetDisplayName((Enums.SehitYakinligi)item)</!option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-5" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininAdi" class="form-label">EŞİNİN ADI</label>
+                                <input id="EsininAdi" asp-for="@Model.EsininAdi" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininIsDurumu" class="form-label">EŞ İŞ DURUMU</label>
+                                <select id="EsininIsDurumu" asp-for="@Model.EsininIsDurumu" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininUnvani" class="form-label">EŞ İŞ ÜNVANI</label>
+                                <input id="EsininUnvani" asp-for="@Model.EsininUnvani" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininIsAdresi" class="form-label">EŞ İŞ ADRESİ</label>
+                                <input id="EsininIsAdresi" asp-for="@Model.EsininIsAdresi" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininIsIl" class="form-label">EŞ İŞ İL</label>
+                                <select id="EsininIsIl" asp-for="@Model" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininIsIlce" class="form-label">EŞ İŞ İLÇE</label>
+                                <select id="EsininIsIlce" asp-for="@Model" class="select2 form-select">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="EsininIsSemt" class="form-label">EŞ İŞ SEMT</label>
+                                <input id="EsininIsSemt" asp-for="@Model.EsininIsSemt" class="form-control"
+                                       type="text"
+                                       placeholder="Semt"
+                                       autofocus />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-6" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="HizmetBilgisi" class="form-label">ÇALIŞTIĞI SERVİSLER</label>
+                                <input id="HizmetBilgisi" asp-for="@Model.HizmetBilgisi" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-7" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="EgitimBilgisi" class="form-label">EĞİTİM BİLGİLERİ</label>
+                                <input id="EgitimBilgisi" asp-for="@Model.EgitimBilgisi" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-8" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="ImzaYetkileri" class="form-label">İMZA YETKİLERİ</label>
+                                <input id="ImzaYetkileri" asp-for="@Model.ImzaYetkileri" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-9" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="CezaBilgileri" class="form-label">CEZA BİLGİLERİ</label>
+                                <input id="CezaBilgileri" asp-for="@Model.CezaBilgileri" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-10" role="tabpanel">
+                        <div class="row">
+                            <div class="mb-3 col-md-6">
+                                <label for="EngelBilgileri" class="form-label">ENGEL BİLGİLERİ</label>
+                                <input id="EngelBilgileri" asp-for="@Model.EngelBilgileri" class="form-control"
+                                       type="text"
+                                       placeholder="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="navs-pills-top-11" role="tabpanel">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start align-items-sm-center gap-4">
+                                <img src="~/img/avatars/empty.png"
+                                     alt="user-avatar"
+                                     class="d-block rounded"
+                                     height="100"
+                                     width="100"
+                                     id="uploadedAvatar" />
+                                <div class="button-wrapper">
+                                    <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
+                                        <span class="d-none d-sm-block">Yeni Fotoğraf Yükle</span>
+                                        <i class="bx bx-upload d-block d-sm-none"></i>
+                                        <input type="file"
+                                               id="upload"
+                                               class="account-file-input"
+                                               hidden
+                                               accept="image/png, image/jpeg" />
+                                    </label>
+                                    <button type="button" class="btn btn-outline-secondary account-image-reset mb-4">
+                                        <i class="bx bx-reset d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Temizle</span>
+                                    </button>
+                                    <p class="text-muted mb-0">JPG/JPEG veya PNG. Formatlarında ve Maks. boyut olarak 800K byte olması gerekmektedir.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-primary me-2">Kaydet</button>
+                        <button type="reset" class="btn btn-outline-secondary" onclick="return confirm('Formu temizlemek istediğinize emin misiniz? Doldurduğunuz tüm veriler silinecek.');">Temizle</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- /Account -->
+</div>

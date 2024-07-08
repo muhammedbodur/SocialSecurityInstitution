@@ -1,4 +1,6 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
@@ -8,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class HizmetBinalariDal : GenericRepository<HizmetBinalari>, IHizmetBinalariDal
+    public class HizmetBinalariDal : GenericRepository<HizmetBinalari, HizmetBinalariDto>, IHizmetBinalariDal
     {
-        public HizmetBinalariDal()
+        public HizmetBinalariDal(IMapper mapper) : base(mapper)
         {
         }
     }

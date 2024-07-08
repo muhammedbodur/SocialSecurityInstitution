@@ -1,0 +1,556 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model SocialSecurityInstitution.PresentationLayer.Models.Kanal.KanalIslemleriEslestirViewModel
+
+@{
+
+}
+
+@section Styles {
+    <style>
+        .cursor-move {
+            cursor: move;
+        }
+
+        .selected {
+            background-color: #f0f0f0;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .sortable-chosen {
+            background-color: #e0e0e0;
+        }
+
+        .sortable-drag {
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script charset="utf-8">
+        $(document).ready(function () {
+            // Selectpicker'ın normalleştirme işlevini belirt
+            $('.selectpicker').selectpicker({
+                liveSearch: true,
+                actionsBox: true,
+                selectedTextFormat: 'count',
+                selectAllText: 'Hepsini Seç',
+                deselectAllText: 'Hepsini Kaldır',
+                countSelectedText: '{0} of {1} eleman seçildi'
+            });
+
+            // Departmanlar değiştirildiğinde
+            $('#departmanlarSelect').on('change', function () {
+                var selectedDepartmanId = $(this).val();
+                hizmetBinalariGetir(selectedDepartmanId);
+            });
+
+            // Departmanlar listesini al ve <select> öğesini doldur
+            $.ajax({
+                url: '/Departman/ListeleJson',
+                type: 'GET',
+                success: function (data) {
+                    var departmanlarSelect = $('#departmanlarSelect');
+                    departmanlarSelect.empty();
+
+                    $.each(data, function (index, departman) {
+                        if (departman.departmanAktiflik == '1') {
+                            departmanlarSelect.append('<option data-tokens="' + departman.departmanId + '" value="' + departman.departmanId + '">' + departman.departmanAdi + '</option>');
+                        }
+                    });
+
+                    // Selectpicker'ı yenile
+                    departmanlarSelect.selectpicker('refresh');
+
+                    $('#hizmetBinalariSelectDiv').show();
+
+                    // İlk departman seçiliyse, ona ait hizmet binalarını getir
+                    var firstOptionValue = departmanlarSelect.find('option:first').val();
+                    if (firstOptionValue) {
+                        hizmetBinalariGetir(firstOptionValue);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    toastr.error('Departmanlar listesi alınamadı.');
+                }
+            });
+
+            function hizmetBinalariGetir(selectedDepartmanId) {
+                // Hizmet binaları için AJAX çağrısı
+                $.ajax({
+                    url: '/HizmetBinalari/ListeleJson?departmanId=' + selectedDepartmanId,
+                    type: 'GET',
+                    beforeSend: function () {
+                        // Hizmet binaları select kutusunu temizle
+                        var hizmetBinalariSelect = $('#hizmetBinalariSelect');
+                        hizmetBinalariSelect.empty();
+                    },
+                    success: function (hizmetBinalari) {
+                        var hizmetBinalariSelect = $('#hizmetBinalariSelect');
+                        $.each(hizmetBinalari, function (index, hizmetBinasi) {
+                            hizmetBinalariSelect.append('<option value="' + hizmetBinasi.hizmetBinasiId + '">' + hizmetBinasi.hizmetBinasiAdi + '</option>');
+                        });
+
+                        // Selectpicker'ı yenile
+                        hizmetBinalariSelect.selectpicker('val', '');
+                        hizmetBinalariSelect.selectpicker('refresh');
+
+                        var firstOptionValue = hizmetBinalariSelect.find('option:first').val();
+                        if (firstOptionValue) {
+                            tumDatalariDoldur(selectedDepartmanId, firstOptionValue);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Hizmet binaları listesi alınamadı.');
+                    }
+                });
+            }
+        
+            function tumDatalariDoldur(departmanId, hizmetBinasiId) {
+                $('#kanallar').empty(); // Mevcut listeyi temizle
+                $('#pending-tasks').empty(); // Mevcut listeyi temizle
+                $('#completed-tasks').empty(); // Mevcut listeyi temizle
+
+                try {
+                    // ID'lerin sayısal olup olmadığını kontrol et
+                    departmanId = parseInt(departmanId, 10);
+                    hizmetBinasiId = parseInt(hizmetBinasiId, 10);
+
+                    if (isNaN(departmanId) || isNaN(hizmetBinasiId)) {
+                        alert("ID'ler sayısal olmalı");
+                        return false;
+                    }
+
+                    try {
+                        // Kanalları ve alt kanalları eşzamanlı olarak getiriyoruz
+                        $.when(
+                            kanallariGetir(hizmetBinasiId),
+                            eslestirilmemisKanalAltKanallariGetir(hizmetBinasiId)
+                        ).done(function () {
+                            // İlk Kanalın ID sini alıyoruz
+                            var firstChannel = $('#kanallar li:first-child');
+                            firstChannel.addClass('selected');
+                            var kanalIslemId = firstChannel.attr('data-bs-whatever');
+
+                            // Eşleştirilmiş Alt Kanalları Getiriyoruz
+                            kanalAltKanalEslestirmeleriGetir(kanalIslemId);
+
+                            // Olay bağlamalarını burada yapıyoruz
+                            $('#kanallar li').click(function () {
+                                ul_li_select_kaldir();
+                                ul_li_select_ekle(this);
+
+                                var kanalIslemId = $(this).attr('data-bs-whatever');
+
+                                kanalAltKanalEslestirmeleriGetir(kanalIslemId);
+
+                                makeSortable();
+                            });
+                        });
+                    } catch (error) {
+                        // Hataları yakala ve mesaj göster
+                        console.error(error.message);
+                        alert("İşlemler Esnasında Sorun Oldu!");
+                    }
+                } catch (error) {
+                    // Hataları yakala ve mesaj göster
+                    console.error(error.message);
+                    if (error.message.includes("ID'ler sayısal olmalı")) {
+                        if (isNaN(departmanId)) {
+                            alert("Departman Bilgisi Gelmedi!");
+                        }
+                        if (isNaN(hizmetBinasiId)) {
+                            alert("Hizmet Binası Bilgisi Gelmedi!");
+                        }
+                    }
+                }
+            }
+
+            function kanallariGetir(hizmetBinasiId) {
+                var deferred = $.Deferred();
+
+                try {
+                    $.ajax({
+                        url: '/Kanal/KanallarListesi',
+                        type: 'GET',
+                        data: { hizmetBinasiId: hizmetBinasiId },
+                        success: function (kanallar) {
+                            var siraKanal = 1;
+
+                            $.each(kanallar, function (index, kanal) {
+                                $('#kanallar').append('<li class="list-group-item" data-bs-whatever="' + kanal['kanalIslemId'] + '" id="kanal_' + kanal['kanalIslemId'] + '">' + (siraKanal++) + ' - ' + kanal['kanalIslemAdi'] + ' <span style="float: right;" id="altKanalSayi_' + kanal['kanalIslemId'] + '" data-bs-whatever="' + kanal['eslestirmeSayisi'] + '" class="badge bg-' + (kanal['eslestirmeSayisi'] > 0 ? 'success' : 'danger') + '">' + kanal['eslestirmeSayisi'] + '</span></li>');
+                            });
+
+                            deferred.resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            toastr.error('Kanal Listesi Gelmedi.');
+                            deferred.reject(error);
+                        }
+                    });
+                } catch (error) {
+                    console.error(error.message);
+                    alert("Kanalları Getirirken Sorun Oldu!");
+                    deferred.reject(error);
+                }
+
+                return deferred.promise();
+            }
+
+            function kanalAltKanalEslestirmeleriGetir(kanalIslemId) {
+                $('#pending-tasks').empty();
+                // Kanal / Alt Kanal Eşleştirmeleri için AJAX çağrısı
+                $.ajax({
+                    url: '/Kanal/kanalAltKanalEslestirmeleriGetir?kanalIslemId=' + kanalIslemId,
+                    type: 'GET',
+                    success: function (data) {
+                        $.each(data, function (index, d) {
+                            $('#pending-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + d.kanalAltIslemId + '">' +
+                                '<span data-bs-whatever="' + d.kanalAltIslemId + '">' + d.kanalAltIslemAdi + '</span>' +
+                                '</li>');
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Al Kanal Listesi Alınamadı.');
+                    }
+                });
+            }
+
+            function eslestirilmemisKanalAltKanallariGetir(hizmetBinasiId) {
+                $('#completed-tasks').empty();
+                // Kanal / Alt Kanal Eşleştirmeleri için AJAX çağrısı
+                $.ajax({
+                    url: '/Kanal/eslestirilmemisKanalAltKanallariGetir',
+                    type: 'GET',
+                    data: { hizmetBinasiId: hizmetBinasiId },
+                    success: function (altKanallar) {
+                        $.each(altKanallar, function (index, altKanal) {
+                            $('#completed-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + altKanal['kanalAltIslemId'] + '">' +
+                                '<span data-bs-whatever="' + altKanal['kanalAltIslemId'] + '">' + altKanal['kanalAltIslemAdi'] + '</span>' +
+                                '</li>');
+                        });
+
+                        // Arama kutusu olayını yeniden tanımla
+                        $("#search-input").off("keyup").on("keyup", function () {
+                            var value = $(this).val().toLocaleLowerCase();
+
+                            if (value === "") {
+                                // Arama kutusu boşsa tüm elemanları göster
+                                $("#completed-tasks li").each(function () {
+                                    $(this).removeClass("d-none");
+                                });
+                            } else {
+                                // Değilse, metne göre filtrele
+                                $("#completed-tasks li").each(function () {
+                                    var text = $(this).text().toLocaleLowerCase();
+                                    if (text.includes(value)) {
+                                        $(this).removeClass("d-none");
+                                    } else {
+                                        $(this).addClass("d-none");
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Eşletirilmemiş Alt Kanallar Listesi Alınamadı.');
+                    }
+                });
+            }
+
+
+            function kanalAltKanalEslestirmeYap(kanalIslemId, kanalAltIslemId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        kanalIslemId = parseInt(kanalIslemId, 10);
+                        kanalAltIslemId = parseInt(kanalAltIslemId, 10);
+
+                        if (isNaN(kanalIslemId) || isNaN(kanalAltIslemId)) {
+                            alert("ID'ler sayısal olmalı");
+                            return reject("ID'ler sayısal olmalı");
+                        }
+
+                        $.ajax({
+                            url: '/Kanal/KanalAltKanalEslestirmeYap',
+                            type: 'POST',
+                            data: {
+                                kanalIslemId: kanalIslemId,
+                                kanalAltIslemId: kanalAltIslemId
+                            },
+                            success: function (data) {
+                                if (data.islemDurum == 1) {
+                                    toastr.success(data.mesaj);
+                                    resolve(true);
+                                } else {
+                                    toastr.error(data.mesaj);
+                                    resolve(false);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error(error);
+                                toastr.error('Kanal / Alt Kanal Eşleştirmesi Yapılamadı!');
+                                reject(error);
+                            }
+                        });
+                    } catch (error) {
+                        console.error(error.message);
+                        reject(error);
+                    }
+                });
+            }
+
+            function kanalAltKanalEslestirmeKaldir(kanalIslemId, kanalAltIslemId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        kanalIslemId = parseInt(kanalIslemId, 10);
+                        kanalAltIslemId = parseInt(kanalAltIslemId, 10);
+
+                        if (isNaN(kanalIslemId) || isNaN(kanalAltIslemId)) {
+                            alert("ID'ler sayısal olmalı");
+                            return reject("ID'ler sayısal olmalı");
+                        }
+
+                        $.ajax({
+                            url: '/Kanal/kanalAltKanalEslestirmeKaldir',
+                            type: 'POST',
+                            data: {
+                                kanalIslemId: kanalIslemId,
+                                kanalAltIslemId: kanalAltIslemId
+                            },
+                            success: function (data) {
+                                if (data.islemDurum == 1) {
+                                    toastr.success(data.mesaj);
+                                    resolve(true);
+                                } else {
+                                    toastr.error(data.mesaj);
+                                    resolve(false);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error(error);
+                                toastr.error('Kanal / Alt Kanal Eşleştirmesi Kaldırılamadı!');
+                                reject(error);
+                            }
+                        });
+                    } catch (error) {
+                        console.error(error.message);
+                        reject(error);
+                    }
+                });
+            }
+
+            /* Verilerin Getirilmesi İçin */
+            $('#goButton').click(function () {
+                // Seçili hizmet binası ID'sini ve seçili departman ID'sini al
+                var selectedDepartmanId = $('#departmanlarSelect').val();
+                var selectedHizmetBinasiId = $('#hizmetBinalariSelect').val();
+                
+                /* Tüm Dataları Getiriyor */
+                tumDatalariDoldur(selectedDepartmanId, selectedHizmetBinasiId);
+            });
+
+            function ul_li_select_kaldir() {
+                $('#kanallar li').removeClass('selected');
+                $('#kanallar li').css('background-color', '');
+            }
+
+            function ul_li_select_ekle(select) {
+                // Tıklanan öğeyi seçili yap
+                var itemId = $(select).attr('id');
+                $(select).addClass('selected');
+                $(select).css('background-color', '#f0f0f0');
+            }
+
+            $('#kanallar li').click(function () {
+                alert('asd');
+                // Seçili öğelerin seçimini kaldır
+                ul_li_select_kaldir();
+
+                // Tıklanan öğeyi seçili yap
+                ul_li_select_ekle(this);
+
+                var kanalIslemId = $(this).attr('data-bs-whatever');
+
+                kanalAltKanalEslestirmeleriGetir(kanalIslemId);
+
+                // Yeniden sortable özelliğini ekle
+                makeSortable();
+            });
+
+            function makeSortable() {
+                const pendingTasks = document.getElementById('pending-tasks');
+                const completedTasks = document.getElementById('completed-tasks');
+
+                Sortable.create(pendingTasks, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: async function (evt) {
+                        var selectedChannel = $('#kanallar .selected');
+                        if (selectedChannel.length > 0) {
+                            var kanalIslemId = selectedChannel.attr('data-bs-whatever');
+                            var item = evt.item;
+                            var kanalAltIslemId = $(item).attr('data-bs-whatever');
+
+                            try {
+                                var result = await kanalAltKanalEslestirmeYap(kanalIslemId, kanalAltIslemId);
+                                if (!result) {
+                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                                } else {
+                                    var eslesenAltKanalSayisi = $("#pending-tasks").children().length;
+                                    $("#altKanalSayi_" + kanalIslemId).text(eslesenAltKanalSayisi);
+                                    $("#altKanalSayi_" + kanalIslemId).removeClass("bg-danger");
+                                    $("#altKanalSayi_" + kanalIslemId).addClass("bg-success");
+                                }
+                            } catch (error) {
+                                console.error(error.message);
+                                alert(error.message);
+                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                            }
+                        } else {
+                            alert("Hatalı İşlem!");
+                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                        }
+                    }
+                });
+
+                Sortable.create(completedTasks, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: async function (evt) {
+                        var selectedChannel = $('#kanallar .selected');
+                        if (selectedChannel.length > 0) {
+                            var kanalIslemId = selectedChannel.attr('data-bs-whatever');
+                            var item = evt.item;
+                            var kanalAltIslemId = $(item).attr('data-bs-whatever');
+
+                            try {
+                                var result = await kanalAltKanalEslestirmeKaldir(kanalIslemId, kanalAltIslemId);
+                                if (!result) {
+                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                                } else {
+                                    var eslesenAltKanalSayisi = $("#pending-tasks").children().length;
+                                    $("#altKanalSayi_" + kanalIslemId).text(eslesenAltKanalSayisi);
+                                    if (eslesenAltKanalSayisi > 0) {
+                                        $("#altKanalSayi_" + kanalIslemId).removeClass("bg-danger");
+                                        $("#altKanalSayi_" + kanalIslemId).addClass("bg-success");
+                                    } else {
+                                        $("#altKanalSayi_" + kanalIslemId).removeClass("bg-success");
+                                        $("#altKanalSayi_" + kanalIslemId).addClass("bg-danger");
+                                    }
+                                }
+                            } catch (error) {
+                                console.error(error.message);
+                                alert(error.message);
+                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                            }
+                        } else {
+                            alert("Hatalı İşlem!");
+                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                        }
+                    }
+                });
+            }
+
+            // İlk yüklemede sortable özelliğini ekle
+            makeSortable();
+
+            
+        });
+    </script>
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header flex-column flex-md-row">
+                <div class="card">
+                    <div class="card-header flex-md-row" style="display: flex; align-items: center;">
+                        <div class="col-sm-4">
+                            <label for="departmanlarSelect" class="form-label">Departmanlar</label>
+                            <select id="departmanlarSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="hizmetBinalariSelect" class="form-label">Hizmet Binaları</label>
+                            <select id="hizmetBinalariSelect" class="selectpicker w-100" data-style="btn-default"></select>
+                        </div>
+                        <div class="col-sm-1 col-4 d-flex align-items-center justify-content-center">
+                            <button id="goButton" class="btn btn-primary btn-sm">Getir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br/>
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="m-0">Kanal / Alt Kanal Eşleştirme</h5>
+            </div>
+            <div class="card-body pb-0">
+                <div class="row" style="">
+                    <div class="col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Kanallar</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="kanallar">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Eşleştirilmiş Alt Kanallar</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="pending-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Alt Kanallar</h6>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" autocomplete="off" id="search-input" class="form-control mb-3" placeholder="Alt kanal ara...">
+                                <ul class="list-group list-group-flush" id="completed-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

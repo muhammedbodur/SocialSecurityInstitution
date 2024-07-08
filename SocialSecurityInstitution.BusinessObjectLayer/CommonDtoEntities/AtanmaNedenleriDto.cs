@@ -8,7 +8,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class AtanmaNedenleriDto
     {
-        public int Id { get; set; }
-        public string? AtanmaNedeni { get; set; }
+        public int AtanmaNedeniId { get; set; }
+        public required string AtanmaNedeni { get; set; }
+        public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
+        public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
     }
 }

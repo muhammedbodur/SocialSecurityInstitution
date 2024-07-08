@@ -1,0 +1,575 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.BankolarRequestDto>
+
+@{
+    int sira = 0;
+}
+
+@section Styles {
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .light-yellow {
+            background-color: #ffffcc;
+        }
+
+        .light-green {
+            background-color: #d7e8c3;
+        }
+
+        .light-red {
+            background-color: #FFCCCB;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.bankoButton').click(function (event) {
+                var button = $(event.relatedTarget);
+                var bankoId = $(this).data('bs-whatever');
+
+                var selectBankoPersonelleri = $('#selectBankoPersonelleri');
+                selectBankoPersonelleri.empty();
+                selectBankoPersonelleri.append('<option value="">Personel Seçiniz</option>');
+                $.ajax({
+                    url: "/Banko/DepartmanPersonelListeleJson",
+                    type: "GET",
+                    data: { bankoId: bankoId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalPersonelGuncelleBankoId").val(bankoId);
+                        if (result.length > 0) {
+                            result.forEach(function (personel) {
+                                selectBankoPersonelleri.append('<option value="' + personel.tcKimlikNo + '">' + personel.personelAdSoyad + '</option>');
+                            });
+                        } else {
+                            toastr.error("Personeller Gelmedi!");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Personelleri getirme işlemi başarısız!");
+                    }
+                });
+            });
+
+            $('#modalBankoEkle').on('show.bs.modal', function (event) {
+                var selectDepartman = $('#selectDepartmanlar');
+                selectDepartman.empty();
+                selectDepartman.append('<option value="">Departman Seçiniz</option>');
+                $.ajax({
+                    url: "/Departman/ListeleJson",
+                    type: "GET",
+                    success: function (result) {
+                        console.log(result);
+                        if (result.length > 0) {
+                            result.forEach(function (departman) {
+                                selectDepartman.append('<option value="' + departman.departmanId + '">' + departman.departmanAdi + '</option>');
+                            });
+                        } else {
+                            toastr.error("Departmanlar Gelmedi!");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Departmanlar getirme işlemi başarısız!");
+                    }
+                });
+            });
+
+            $('#selectDepartmanlar').change(function () {
+                var selectedDepartmanId = $(this).val();
+                var selectHizmetBinasi = $('#selectHizmetBinalari');
+                selectHizmetBinasi.empty();
+                selectHizmetBinasi.append('<option value="">Hizmet Binası Seçiniz</option>');
+                if (selectedDepartmanId) {
+                    $.ajax({
+                        url: '/HizmetBinalari/Getir',
+                        type: 'GET',
+                        data: { departmanId: selectedDepartmanId },
+                        dataType: 'json',
+                        success: function (result) {
+                            console.log(result);
+                            if (result.length > 0) {
+                                result.forEach(function (hizmetBinasi) {
+                                    selectHizmetBinasi.append('<option value="' + hizmetBinasi.hizmetBinasiId + '">' + hizmetBinasi.hizmetBinasiAdi + '</option>');
+                                });
+                            } else {
+                                toastr.error("Hizmet Binaları Gelmedi!");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            // Ajax çağrısı başarısız olduğunda yapılacak işlemler
+                            console.error(error);
+                            toastr.error('Departman detayları alınamadı!');
+                        }
+                    });
+                }
+            });
+
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var bankoId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Banko/Sil",
+                    type: "GET",
+                    data: { bankoId: bankoId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Banko Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('#modalBankoGuncelle').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var bankoId = button.attr('data-bs-whatever');
+
+                $.ajax({
+                    url: "/Banko/Getir",
+                    type: "GET",
+                    data: { bankoId: bankoId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalCenterTitle").text("Banko Düzenle");
+                        $("#modalGuncelleBankoId").val(bankoId);
+                        $("#modalGuncelleBankoNo").val(result.bankoNo);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        $("#modalBankoGuncelle").modal("hide");
+                        $('#modalBankoGuncelle').on('hidden.bs.modal', function (e) {
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                        });
+                    }
+                });
+            });
+
+            $("#btnGuncelle").click(function () {
+                var bankoId = $("#modalGuncelleBankoId").val();
+                var yeniBankoNo = $("#modalGuncelleBankoNo").val();
+
+                $.ajax({
+                    url: "/Banko/Guncelle",
+                    type: "POST",
+                    data: {
+                        bankoId: bankoId,
+                        bankoNo: yeniBankoNo
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Banko Güncelleme İşlemi Başarılı");
+
+                        var bankoHtml = '<button id="bankoButton_' + bankoId + '" data-bs-whatever="' + bankoId + '" type="button" class="bankoButton btn bg-success" data-bs-toggle="modal" data-bs-target="#modalBankoyaPersonelAta">' +
+                            '<span class="badge bg-success">Banko <span class="badge bg-secondary bg-success" style="font-size: larger;">' + yeniBankoNo + '</span></span>' +
+                            '</button>';
+                        $("#bankoNo_" + bankoId).html(bankoHtml);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Banko Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+
+            $("#btnPersonelGuncelle").click(function () {
+                var bankoId = $("#modalPersonelGuncelleBankoId").val();
+                var tcKimlikNo = $("#selectBankoPersonelleri").val();
+                
+                $.ajax({
+                    url: "/Banko/BankoPersonelGuncelle",
+                    type: "POST",
+                    data: {
+                        bankoId: bankoId,
+                        tcKimlikNo: tcKimlikNo
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        
+                        if (response.error) {
+                            // Hata durumu
+                            var errorMessage = response.error;
+                            console.error(errorMessage);
+                            toastr.error(errorMessage);
+                        } else {
+                            // Başarılı durum
+                            var successMessage = response.success;
+                            var data = response.data; // Veri
+                            console.log(data);
+                            toastr.success(successMessage);
+                            var yeniBaslik = data.adSoyad;
+                            var yeniResimURL = "/img/avatars/" + data.resim;
+                            $("#bankoTr_" + bankoId).attr("class", "light-green");
+
+                            var yeniIcerik = `
+                                <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                    <li data-bs-toggle="tooltip"
+                                        data-popup="tooltip-custom"
+                                        data-bs-placement="top"
+                                        class="avatar avatar-xs pull-up"
+                                        title="${yeniBaslik}">
+                                        <img src="${yeniResimURL}" alt="Avatar" class="rounded-circle" />
+                                    </li>
+                                </ul>
+                            `;
+
+                            $("#bankoPersonelResim_" + bankoId).html(yeniIcerik);
+                            $("#bankoPersonelAdi_" + bankoId).html(data.adSoyad);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        var errorMessage = xhr.responseText;
+                        console.error(errorMessage);
+                        toastr.error(errorMessage);
+                    }
+                });
+            });
+
+            $("#btnEkle").click(function () {
+                var bankoNo = $("#modalEkleBankoNo").val();
+                var departmanId = $("#selectDepartmanlar option:selected").val();
+                var hizmetBinasiId = $("#selectHizmetBinalari option:selected").val();
+
+                $.ajax({
+                    url: "/Banko/Ekle",
+                    type: "POST",
+                    data: {
+                        bankoNo: bankoNo,
+                        hizmetBinasiId: hizmetBinasiId,
+                        departmanId: departmanId,
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Banko Ekleme İşlemi Başarılı");
+                        var sira = $("tbody tr").length + 1;
+
+                        var yeniSatir = '<tr id="bankoTr_' + result.bankoId + '" class="light-yellow">' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td id="departmanAdi_' + result.bankoId + '">' + result.departmanAdi + '</td>' +
+                            '<td id="hizmetBinasiAdi_' + result.bankoId + '">' + result.hizmetBinasiAdi + '</td>' +
+                            '<td id="bankoPersonelResim_' + result.bankoId + '">' +
+                            '<ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">' +
+                            '<li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" title="' + result.personelAdSoyad + '">' +
+                            '<img src="/img/avatars/empty.png" alt="Avatar" class="rounded-circle" />' +
+                            '</li>' +
+                            '</ul>' +
+                            '</td>' +
+                            '<td id="bankoPersonelAdi_' + result.bankoId + '"></td>' +
+                            '<td id="bankoNo_' + result.bankoId + '">' +
+                            '<button id="bankoButton_' + result.bankoId + '" data-bs-whatever="' + result.bankoId + '" type="button" class="bankoButton btn bg-success" data-bs-toggle="modal" data-bs-target="#modalBankoyaPersonelAta">' +
+                            '<span class="badge bg-success">Banko<span class="badge bg-secondary bg-success" style="font-size: larger;">' + result.bankoNo + '</span></span>' +
+                            '</button>' +
+                            '</td>' +
+                            '<td><a class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result.bankoId + '"><span id="aktiflik_span_' + result.bankoId + '" class="badge bg-label-success me-1">Aktif</span></a></td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-whatever="' + result.bankoId + '" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result.bankoId + '" data-bs-toggle="modal" data-bs-target="#modalBankoGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>' +
+                            '</a>' +
+                            '<a id="activePassiveButton_' + result.bankoId + '" class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result.bankoId + '">' +
+                            '<i class="bx bx-pause-circle me-1"></i> <span>Pasif Et</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-button" href="#" data-bs-whatever="' + result.bankoId + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+                        $("tbody").append(yeniSatir);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Banko Ekleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('.active-passive-button').click(function (e) {
+                e.preventDefault(); // Sayfanın yeniden yüklenmesini önler
+
+                var bankoId = $(this).data('bs-whatever');
+
+                $.ajax({
+                    url: "/Banko/AktifPasifEt",
+                    type: "GET",
+                    data: { bankoId: bankoId },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success(result.mesaj);
+                        if (result.islemDurum == 1) {
+                            $("#duzenlenmeTarihi_" + bankoId).html((new Date()).toLocaleString());
+                            var badgeClass = result.aktiflikDurum == 'Aktif' ? "bg-label-success" : "bg-label-danger";
+                            $("#aktiflik_span_" + bankoId).removeClass("bg-label-success bg-label-danger").addClass(badgeClass).text(result.aktiflikDurum);
+
+                            if (result.aktiflikDurum == 'Aktif') {
+                                $("#bankoTr_" + bankoId).attr("class", "light-yellow");
+                                $('#activePassiveButton_' + bankoId).find('i').removeClass('bx-play-circle').addClass('bx-pause-circle');
+                                $('#activePassiveButton_' + bankoId).find('span').text('Pasif Et');
+                            } else {
+                                $("#bankoTr_" + bankoId).attr("class", "light-red");
+                                $('#activePassiveButton_' + bankoId).find('i').removeClass('bx-pause-circle').addClass('bx-play-circle');
+                                $('#activePassiveButton_' + bankoId).find('span').text('Aktif Et');
+
+                                var yeniIcerik = `
+                                        <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                            <li data-bs-toggle="tooltip"
+                                                data-popup="tooltip-custom"
+                                                data-bs-placement="top"
+                                                class="avatar avatar-xs pull-up"
+                                                title="">
+                                                <img src="/img/avatars/empty.png" alt="Avatar" class="rounded-circle" />
+                                            </li>
+                                        </ul>
+                                    `;
+
+                                $("#bankoPersonelResim_" + bankoId).html(yeniIcerik);
+                                $("#bankoPersonelAdi_" + bankoId).html("");
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error(error);
+                    }
+                });
+            });
+
+        });
+    </script>
+}
+
+
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="head-label text-left">
+            <h5 class="card-title mb-0">Bankolar</h5>
+        </div>
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false"><span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span></button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalBankoEkle">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Banko Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Departmanlar</th>
+                    <th>Hizmet Binaları</th>
+                    <th></th>
+                    <th>Banko Personeli</th>
+                    <th>Bankolar</th>
+                    <th>Aktiflik</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var banko in Model)
+                    {
+                        { sira++; }
+                        string trClass = banko.BankoAktiflik == Enums.Aktiflik.Pasif ? "light-red" : string.IsNullOrEmpty(banko.PersonelAdSoyad) ? "light-yellow" : "light-green";
+                        string badgeClass = banko.BankoAktiflik == Enums.Aktiflik.Aktif ? "bg-label-success" : "bg-label-danger";
+                        string activePassiveLabelClass = banko.BankoAktiflik == Enums.Aktiflik.Aktif ? "bx-pause-circle" : "bx-play-circle";
+                        string activePassiveLabelText = banko.BankoAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
+                        string oddEvenSituationClass = sira % 2 == 0 ? "bg-danger" : "bg-success";
+                        <tr id="bankoTr_@banko.BankoId" class="@trClass">
+                            <td class="sira">@sira</td>
+                            <td id="departmanAdi_@banko.BankoId">@banko.DepartmanAdi</td>
+                            <td id="hizmetBinasiAdi_@banko.BankoId">@banko.HizmetBinasiAdi</td>
+                            <td id="bankoPersonelResim_@banko.BankoId">
+                                <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                                    <li data-bs-toggle="tooltip"
+                                        data-popup="tooltip-custom"
+                                        data-bs-placement="top"
+                                        class="avatar avatar-xs pull-up"
+                                        title="@banko.PersonelAdSoyad">
+                                        <img src="~/img/avatars/@banko.PersonelResim" alt="Avatar" class="rounded-circle" />
+                                    </li>
+                                </ul>
+                            </td>
+                            <td id="bankoPersonelAdi_@banko.BankoId">
+                                @banko.PersonelAdSoyad
+                            </td>
+                            <td id="bankoNo_@banko.BankoId">
+                                <button id="bankoButton_@banko.BankoId" data-bs-whatever="@banko.BankoId" type="button" class="bankoButton btn @oddEvenSituationClass" data-bs-toggle="modal" data-bs-target="#modalBankoyaPersonelAta">
+                                    <span class="badge @oddEvenSituationClass">Banko<span class="badge bg-secondary @oddEvenSituationClass" style="font-size: larger;">@banko.BankoNo</span></span>
+                                </button>
+                            </td>
+                            <td><a class="dropdown-item active-passive-button" href="#" data-bs-whatever="@banko.BankoId"><span id="aktiflik_span_@banko.BankoId" class="badge @badgeClass me-1">@banko.BankoAktiflik</span></a></td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-whatever="@banko.BankoId" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@banko.BankoId" data-bs-toggle="modal" data-bs-target="#modalBankoGuncelle">
+                                            <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
+                                        </a>
+
+                                        <a id="activePassiveButton_@banko.BankoId" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@banko.BankoId">
+                                            <i class="bx @activePassiveLabelClass me-1"></i> <span>@activePassiveLabelText</span>
+                                        </a>
+
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@banko.BankoId">
+                                            <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalBankoEkle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Banko Ekle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Departman</label>
+                        <select id="selectDepartmanlar" class="form-select">
+                            <option value="">Departman Seçiniz</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" id="selectHizmetBinalariDiv">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Hizmet Binaları</label>
+                        <select id="selectHizmetBinalari" class="form-select">
+                            <option value="">Hizmet Binası Seçiniz</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" id="inputBankoNoDiv">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Banko No</label>
+                        <input type="text"
+                               id="modalEkleBankoNo"
+                               class="form-control"
+                               placeholder="Banko No Giriniz" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEkle">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalBankoGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Banko Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Banko No</label>
+                        <input type="text"
+                               name="bankoNo"
+                               id="modalGuncelleBankoNo"
+                               class="form-control"
+                               placeholder="Banko Adı" />
+                        <input type="hidden" id="modalGuncelleBankoId" name="bankoId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalBankoyaPersonelAta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Bankoya Personel Ata</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Personeller</label>
+                        <select id="selectBankoPersonelleri" class="form-select">
+                            <option value="">Personel Seçiniz</option>
+                        </select>
+                        <input type="hidden" id="modalPersonelGuncelleBankoId" name="bankoId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnPersonelGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

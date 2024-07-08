@@ -1,0 +1,202 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.KanalAltIslemleriRequestDto>
+
+@{
+    Layout = null;
+    ViewData["Title"] = "SGK Kiosk Alt İşlem Ekran";
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    @await Html.PartialAsync("_FavIcon")
+    @await Html.PartialAsync("_Fonts")
+    @await Html.PartialAsync("_Styles")
+    @await Html.PartialAsync("_Scripts")
+
+    <style>
+        html {
+            overflow-y: auto; /* Dikey kaydırma çubuğunu etkinleştir */
+        }
+
+        body {
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+
+        body .card:hover {
+            background-color: #d0d8e0;
+            transform: scale(1.01);
+        }
+
+        body .card-title {
+            font-weight: bold;
+            color: #000080;
+        }
+
+        body .card-body {
+            height: 500px; /* Sabit bir yükseklik belirleyin */
+            overflow-y: auto; /* İçeriğin boyutunu aşması durumunda dikey kaydırma çubuğunu etkinleştir */
+        }
+
+        .remaining-time-container {
+            display: flex;
+            justify-content: center; /* Yatayda ortala */
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .remaining-time-text {
+            color: red;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .back-button-container {
+            display: flex;
+            justify-content: flex-start; /* Butonu sola hizala */
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            font-size: 1.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .back-button-icon {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="back-button-container">
+            <button class="back-button" onclick="window.history.back();">
+                <span class="back-button-icon">&#8592;</span> Geri
+            </button>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="text-center mb-4">
+                        <img src="~/img/logos/sgk_logo.svg" alt="SGK Logo" class="img-fluid mb-2" style="max-height: 100px;" />
+                        <h1 class="display-5">KONAK SGM</h1>
+                    </div>
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        @foreach (var altKanal in Model)
+                        {
+                            @if (altKanal.KanalAltIslemAktiflik == Enums.Aktiflik.Aktif)
+                            {
+                                <div class="col">
+                                    <div class="card h-100 text-center">
+                                        <div class="card-body d-flex align-items-stretch justify-content-center p-0" style="height: 150px;">
+                                            <button type="button"
+                                                    class="btn btn-primary w-100 YazdirButton"
+                                                    data-bs-whatever="@altKanal.KanalAltIslemId"
+                                                    style="font-weight:bold;font-family: 'Roboto', sans-serif;font-size: 2.3rem; padding: 0.5rem;">
+                                                @altKanal.KanalAltIslemAdi
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="remaining-time-container">
+                        <span>Seçim için Kalan Süreniz : <span id="remaining-time" class="remaining-time-text"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Sira Sayısı Gösterim modal -->
+    <div class="modal fade" id="siraNoGosterimModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-simple modal-enable-otp modal-dialog-centered" style="max-width: 400px; height: 200px;">
+            <div class="modal-content p-2">
+                <div class="modal-body">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <div class="d-flex gap-2 align-items-center">
+                            <h6 class="m-0">Sıra Numaranız</h6>
+                        </div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h1 id="siraNo" class="display-1 fw-bold mb-0"></h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Sira Sayısı Gösterim modal -->
+
+    <script charset="utf-8">
+        $(document).ready(function () {
+            let remainingTime = 60;
+            $('#remaining-time').html(remainingTime);
+            const timerInterval = setInterval(() => {
+                remainingTime--;
+                $('#remaining-time').text(remainingTime);
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    toastr.error('İşlem Süreniz Doldu!');
+                    setTimeout(function () {
+                        window.history.back();
+                    }, 5000);
+                }
+            }, 1000);
+
+            $('.YazdirButton').click(function (event) {
+                alert("Merhaba");
+                var button = $(this);
+                var kanalAltIslemId = button.data('bs-whatever');
+                var trElement = button.closest('tr');
+
+                $.ajax({
+                    url: "/Kiosk/KioskYazdir",
+                    type: "GET",
+                    data: { kanalAltIslemId: kanalAltIslemId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            $("#siraNo").text(result.siraNo);
+
+                            var myModal = new bootstrap.Modal(document.getElementById('siraNoGosterimModal'));
+                            myModal.show();
+                            toastr.success(result.mesaj);
+                        }else{
+                            toastr.success(result.mesaj);
+                        }
+                        
+                        setTimeout(function () {
+                            window.history.back();
+                        }, 5000);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Sıra Alma İşlemi Başarısız!");
+                        setTimeout(function () {
+                            window.history.back();
+                        }, 5000);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "sProcessing": "İşleniyor...",
+  "sLengthMenu": "Sayfada _MENU_ Kayıt Göster",
+  "sZeroRecords": "Eşleşen Kayıt Bulunamadı",
+  "sInfo": " _TOTAL_ Kayıttan _START_ - _END_ Arası Kayıtlar",
+  "sInfoEmpty": "Kayıt Yok",
+  "sInfoFiltered": "( _MAX_ Kayıt İçerisinden Bulunan)",
+  "sInfoPostFix": "",
+  "sSearch": "Ara:",
+  "sUrl": "",
+  "oPaginate": {
+    "sFirst": "İlk",
+    "sPrevious": "Önceki",
+    "sNext": "Sonraki",
+    "sLast": "Son"
+  },
+  "oAria": {
+    "sSortAscending": ": Artan Sıralama",
+    "sSortDescending": ": Azalan Sıralama"
+  }
+}

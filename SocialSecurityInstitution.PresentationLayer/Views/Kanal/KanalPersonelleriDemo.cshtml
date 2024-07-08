@@ -1,0 +1,282 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.KanalPersonelleriDto>
+
+@{
+    string RandomString(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+}
+
+@section Styles {
+    <style>
+        .table {
+            overflow-x: hidden;
+        }
+
+        .table .custom-th,
+        .table .custom-td {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: hidden;
+            max-width: 100px;
+        }
+
+        .custom-td-button {
+            width: 100%;
+            height: 100%;
+            padding: 15px 5px; /*15px yükseklik ve 0px genişlik*/
+        }
+
+        .custom-td-button {
+            width: 100%;
+            height: 100%;
+            padding: 15px 5px; /*15px yükseklik ve 0px genişlik*/
+        }
+
+        #playlist-wrapper {
+            position: relative;
+            width: 100%;
+            overflow-x: auto; /* Yatay kaydırma çubuğunu etkinleştirir */
+            white-space: nowrap;
+            cursor: grab; /* Sürükleme işareti */
+        }
+
+        #playlist-wrapper:active {
+            cursor: grabbing; /* Sürükleme sırasında farklı bir işaret */
+        }
+
+        .playlist-row {
+            flex-wrap: wrap; /* Sıraları wrap (yan yana) yerleştir */
+        }
+
+        .tableFixHead {
+            overflow: auto;
+        }
+
+        .tableFixHead table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .tableFixHead th,
+        .tableFixHead td {
+            padding: 8px 16px;
+        }
+
+
+        td:first-child, th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background-color: white;
+        }
+
+        td:nth-child(2), th:nth-child(2) {
+            position: sticky;
+            left: 100px;
+            z-index: 1;
+            background-color: white;
+        }
+
+        .tableFixHead th {
+            position: sticky;
+            top: 0;
+            background: #eee;
+            z-index: 2
+        }
+
+        th:first-child, th:nth-child(2) {
+            z-index: 3
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var isMouseDown = false,
+                startX,
+                scrollLeft;
+
+            $('#playlist-wrapper').mousedown(function (e) {
+                isMouseDown = true;
+                startX = e.pageX - $('#playlist-wrapper').offset().left;
+                scrollLeft = $('#playlist-wrapper').scrollLeft();
+            }).mouseup(function () {
+                isMouseDown = false;
+            }).mousemove(function (e) {
+                if (isMouseDown) {
+                    var mouseX = e.pageX - $('#playlist-wrapper').offset().left;
+                    var diff = mouseX - startX;
+                    $('#playlist-wrapper').scrollLeft(scrollLeft - diff);
+                }
+            }).mouseleave(function () {
+                isMouseDown = false;
+            });
+        });
+
+        $(document).ready(function () {
+            $('#socialSecurityIsntution').addClass('layout-menu-collapsed');
+
+            $('.accordion-toggle').click(function () {
+                var target = $(this).next('.collapse');
+                $('.collapse').not(target).removeClass('show');
+                target.toggleClass('show');
+            });
+
+            // Herhangi bir yere tıklandığında açılan tr'nin kapanması
+            $(document).click(function (e) {
+                if (!$(e.target).closest('.table-responsive').length) {
+                    $('.collapse').removeClass('show');
+                }
+            });
+        });
+    </script>
+}
+
+<!-- Bordered Table -->
+<div class="card container-fluid">
+    <h5 class="card-header">Kanal Personelleri</h5>
+    <div class="card-body">
+        <div class="tableFixHead table-responsive" id="playlist-wrapper">
+            <table class="table table-responsive table-bordered table-fixed">
+                <thead>
+                    <tr>
+                        <th class="custom-th">Banko</th>
+                        <th class="">Personel Adı</th>
+                        <th class="custom-th">Birşey Soracağım</th>
+                        <th class="custom-th">Borçlanmalar</th>
+                        <th class="custom-th">Döküm</th>
+                        <th class="custom-th">Eksik Gün</th>
+                        <th class="custom-th">Emzirme</th>
+                        <th class="custom-th">GSS</th>
+                        <th class="custom-th">İşveren</th>
+                        <th class="custom-th">İşyeri Tescil</th>
+                        <th class="custom-th">K. Banko İşlemleri</th>
+                        <th class="custom-th">Maluliyet</th>
+                        <th class="custom-th">Rapor Parası</th>
+                        <th class="custom-th">SGDP</th>
+                        <th class="custom-th">Uzun B.İ.</th>
+                        <th class="custom-th">Yurtdışı İşlemler</th>
+                        <th class="custom-th">Z. 4/B</th>
+                        <th class="custom-th">Z. Banko İşlemleri</th>
+                        <th class="custom-th">İcra İşlemleri</th>
+                        <th class="custom-th">GSS Yap.</th>
+                        <th class="custom-th">4/A İşveren Yap.</th>
+                        <th class="custom-th">4/B-SGDP Yap.</th>
+                        <th class="custom-th">Ekstra İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="playlist-row">
+                    @for (int i = 1; i <= 21; i++)
+                    {
+                        <tr data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="collapse1" class="accordion-toggle">
+                            <td class=" custom-td">
+                                @i
+                            </td>
+                            <td class=" custom-td">
+                                <div class="d-flex justify-content-start align-items-center">
+                                    <div class="avatar-wrapper">
+                                        <div class="avatar avatar-md me-2 pull-up">
+                                            <img src="~/img/avatars/410351.jpeg" alt="Avatar" class="rounded-circle">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span class="emp_name text-truncate">@(i.ToString() + "-" + RandomString(10))</span>
+                                        <small class="emp_post text-truncate text-muted">Mühendis</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button" data-bs-whatever="TcKimlikNo-">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                            </td>
+                            <td class=" custom-td">
+                                <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                            </td>
+                        </tr>
+                        @for (int j = 1; j < 4; j++)
+                        {
+                            <tr class="collapse">
+                                <td colspan="2"></td>
+                                @for (int k = 1; k < 22; k++)
+                                {
+                                    <td>
+                                        @i-@k
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!--/ Bordered Table -->

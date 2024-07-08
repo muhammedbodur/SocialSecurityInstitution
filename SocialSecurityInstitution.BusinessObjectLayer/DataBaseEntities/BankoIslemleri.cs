@@ -18,7 +18,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
          ise yine seçilen OrtaGrup a göre gelecek.
         */
         [Key]
-        public int Id { get; set; }
+        public int BankoIslemId { get; set; }
 
         /* AnaGrup, OrtaGrup, AltGrup olarak 3 farklı grup verilebilir, BankoGrupları ndan beslenir. */
         public required BankoGrup BankoGrup { get; set; }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.AbstractDataServices
 {
-    public interface IAtanmaNedenleriDal : IGenericDal<AtanmaNedenleri>
+    public interface IAtanmaNedenleriDal : IGenericDal<AtanmaNedenleriDto>
     {
     }
 }

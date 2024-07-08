@@ -5,64 +5,30 @@
         <li class="menu-item active">
             <a href="/home/index" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home-circle"></i>
-                <div data-i18n="Analytics">Dashboard</div>
+                <div data-i18n="Ana Sayfa">Ana Sayfa</div>
             </a>
-        </li>
-        <li class="menu-item" style="display:none;">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-layout"></i>
-                <div data-i18n="Layouts">Layouts</div>
-            </a>
-
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="layouts-without-menu.html" class="menu-link">
-                        <div data-i18n="Without menu">Without menu</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="layouts-without-navbar.html" class="menu-link">
-                        <div data-i18n="Without navbar">Without navbar</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="layouts-container.html" class="menu-link">
-                        <div data-i18n="Container">Container</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="layouts-fluid.html" class="menu-link">
-                        <div data-i18n="Fluid">Fluid</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="layouts-blank.html" class="menu-link">
-                        <div data-i18n="Blank">Blank</div>
-                    </a>
-                </li>
-            </ul>
         </li>
         <li class="menu-header small text-uppercase">
-            <span class="menu-header-text">Personel</span>
+            <span class="menu-header-text">Genel İşlemler</span>
         </li>
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
-                <div data-i18n="Personel Bilgileri">Personel Bilgileri</div>
+                <i class="menu-icon tf-icons bx bx-user"></i>
+                <div data-i18n="Personel">Personel</div>
             </a>
             <ul class="menu-sub">
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Personel" asp-action="List" class="menu-link">
+                    <a asp-area="" asp-controller="Personel" asp-action="Listele" class="menu-link">
                         <div data-i18n="Personel Listesi">Personel Listesi</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Personel" asp-action="Tab" class="menu-link">
+                    <a asp-area="" asp-controller="Personel" asp-action="Hesap" class="menu-link">
                         <div data-i18n="Personel Hesabı">Personel Hesabı</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Personel" asp-action="Add" class="menu-link">
+                    <a asp-area="" asp-controller="Personel" asp-action="Ekle" class="menu-link">
                         <div data-i18n="Personel Ekleme">Personel Ekleme</div>
                     </a>
                 </li>
@@ -75,221 +41,204 @@
         </li>
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
-                <div data-i18n="Authentications">Authentications</div>
+                <i class="menu-icon tf-icons bx bx-abacus"></i>
+                <div data-i18n="Organizasyon">Organizasyon</div>
             </a>
             <ul class="menu-sub">
                 <li class="menu-item">
-                    <a href="auth-login-basic.html" class="menu-link" target="_blank">
-                        <div data-i18n="Basic">Login</div>
+                    <a asp-area="" asp-controller="Departman" asp-action="Listele" class="menu-link">
+                        <div data-i18n="Departman Bilgileri">Departman Bilgileri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="auth-register-basic.html" class="menu-link" target="_blank">
-                        <div data-i18n="Basic">Register</div>
+                    <a asp-area="" asp-controller="Servis" asp-action="Listele" class="menu-link">
+                        <div data-i18n="Servis Bilgileri">Servis Bilgileri</div>
                     </a>
                 </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Unvan" asp-action="Listele" class="menu-link">
+                        <div data-i18n="Unvan Bilgileri">Unvan Bilgileri</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
+                <div data-i18n="Kimlik Doğrulama">Kimlik Doğrulama</div>
+            </a>
+            <ul class="menu-sub">
                 <li class="menu-item">
                     <a href="auth-forgot-password-basic.html" class="menu-link" target="_blank">
-                        <div data-i18n="Basic">Forgot Password</div>
+                        <div data-i18n="Şifre Yenileme">Şifre Yenileme</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">Sıramatik İşlemleri</span>
+        </li>
+        <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-desktop"></i>
+                <div data-i18n="Bankolar">Bankolar</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Banko" asp-action="Listele" class="menu-link">
+                        <div data-i18n="Banko Bilgileri">Banko Bilgileri</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Banko" asp-action="PersonelListele" class="menu-link">
+                        <div data-i18n="Banko Personelleri">Banko Personelleri</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Banko" asp-action="AltIslemlerListele" class="menu-link">
+                        <div data-i18n="Banko Alt İşlemleri">Banko Alt İşlemleri</div>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-cube-alt"></i>
-                <div data-i18n="Misc">Misc</div>
+                <i class="menu-icon tf-icons bx bx-chalkboard"></i>
+                <div data-i18n="Kanallar">Kanallar</div>
             </a>
             <ul class="menu-sub">
                 <li class="menu-item">
-                    <a href="pages-misc-error.html" class="menu-link">
-                        <div data-i18n="Error">Error</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanalIslemleriListele" class="menu-link">
+                        <div data-i18n="Kanal İşlemleri">Kanal İşlemleri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="pages-misc-under-maintenance.html" class="menu-link">
-                        <div data-i18n="Under Maintenance">Under Maintenance</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        <li class="menu-header small text-uppercase"><span class="menu-header-text">Components</span></li>
-        <li class="menu-item">
-            <a href="cards-basic.html" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-collection"></i>
-                <div data-i18n="Basic">Cards</div>
-            </a>
-        </li>
-        <li class="menu-item">
-            <a href="javascript:void(0)" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-box"></i>
-                <div data-i18n="User interface">User interface</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="ui-accordion.html" class="menu-link">
-                        <div data-i18n="Accordion">Accordion</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanalAltIslemleriListele" class="menu-link">
+                        <div data-i18n="Alt Kanal İşlemleri">Alt Kanal İşlemleri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="ui-alerts.html" class="menu-link">
-                        <div data-i18n="Alerts">Alerts</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanalPersonelleri" class="menu-link">
+                        <div data-i18n="Kanal Personelleri">Kanal Personelleri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="ui-badges.html" class="menu-link">
-                        <div data-i18n="Badges">Badges</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="PersonelAltKanalEslestir" class="menu-link">
+                        <div data-i18n="Personel/Alt Kanal Eşleştirme">Personel/Alt Kanal Eşleştirme</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="ui-buttons.html" class="menu-link">
-                        <div data-i18n="Buttons">Buttons</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanalEslestir" class="menu-link">
+                        <div data-i18n="Kanal/Alt Kanal Eşleştirme">Kanal/Alt Kanal Eşleştirme</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="ui-carousel.html" class="menu-link">
-                        <div data-i18n="Carousel">Carousel</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanallarListele" class="menu-link">
+                        <div data-i18n="Sabit Kanal İşlemleri">Sabit Kanal İşlemleri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="ui-collapse.html" class="menu-link">
-                        <div data-i18n="Collapse">Collapse</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-dropdowns.html" class="menu-link">
-                        <div data-i18n="Dropdowns">Dropdowns</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-footer.html" class="menu-link">
-                        <div data-i18n="Footer">Footer</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-list-groups.html" class="menu-link">
-                        <div data-i18n="List Groups">List groups</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-modals.html" class="menu-link">
-                        <div data-i18n="Modals">Modals</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-navbar.html" class="menu-link">
-                        <div data-i18n="Navbar">Navbar</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-offcanvas.html" class="menu-link">
-                        <div data-i18n="Offcanvas">Offcanvas</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-pagination-breadcrumbs.html" class="menu-link">
-                        <div data-i18n="Pagination &amp; Breadcrumbs">Pagination &amp; Breadcrumbs</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-progress.html" class="menu-link">
-                        <div data-i18n="Progress">Progress</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-spinners.html" class="menu-link">
-                        <div data-i18n="Spinners">Spinners</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-tabs-pills.html" class="menu-link">
-                        <div data-i18n="Tabs &amp; Pills">Tabs &amp; Pills</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-toasts.html" class="menu-link">
-                        <div data-i18n="Toasts">Toasts</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-tooltips-popovers.html" class="menu-link">
-                        <div data-i18n="Tooltips & Popovers">Tooltips &amp; popovers</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="ui-typography.html" class="menu-link">
-                        <div data-i18n="Typography">Typography</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        <li class="menu-item">
-            <a href="javascript:void(0)" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-copy"></i>
-                <div data-i18n="Extended UI">Extended UI</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="extended-ui-perfect-scrollbar.html" class="menu-link">
-                        <div data-i18n="Perfect Scrollbar">Perfect scrollbar</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="extended-ui-text-divider.html" class="menu-link">
-                        <div data-i18n="Text Divider">Text Divider</div>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        <li class="menu-item">
-            <a href="icons-boxicons.html" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-crown"></i>
-                <div data-i18n="Boxicons">Boxicons</div>
-            </a>
-        </li>
-        <li class="menu-header small text-uppercase"><span class="menu-header-text">Forms &amp; Tables</span></li>
-        <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-detail"></i>
-                <div data-i18n="Form Elements">Form Elements</div>
-            </a>
-            <ul class="menu-sub">
-                <li class="menu-item">
-                    <a href="forms-basic-inputs.html" class="menu-link">
-                        <div data-i18n="Basic Inputs">Basic Inputs</div>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="forms-input-groups.html" class="menu-link">
-                        <div data-i18n="Input groups">Input groups</div>
+                    <a asp-area="" asp-controller="Kanal" asp-action="KanallarAltListele" class="menu-link">
+                        <div data-i18n="Sabit Alt Kanal İşlemleri">Sabit Alt Kanal İşlemleri</div>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-detail"></i>
-                <div data-i18n="Form Layouts">Form Layouts</div>
+                <i class="menu-icon tf-icons bx bx-slideshow"></i>
+                <div data-i18n="Kiosk">Kiosk</div>
             </a>
             <ul class="menu-sub">
                 <li class="menu-item">
-                    <a href="form-layouts-vertical.html" class="menu-link">
-                        <div data-i18n="Vertical Form">Vertical Form</div>
+                    <a asp-area="" asp-controller="Kiosk" asp-action="KioskIslemleriListele" class="menu-link">
+                        <div data-i18n="Kiosk İşlemleri">Kiosk İşlemleri</div>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="form-layouts-horizontal.html" class="menu-link">
-                        <div data-i18n="Horizontal Form">Horizontal Form</div>
+                    <a asp-area="" asp-controller="Kiosk" asp-action="KioskEslestir" class="menu-link">
+                        <div data-i18n="Kiosk/Alt Kanal Eşleştirme">Kiosk/Alt Kanal Eşleştirme</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Kiosk" asp-action="KioskListele" class="menu-link">
+                        <div data-i18n="Sabit Kiosk İşlemleri">Sabit Kiosk İşlemleri</div>
                     </a>
                 </li>
             </ul>
         </li>
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Pdks</span></li>
         <li class="menu-item">
-            <a href="tables-basic.html" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-table"></i>
-                <div data-i18n="Tables">Tables</div>
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-street-view"></i>
+                <div data-i18n="Pdks Bilgileri">Pdks Bilgileri</div>
             </a>
+            <ul class="menu-sub">
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Pdks" asp-action="Hareketleri" class="menu-link">
+                        <div data-i18n="Giriş/Çıkış Bilgileri">Giriş/Çıkış Bilgileri</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Pdks" asp-action="IzinTalep" class="menu-link">
+                        <div data-i18n="İzin Talep Sistemi">İzin Talep Sistemi</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Eshot" asp-action="Hareketleri" class="menu-link">
+                        <div data-i18n="Personel Çalışma Gün Sayıları">Personel Çalışma Gün Sayıları</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Pdks" asp-action="IzinIslemleri" class="menu-link">
+                        <div data-i18n="İnsan Kaynakları - İzin Kayıt Sorumlusu">İnsan Kaynakları - İzin Kayıt Sorumlusu</div>
+                    </a>
+                </li>
+                <li class="menu-item open" style="">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <div class="text-truncate" data-i18n="Raporlar">Raporlar</div>
+                    </a>
+                    <ul class="menu-sub">
+                        <li class="menu-item">
+                            <a asp-area="" asp-controller="Pdks" asp-action="SgmRapor" class="menu-link">
+                                <div class="text-truncate" data-i18n="Sgm Mesai Listesi">Sgm Mesai Listesi</div>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a asp-area="" asp-controller="Pdks" asp-action="PersonelRapor" class="menu-link">
+                                <div class="text-truncate" data-i18n="Personel Mesai Listesi">Personel Mesai Listesi</div>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </li>
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Eshot</span></li>
+        <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-bus"></i>
+                <div data-i18n="Eshot Bilgileri">Eshot Bilgileri</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Eshot" asp-action="Hareketleri" class="menu-link">
+                        <div data-i18n="Eshot Haraketleri">Eshot Haraketleri</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Eshot" asp-action="KullanimHakki" class="menu-link">
+                        <div data-i18n="Eshot Kullanım Hakkı">Eshot Kullanım Hakkı</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a asp-area="" asp-controller="Eshot" asp-action="UcretBilgileri" class="menu-link">
+                        <div data-i18n="Eshot Ücret Bilgileri">Eshot Ücret Bilgileri</div>
+                    </a>
+                </li>
+                
+            </ul>
+        </li>
+        
     </ul>
 </aside>

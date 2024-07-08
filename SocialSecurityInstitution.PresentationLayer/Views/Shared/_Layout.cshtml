@@ -1,8 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using SocialSecurityInstitution.PresentationLayer.Services.AbstractPresentationServices
+@inject IUserInfoService UserInfoService
 
-<html lang="en" class="light-style layout-menu-fixed">
+<!DOCTYPE html>
+
+<html lang="tr" id="socialSecurityIsntution" class="light-style layout-menu-fixed">
 <head>
-    <title>Pdks Dashboard - İzmir Sosyal Güvenlik İl Müdürlüğü</title>
+    <title>Dashboard - İzmir Sosyal Güvenlik İl Müdürlüğü</title>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -35,8 +38,10 @@
 
     @await Html.PartialAsync("_Scripts")
 
-    <!-- Page Scripts-->
-    @RenderSection("PageScripts", required: false)
+    @await Component.InvokeAsync("NToastNotify")
 
+    @RenderSection("PageScripts", required: false)
+    @RenderSection("Scripts", required: false)
+    @RenderSection("Styles", required: false)
 </body>
 </html>

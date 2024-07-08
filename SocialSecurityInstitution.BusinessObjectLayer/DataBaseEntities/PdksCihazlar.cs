@@ -10,7 +10,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class PdksCihazlar
     {
         [Key]
-        public int Id { get; set; }
+        public int PdksCihazId { get; set; }
         public required int DepartmanId { get; set; }
         public required Departmanlar Departman { get; set; }
         public required string CihazIP { get; set; }

@@ -1,0 +1,245 @@
+﻿@{
+    string RandomString(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+}
+
+@section Styles {
+    <style>
+        .cursor-move {
+            cursor: move;
+        }
+
+        .selected {
+            background-color: #f0f0f0;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .sortable-chosen {
+            background-color: #e0e0e0;
+        }
+
+        .sortable-drag {
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#personeller li:first-child').addClass('selected');
+
+            // Kanallar ve alt kanalları saklamak için dict oluştur
+            var uzmanAltKanallar = {};
+            var yrdUzmanAltKanallar = {};
+            var tumAltKanallar = [];
+
+            // Kanal ID'lerini toplamak için array oluştur
+            var personelIds = [];
+
+            // Her bir personelin alt kanallarını sakla
+            $('#personeller li').each(function () {
+                var personelId = $(this).attr('id');
+                uzmanAltKanallar[personelId] = [];
+                yrdUzmanAltKanallar[personelId] = [];
+                personelIds.push(personelId);
+            });
+
+            // Tüm alt kanalları topla
+            $('#completed-tasks li').each(function () {
+                var altKanalId = parseInt($(this).attr('data-bs-whatever'));
+                var altKanalText = $(this).text().trim();
+                tumAltKanallar.push({ id: altKanalId, text: altKanalText });
+            });
+
+            function ul_li_select_kaldir() {
+                $('#personeller li').removeClass('selected');
+                $('#personeller li').css('background-color', '');
+            }
+
+            function ul_li_select_ekle(select) {
+                // Tıklanan öğeyi seçili yap
+                var itemId = $(select).attr('id');
+                $(select).addClass('selected');
+                $(select).css('background-color', '#f0f0f0');
+            }
+
+            function updateCompletedTasks(personelId) {
+                $('#completed-tasks').empty(); // Önceki alt kanalları temizle
+
+                // Mevcut uzman ve yrd. uzman alt kanalları topla
+                var selectedAltKanallar = uzmanAltKanallar[personelId].concat(yrdUzmanAltKanallar[personelId]);
+
+                // Tüm alt kanallardan mevcut olanları çıkar
+                var remainingAltKanallar = tumAltKanallar.filter(function (altKanal) {
+                    return !selectedAltKanallar.some(function (selectedAltKanal) {
+                        return selectedAltKanal.id === altKanal.id;
+                    });
+                });
+
+                // Kalan alt kanalları completed-tasks listesine ekle
+                remainingAltKanallar.forEach(function (altKanal) {
+                    $('#completed-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + altKanal.id + '"><span>' + altKanal.text + '</span></li>');
+                });
+            }
+
+            $('#personeller li').click(function () {
+                // Seçili öğelerin seçimini kaldır
+                ul_li_select_kaldir();
+
+                // Tıklanan öğeyi seçili yap
+                ul_li_select_ekle(this);
+
+                var personelId = $(this).attr('id');
+                $('#pending-tasks, #pending-tasks-2').empty(); // Önceki alt kanalları temizle
+
+                uzmanAltKanallar[personelId].forEach(function (altKanal) {
+                    $('#pending-tasks').append('<li class="list-group-item drag-item" data-bs-whatever="' + altKanal.id + '">' + altKanal.text + '</li>');
+                });
+
+                yrdUzmanAltKanallar[personelId].forEach(function (altKanal) {
+                    $('#pending-tasks-2').append('<li class="list-group-item drag-item" data-bs-whatever="' + altKanal.id + '">' + altKanal.text + '</li>');
+                });
+
+                updateCompletedTasks(personelId);
+            });
+
+            const pendingTasks = document.getElementById('pending-tasks');
+            const pendingTasks2 = document.getElementById('pending-tasks-2');
+            const completedTasks = document.getElementById('completed-tasks');
+
+            function createSortable(el, type = null) {
+                return Sortable.create(el, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: function (evt) {
+                        // Alt kanalları seçili personele ekle
+                        var selectedChannel = $('#personeller .selected');
+                        if (selectedChannel.length > 0) {
+                            var personelId = selectedChannel.attr('id');
+                            var item = evt.item; // Sürüklenen öğe
+                            var itemId = parseInt($(item).attr('data-bs-whatever'));
+                            var itemText = $(item).text().trim();
+                            var itemObj = { id: itemId, text: itemText };
+
+                            // Alt kanalları güncelle
+                            if (type != null && type == 'uzman')
+                                uzmanAltKanallar[personelId].push(itemObj);
+                            else if (type != null && type == 'yrdUzman')
+                                yrdUzmanAltKanallar[personelId].push(itemObj);
+                        }
+                    },
+                    onRemove: function (evt) {
+                        // Alt kanalları seçili personelden çıkar
+                        var selectedChannel = $('#personeller .selected');
+                        if (selectedChannel.length > 0) {
+                            var personelId = selectedChannel.attr('id');
+                            var item = evt.item; // Sürüklenen öğe
+                            var itemId = parseInt($(item).attr('data-bs-whatever'));
+
+                            // Alt kanallardan öğeyi çıkar
+                            if (type != null && type == 'uzman') {
+                                uzmanAltKanallar[personelId] = uzmanAltKanallar[personelId].filter(function (altKanal) {
+                                    return altKanal.id !== itemId;
+                                });
+                            } else if (type != null && type == 'yrdUzman') {
+                                yrdUzmanAltKanallar[personelId] = yrdUzmanAltKanallar[personelId].filter(function (altKanal) {
+                                    return altKanal.id !== itemId;
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+
+            createSortable(pendingTasks, 'uzman');
+            createSortable(pendingTasks2, 'yrdUzman');
+            createSortable(completedTasks);
+        });
+    </script>
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="m-0">Personel / Alt Kanal Eşleştirme</h5>
+            </div>
+            <div class="card-body pb-0">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Personeller</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="personeller">
+                                    @for (int i = 1; i <= 20; i++)
+                                    {
+                                        <li class="list-group-item" id="kisi_@i">Personel @i</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Uzman</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="pending-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Yard. Uzm.</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="pending-tasks-2">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Alt Kanallar</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="completed-tasks">
+                                    @for (int i = 1; i <= 60; i++)
+                                    {
+                                        <li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="@i">
+                                            <span data-bs-whatever="@i">@(i.ToString() + "-" + RandomString(10))</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,309 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.UnvanlarDto>
+
+@{
+    int sira = 0;
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var unvanId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Unvan/Sil",
+                    type: "GET",
+                    data: { unvanId: unvanId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Unvan Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('#modalUnvanGuncelle').one('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var unvanId = button.attr('data-bs-whatever');
+                $.ajax({
+                    url: "/Unvan/Getir",
+                    type: "GET",
+                    data: { unvanId: unvanId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalCenterTitle").text("Unvan Düzenle");
+                        $("#modalGuncelleUnvanId").val(unvanId);
+                        $("#modalGuncelleUnvanAdi").val(result.unvanAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        $("#modalUnvanGuncelle").modal("hide");
+                        $('#modalUnvanGuncelle').on('hidden.bs.modal', function (e) {
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                        });
+                    }
+                });
+            });
+
+            $("#btnGuncelle").click(function () {
+                var unvanId = $("#modalGuncelleUnvanId").val();
+                var yeniUnvanAdi = $("#modalGuncelleUnvanAdi").val();
+
+                $.ajax({
+                    url: "/Unvan/Guncelle",
+                    type: "POST",
+                    data: {
+                        unvanId: unvanId,
+                        unvanAdi: yeniUnvanAdi
+                    },
+                    success: function (result) {
+                        toastr.success("Unvan Güncelleme İşlemi Başarılı");
+                        $("#unvanAdi_" + unvanId).text(yeniUnvanAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Unvan Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $("#btnEkle").click(function () {
+                var unvanAdi = $("#modalEkleUnvanAdi").val();
+
+                $.ajax({
+                    url: "/Unvan/Ekle",
+                    type: "POST",
+                    data: {
+                        unvanAdi: unvanAdi
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Unvan Ekleme İşlemi Başarılı");
+                        var sira = $("tbody tr").length + 1;
+                        var yeniSatir = '<tr>' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td>' + unvanAdi + '</td>' +
+                            '<td>' + (new Date()).toLocaleString() + '</td>' +
+                            '<td><span class="badge bg-label-success me-1">Aktif</span></td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result + '" data-bs-toggle="modal" data-bs-target="#modalUnvanGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>' +
+                            '</a>' +
+                            '<a id="activePassiveButton_' + result + '" class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result + '">' +
+                            '<i class="bx bx-pause-circle me-1"></i> <span>Pasif Et</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-botton" href="#" data-bs-whatever="' + result + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+
+                        // Yeni satırı tabloya ekledik
+                        $("tbody").append(yeniSatir);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Unvan Ekleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('.active-passive-button').click(function (e) {
+                e.preventDefault(); // Sayfanın yeniden yüklenmesini önler
+
+                var unvanId = $(this).data('bs-whatever');
+
+                $.ajax({
+                    url: "/Unvan/AktifPasifEt",
+                    type: "GET",
+                    data: { unvanId: unvanId },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success(result.mesaj);
+                        if (result.islemDurum == 1) {
+                            var badgeClass = result.aktiflikDurum == 'Aktif' ? "bg-label-success" : "bg-label-danger";
+                            $("#aktiflik_span_" + unvanId).removeClass("bg-label-success bg-label-danger").addClass(badgeClass).text(result.aktiflikDurum);
+
+                            if (result.aktiflikDurum == 'Aktif') {
+                                $('#activePassiveButton_' + unvanId).find('i').removeClass('bx-play-circle').addClass('bx-pause-circle');
+                                $('#activePassiveButton_' + unvanId).find('span').text('Pasif Et');
+                            } else {
+                                $('#activePassiveButton_' + unvanId).find('i').removeClass('bx-pause-circle').addClass('bx-play-circle');
+                                $('#activePassiveButton_' + unvanId).find('span').text('Aktif Et');
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error(error);
+                    }
+                });
+            });
+
+        });
+    </script>
+}
+
+
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="head-label text-left">
+            <h5 class="card-title mb-0">Unvanlar</h5>
+        </div>
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false"><span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span></button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalUnvanEkle">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Unvan Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive text-nowrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Unvan Adı</th>
+                    <th>Düzenlenme Tarihi</th>
+                    <th>Aktiflik</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var unvan in Model)
+                    {
+                        { sira++; }
+                        string badgeClass = unvan.UnvanAktiflik == Enums.Aktiflik.Aktif ? "bg-label-success" : "bg-label-danger";
+                        string activePassiveLabelClass = unvan.UnvanAktiflik == Enums.Aktiflik.Aktif ? "bx-pause-circle" : "bx-play-circle";
+                        string activePassiveLabelText = unvan.UnvanAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
+                        <tr>
+                            <td class="sira">@sira</td>
+                            <td id="unvanAdi_@unvan.Id">@unvan.UnvanAdi</td>
+                            <td>@unvan.DuzenlenmeTarihi</td>
+                            <td><span id="aktiflik_span_@unvan.Id" class="badge @badgeClass me-1">@unvan.UnvanAktiflik</span></td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@unvan.Id" data-bs-toggle="modal" data-bs-target="#modalUnvanGuncelle">
+                                            <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
+                                        </a>
+
+                                        <a id="activePassiveButton_@unvan.Id" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@unvan.Id">
+                                            <i class="bx @activePassiveLabelClass me-1"></i> <span>@activePassiveLabelText</span>
+                                        </a>
+
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@unvan.Id">
+                                            <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalUnvanEkle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Unvan Ekle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Unvan Adı</label>
+                        <input type="text"
+                               id="modalEkleUnvanAdi"
+                               class="form-control"
+                               placeholder="Unvan Adı Giriniz" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEkle">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalUnvanGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Unvan Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Unvan Adı</label>
+                        <input type="text"
+                               name="unvanAdi"
+                               id="modalGuncelleUnvanAdi"
+                               class="form-control"
+                               placeholder="Unvan Adı" />
+                        <input type="hidden" id="modalGuncelleUnvanId" name="unvanId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

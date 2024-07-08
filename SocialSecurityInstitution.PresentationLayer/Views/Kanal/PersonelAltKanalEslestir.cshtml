@@ -1,0 +1,689 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model SocialSecurityInstitution.PresentationLayer.Models.Kanal.AltKanallarPersonellerViewModel
+
+@{
+
+}
+
+@section Styles {
+    <style>
+        .cursor-move {
+            cursor: move;
+        }
+
+        .selected {
+            background-color: #f0f0f0;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .sortable-chosen {
+            background-color: #e0e0e0;
+        }
+
+        .sortable-drag {
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Selectpicker'ın normalleştirme işlevini belirt
+            $('.selectpicker').selectpicker({
+                liveSearchNormalize: true,
+                liveSearch: true
+            });
+
+            $('#goButton').click(function () {
+                // Seçili departman ID'sini al
+                var selectedDepartmanId = $('#departmanlarSelect').val();
+                // Seçili hizmet binası ID'sini al
+                var selectedHizmetBinasiId = $('#hizmetBinalariSelect').val();
+
+                tumDatalariDoldur(selectedDepartmanId, selectedHizmetBinasiId);
+            });
+
+            // Departmanlar değiştirildiğinde
+            $('#departmanlarSelect').on('change', function () {
+                var selectedDepartmanId = $(this).val();
+                hizmetBinalariGetir(selectedDepartmanId);
+            });
+
+            // Departmanlar listesini al ve <select> öğesini doldur
+            $.ajax({
+                url: '/Departman/ListeleJson',
+                type: 'GET',
+                success: function (data) {
+                    var departmanlarSelect = $('#departmanlarSelect');
+                    departmanlarSelect.empty();
+
+                    $.each(data, function (index, departman) {
+                        if (departman.departmanAktiflik == '1') {
+                            departmanlarSelect.append('<option data-tokens="' + departman.departmanId + '" value="' + departman.departmanId + '">' + departman.departmanAdi + '</option>');
+                        }
+                    });
+
+                    // Selectpicker'ı yenile
+                    departmanlarSelect.selectpicker('refresh');
+
+                    $('#hizmetBinalariSelectDiv').show();
+
+                    // İlk departman seçiliyse, ona ait hizmet binalarını getir
+                    var firstOptionValue = departmanlarSelect.find('option:first').val();
+                    if (firstOptionValue) {
+                        hizmetBinalariGetir(firstOptionValue);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    toastr.error('Departmanlar listesi alınamadı.');
+                }
+            });
+
+            function hizmetBinalariGetir(selectedDepartmanId) {
+                // Hizmet binaları için AJAX çağrısı
+                $.ajax({
+                    url: '/HizmetBinalari/ListeleJson?departmanId=' + selectedDepartmanId,
+                    type: 'GET',
+                    beforeSend: function () {
+                        // Hizmet binaları select kutusunu temizle
+                        var hizmetBinalariSelect = $('#hizmetBinalariSelect');
+                        hizmetBinalariSelect.empty();
+                    },
+                    success: function (hizmetBinalari) {
+                        var hizmetBinalariSelect = $('#hizmetBinalariSelect');
+                        $.each(hizmetBinalari, function (index, hizmetBinasi) {
+                            hizmetBinalariSelect.append('<option value="' + hizmetBinasi.hizmetBinasiId + '">' + hizmetBinasi.hizmetBinasiAdi + '</option>');
+                        });
+
+                        // Selectpicker'ı yenile
+                        hizmetBinalariSelect.selectpicker('refresh');
+
+                        var firstOptionValue = hizmetBinalariSelect.find('option:first').val();
+                        if (firstOptionValue) {
+                            tumDatalariDoldur(selectedDepartmanId, firstOptionValue);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Hizmet binaları listesi alınamadı.');
+                    }
+                });
+            }
+
+            // Selectpicker'ın normalleştirme işlevini belirt
+            $('.selectpicker').selectpicker({
+                liveSearchNormalize: true,
+                liveSearch: true
+            });
+
+            function tumDatalariDoldur(departmanId, hizmetBinasiId) {
+                $('#personeller').empty(); // Mevcut listeyi temizle
+                $('#pending-tasks').empty(); // Mevcut listeyi temizle
+                $('#pending-tasks-2').empty(); // Mevcut listeyi temizle
+                $('#completed-tasks').empty(); // Mevcut listeyi temizle
+
+                try {
+                    // ID'lerin sayısal olup olmadığını kontrol et
+                    departmanId = parseInt(departmanId, 10);
+                    hizmetBinasiId = parseInt(hizmetBinasiId, 10);
+
+                    if (isNaN(departmanId) || isNaN(hizmetBinasiId)) {
+                        alert("ID'ler sayısal olmalı");
+                        return false;
+                    }
+
+                    try {
+                        // Personelleri ve alt kanalları eşzamanlı olarak getiriyoruz
+                        $.when(
+                            personelleriGetir(departmanId, hizmetBinasiId)
+                        ).done(function () {
+                            // İlk Personelin TcKimlikNo sunu alıyoruz
+                            var ilkPersonel = $('#personeller li:first-child');
+                            ilkPersonel.addClass('selected');
+                            var personelTcKimlikNo = ilkPersonel.attr('data-bs-whatever');
+
+                            // Eşleştirilmiş Alt Kanalları Getiriyoruz
+                            personelAltKanalEsletirmeleriGetir(personelTcKimlikNo);
+                            // Eşleştirilmişmemiş Alt Kanalları Getiriyoruz
+                            personelAltKanalEslestirilmemisGetir(personelTcKimlikNo, hizmetBinasiId);
+
+                            // Olay bağlamalarını burada yapıyoruz
+                            $('#personeller li').click(function () {
+                                ul_li_select_kaldir();
+                                ul_li_select_ekle(this);
+
+                                var personelTcKimlikNo = $(this).attr('data-bs-whatever');
+
+                                personelAltKanalEsletirmeleriGetir(personelTcKimlikNo);
+                                personelAltKanalEslestirilmemisGetir(personelTcKimlikNo, hizmetBinasiId);
+
+                                makeSortable();
+                            });
+                        });
+                    } catch (error) {
+                        // Hataları yakala ve mesaj göster
+                        console.error(error.message);
+                        alert("İşlemler Esnasında Sorun Oldu!");
+                    }
+                } catch (error) {
+                    // Hataları yakala ve mesaj göster
+                    console.error(error.message);
+                    if (error.message.includes("ID'ler sayısal olmalı")) {
+                        if (isNaN(departmanId)) {
+                            alert("Departman Bilgisi Gelmedi!");
+                        }
+                        if (isNaN(hizmetBinasiId)) {
+                            alert("Hizmet Binası Bilgisi Gelmedi!");
+                        }
+                    }
+                }
+            }
+
+            function personelleriGetir(departmanId, hizmetBinasiId) {
+                var deferred = $.Deferred();
+
+                try {
+                    $.ajax({
+                        url: '/Kanal/KanalAltPersonelleriGetir',
+                        type: 'GET',
+                        data: { hizmetBinasiId: hizmetBinasiId },
+                        success: function (personeller) {
+                            var siraPersonel = 1;
+
+                            $.each(personeller, function (index, personel) {
+                                $('#personeller').append(
+                                    '<li class="list-group-item d-flex justify-content-between align-items-center" data-bs-whatever="' + personel['tcKimlikNo'] + '" id="' + personel['tcKimlikNo'] + '">' +
+                                    '<span>' + siraPersonel++ + ' - ' + personel['adSoyad'] + '</span>' +
+                                    '<div>' +
+                                    '<span id="uzmanAltKanalSayi_' + personel['tcKimlikNo'] + '" class="badge bg-success">' + personel['uzmanSayisi'] + '</span>' +
+                                    '<span id="uzmanYrdAltKanalSayi_' + personel['tcKimlikNo'] + '" class="badge bg-info">' + personel['uzmanYrdSayisi'] + '</span>' +
+                                    '</div>' +
+                                    '</li>'
+                                );
+                            });
+
+
+                            deferred.resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            toastr.error('Personel Listesi Gelmedi.');
+                            deferred.reject(error);
+                        }
+                    });
+                } catch (error) {
+                    console.error(error.message);
+                    alert("Personelleri Getirirken Sorun Oldu!");
+                    deferred.reject(error);
+                }
+
+                return deferred.promise();
+            }
+
+            function personelAltKanalEsletirmeleriGetir(tcKimlikNo){
+                var deferred = $.Deferred();
+
+                try {
+                    $('#pending-tasks').empty();
+                    $('#pending-tasks-2').empty();
+
+                    $.ajax({
+                        url: '/Kanal/PersonelAltKanallariGetir',
+                        type: 'GET',
+                        data: { tcKimlikNo: tcKimlikNo },
+                        success: function (altKanallar) {
+                            
+                            $.each(altKanallar, function (index, altKanal) {
+                                if (altKanal['uzmanlik'] == 1) {
+                                    $('#pending-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + altKanal['kanalAltIslemId'] + '" ><span data-bs-whatever="' + altKanal['kanalAltIslemId'] + '" > ' + altKanal['kanalAltIslemAdi'] + '</span></li>');
+                                } else {
+                                    $('#pending-tasks-2').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + altKanal['kanalAltIslemId'] + '" ><span data-bs-whatever="' + altKanal['kanalAltIslemId'] + '" > ' + altKanal['kanalAltIslemAdi'] + '</span></li>');
+                                }
+                            });
+
+                            // Arama kutusu olayını yeniden tanımla
+                            $("#search-input-expert-subchannels").off("keyup").on("keyup", function () {
+                                var value = $(this).val().toLocaleLowerCase();
+
+                                if (value === "") {
+                                    // Arama kutusu boşsa tüm elemanları göster
+                                    $("#pending-tasks li").each(function () {
+                                        $(this).removeClass("d-none");
+                                    });
+                                } else {
+                                    // Değilse, metne göre filtrele
+                                    $("#pending-tasks li").each(function () {
+                                        var text = $(this).text().toLocaleLowerCase();
+                                        if (text.includes(value)) {
+                                            $(this).removeClass("d-none");
+                                        } else {
+                                            $(this).addClass("d-none");
+                                        }
+                                    });
+                                }
+                            });
+                            // Arama kutusu olayını yeniden tanımla
+                            $("#search-input-expert-asst-subchannels").off("keyup").on("keyup", function () {
+                                var value = $(this).val().toLocaleLowerCase();
+
+                                if (value === "") {
+                                    // Arama kutusu boşsa tüm elemanları göster
+                                    $("#pending-tasks-2 li").each(function () {
+                                        $(this).removeClass("d-none");
+                                    });
+                                } else {
+                                    // Değilse, metne göre filtrele
+                                    $("#pending-tasks-2 li").each(function () {
+                                        var text = $(this).text().toLocaleLowerCase();
+                                        if (text.includes(value)) {
+                                            $(this).removeClass("d-none");
+                                        } else {
+                                            $(this).addClass("d-none");
+                                        }
+                                    });
+                                }
+                            });
+
+                            deferred.resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            toastr.error('Alt Kanal Listesi Gelmedi.');
+                            deferred.reject(error);
+                        }
+                    });
+                } catch (error) {
+                    console.error(error.message);
+                    alert("Alt Kanalları Getirirken Sorun Oldu!");
+                    deferred.reject(error);
+                }
+
+                return deferred.promise();
+            }
+
+            function personelAltKanalEslestirilmemisGetir(tcKimlikNo, hizmetBinasiId) {
+                var deferred = $.Deferred();
+
+                try {
+                    $('#completed-tasks').empty();
+
+                    $.ajax({
+                        url: '/Kanal/PersonelAltKanallarEslesmeyenleriGetir',
+                        type: 'GET',
+                        data: { 
+                            tcKimlikNo: tcKimlikNo,
+                            hizmetBinasiId: hizmetBinasiId
+                        },
+                        success: function (altKanallar) {
+                            $.each(altKanallar, function (index, altKanal) {
+                                $('#completed-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + altKanal['kanalAltIslemId'] + '" ><span data-bs-whatever="' + altKanal['kanalAltIslemId'] + '"> ' + altKanal['kanalAltIslemAdi'] + '</span></li>');
+                            });
+
+                            // Arama kutusu olayını yeniden tanımla
+                            $("#search-input-subchannels").off("keyup").on("keyup", function () {
+                                var value = $(this).val().toLocaleLowerCase();
+
+                                if (value === "") {
+                                    // Arama kutusu boşsa tüm elemanları göster
+                                    $("#completed-tasks li").each(function () {
+                                        $(this).removeClass("d-none");
+                                    });
+                                } else {
+                                    // Değilse, metne göre filtrele
+                                    $("#completed-tasks li").each(function () {
+                                        var text = $(this).text().toLocaleLowerCase();
+                                        if (text.includes(value)) {
+                                            $(this).removeClass("d-none");
+                                        } else {
+                                            $(this).addClass("d-none");
+                                        }
+                                    });
+                                }
+                            });
+
+                            deferred.resolve();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                            toastr.error('Alt Kanal Listesi Gelmedi.');
+                            deferred.reject(error);
+                        }
+                    });
+                } catch (error) {
+                    console.error(error.message);
+                    alert("Kanalları Getirirken Sorun Oldu!");
+                    deferred.reject(error);
+                }
+
+                return deferred.promise();
+            }
+
+            function ul_li_select_kaldir() {
+                $('#personeller li').removeClass('selected');
+                $('#personeller li').css('background-color', '');
+            }
+
+            function ul_li_select_ekle(select) {
+                // Tıklanan öğeyi seçili yap
+                var itemId = $(select).attr('id');
+                $(select).addClass('selected');
+                $(select).css('background-color', '#f0f0f0');
+            }
+
+
+            $('#personeller li').click(function () {
+                // Seçili öğelerin seçimini kaldır
+                ul_li_select_kaldir();
+
+                // Tıklanan öğeyi seçili yap
+                ul_li_select_ekle(this);
+
+                tcKimlikNo = $(this).attr("data-bs-whatever");
+                hizmetBinasiId = $("#hizmetBinalariSelect select").val();
+
+                personelAltKanalEsletirmeleriGetir(tcKimlikNo);
+                personelAltKanalEslestirilmemisGetir(tcKimlikNo, hizmetBinasiId);
+            });
+
+            function personelAltKanalEslestirmeYap(tcKimlikNo, kanalAltIslemId, uzmanlikSeviye) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        kanalAltIslemId = parseInt(kanalAltIslemId, 10);
+                        uzmanlikSeviye = parseInt(uzmanlikSeviye, 10);
+
+                        if (tcKimlikNo.length != 11 || isNaN(kanalAltIslemId) || isNaN(uzmanlikSeviye)) {
+                            alert("Bilgilerde Sorun Var!");
+                            return reject("Bilgilerde Sorun Var!");
+                        }
+
+                        $.ajax({
+                            url: '/Kanal/PersonelAltKanalEslestirmeYap',
+                            type: 'POST',
+                            data: {
+                                tcKimlikNo: tcKimlikNo,
+                                kanalAltIslemId: kanalAltIslemId,
+                                uzmanlikSeviye: uzmanlikSeviye
+                            },
+                            success: function (data) {
+                                if (data.islemDurum == 1) {
+                                    toastr.success(data.mesaj);
+                                    resolve(true);
+                                } else {
+                                    toastr.error(data.mesaj);
+                                    resolve(false);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error(error);
+                                toastr.error('Personel / Alt Kanal Eşleştirmesi Yapılamadı!');
+                                reject(error);
+                            }
+                        });
+                    } catch (error) {
+                        console.error(error.message);
+                        reject(error);
+                    }
+                });
+            }
+
+            function personelAltKanalEslestirmeKaldir(tcKimlikNo, kanalAltIslemId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        kanalAltIslemId = parseInt(kanalAltIslemId, 10);
+
+                        if (tcKimlikNo.length != 11 || isNaN(kanalAltIslemId)) {
+                            alert("Bilgilerde Sorun Var!");
+                            return reject("Bilgilerde Sorun Var!");
+                        }
+
+                        $.ajax({
+                            url: '/Kanal/PersonelAltKanalEslestirmeKaldir',
+                            type: 'POST',
+                            data: {
+                                tcKimlikNo: tcKimlikNo,
+                                kanalAltIslemId: kanalAltIslemId
+                            },
+                            success: function (data) {
+                                if (data.islemDurum == 1) {
+                                    toastr.success(data.mesaj);
+                                    resolve(true);
+                                } else {
+                                    toastr.error(data.mesaj);
+                                    resolve(false);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error(error);
+                                toastr.error('Personel / Alt Kanal Eşleştirmesi Kaldırılamadı!');
+                                reject(error);
+                            }
+                        });
+                    } catch (error) {
+                        console.error(error.message);
+                        reject(error);
+                    }
+                });
+            }
+            
+            function makeSortable() {
+                const pendingTasks = document.getElementById('pending-tasks');
+                const pendingTasks2 = document.getElementById('pending-tasks-2');
+                const completedTasks = document.getElementById('completed-tasks');
+
+                Sortable.create(pendingTasks, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: async function (evt) {
+                        // Alt kanalları seçili personele Uzman Olarak ekle
+                        var selectedPersonel = $('#personeller .selected');
+                        if (selectedPersonel.length > 0) {
+                            var tcKimlikNo = selectedPersonel.attr('data-bs-whatever');
+                            var item = evt.item;
+                            var kanalAltIslemId = $(item).attr('data-bs-whatever');
+
+                            try {
+                                var result = await personelAltKanalEslestirmeYap(tcKimlikNo, kanalAltIslemId, 1);
+                                if (!result) {
+                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                                } else {
+                                    var eslesenUzmanAltKanalSayisi = $("#pending-tasks").children().length;
+                                    var eslesenUzmanYrdAltKanalSayisi = $("#pending-tasks-2").children().length;
+                                    $("#uzmanAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanAltKanalSayisi);
+                                    $("#uzmanYrdAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanYrdAltKanalSayisi);
+                                }
+                            } catch (error) {
+                                console.error(error.message);
+                                alert(error.message);
+                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                            }
+                        } else {
+                            alert("Hatalı İşlem!");
+                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                        }
+                    }
+                });
+
+                Sortable.create(pendingTasks2, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: async function (evt) {
+                        // Alt kanalları seçili personele Uzman Yrd Olarak ekle
+                        var selectedPersonel = $('#personeller .selected');
+                        if (selectedPersonel.length > 0) {
+                            var tcKimlikNo = selectedPersonel.attr('data-bs-whatever');
+                            var item = evt.item;
+                            var kanalAltIslemId = $(item).attr('data-bs-whatever');
+
+                            try {
+                                var result = await personelAltKanalEslestirmeYap(tcKimlikNo, kanalAltIslemId, 2);
+                                if (!result) {
+                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                                } else {
+                                    var eslesenUzmanAltKanalSayisi = $("#pending-tasks").children().length;
+                                    var eslesenUzmanYrdAltKanalSayisi = $("#pending-tasks-2").children().length;
+                                    $("#uzmanAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanAltKanalSayisi);
+                                    $("#uzmanYrdAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanYrdAltKanalSayisi);
+                                }
+                            } catch (error) {
+                                console.error(error.message);
+                                alert(error.message);
+                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                            }
+                        } else {
+                            alert("Hatalı İşlem!");
+                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                        }
+                    }
+                });
+
+                Sortable.create(completedTasks, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: async function (evt) {
+                        // Alt kanalları  ekle
+                        var selectedPersonel = $('#personeller .selected');
+                        if (selectedPersonel.length > 0) {
+                            var tcKimlikNo = selectedPersonel.attr('data-bs-whatever');
+                            var item = evt.item;
+                            var kanalAltIslemId = $(item).attr('data-bs-whatever');
+
+                            try {
+                                var result = await personelAltKanalEslestirmeKaldir(tcKimlikNo, kanalAltIslemId);
+                                if (!result) {
+                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                                } else {
+                                    var eslesenUzmanAltKanalSayisi = $("#pending-tasks").children().length;
+                                    var eslesenUzmanYrdAltKanalSayisi = $("#pending-tasks-2").children().length;
+                                    $("#uzmanAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanAltKanalSayisi);
+                                    $("#uzmanYrdAltKanalSayi_" + tcKimlikNo).text(eslesenUzmanYrdAltKanalSayisi);
+                                }
+                            } catch (error) {
+                                console.error(error.message);
+                                alert(error.message);
+                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                            }
+                        } else {
+                            alert("Hatalı İşlem!");
+                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                        }
+                    }
+                });
+            }
+
+            makeSortable();
+        });
+    </script>
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header flex-column flex-md-row">
+                <div class="card">
+                    <div class="card-header flex-md-row" style="display: flex; align-items: center;">
+                        <div class="col-sm-4">
+                            <label for="departmanlarSelect" class="form-label">Departmanlar</label>
+                            <select id="departmanlarSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="hizmetBinalariSelect" class="form-label">Hizmet Binaları</label>
+                            <select id="hizmetBinalariSelect" class="selectpicker w-100" data-style="btn-default"></select>
+                        </div>
+                        <div class="col-sm-1 col-4 d-flex align-items-center justify-content-center">
+                            <button id="goButton" class="btn btn-primary btn-sm">Getir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="m-0">Personel / Alt Kanal Eşleştirme</h5>
+            </div>
+            <div class="card-body pb-0">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Personeller</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="personeller">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Uzman</h6>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" autocomplete="off" id="search-input-expert-subchannels" class="form-control mb-3" placeholder="Alt kanal ara...">
+                                <ul class="list-group list-group-flush" id="pending-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Yard. Uzm.</h6>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" autocomplete="off" id="search-input-expert-asst-subchannels" class="form-control mb-3" placeholder="Alt kanal ara...">
+                                <ul class="list-group list-group-flush" id="pending-tasks-2">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Alt Kanallar</h6>
+                            </div>
+                            <div class="card-body">
+                                <input type="text" autocomplete="off" id="search-input-subchannels" class="form-control mb-3" placeholder="Alt kanal ara...">
+                                <ul class="list-group list-group-flush" id="completed-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

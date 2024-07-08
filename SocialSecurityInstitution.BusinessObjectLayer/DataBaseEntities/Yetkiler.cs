@@ -11,7 +11,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class Yetkiler
     {
         [Key]
-        public int Id { get; set; }
+        public int YetkiId { get; set; }
 
         // AnaYetki, OrtaYetki, AltYetki olarak 3 e ayrılır, Yetkiler ile YetkiTipleri arasında bir ilişki tanımlanıyor
         public required YetkiTurleri YetkiTuru { get; set; }
@@ -26,6 +26,6 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
-        public ICollection<PersonelYetkileri>? PersonelYetkileri_ { get; set; }
+        public ICollection<PersonelYetkileriii>? PersonelYetkileri_ { get; set; }
     }
 }

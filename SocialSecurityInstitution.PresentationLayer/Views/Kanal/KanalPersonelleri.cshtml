@@ -1,0 +1,367 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.KanalPersonelleriDto>
+
+@{
+    // int sira = 0;
+    bool modelIsEmpty = Model == null || !Model.Any();
+    // var departmanId = Request.Query["departmanId"];
+    // var hizmetBinasiId = Request.Query["hizmetBinasiId"];
+}
+
+@section Styles {
+    <style>
+        .table {
+            overflow-x: hidden;
+        }
+
+        .table .custom-th,
+        .table .custom-td {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            padding: 0.2rem;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: hidden;
+            max-width: 100px;
+        }
+
+        .custom-td-button {
+            width: 100%;
+            height: 100%;
+            padding: 15px 5px; /*15px yükseklik ve 0px genişlik*/
+        }
+
+    </style>
+}
+
+@section Scripts {
+    <script>
+
+        $(document).ready(function () {
+            $('#socialSecurityIsntution').addClass('layout-menu-collapsed');
+
+            $('.avatar').hover(function () {
+                $('.avatar').addClass('avatar-lg');
+            }, function () {
+                $('.avatar').removeClass('avatar-lg');
+            });
+
+            $('.accordion-toggle').click(function () {
+                var target = $(this).next('.collapse');
+                $('.collapse').not(target).removeClass('show');
+                target.toggleClass('show');
+            });
+
+            // Herhangi bir yere tıklandığında açılan tr'nin kapanması
+            $(document).click(function (e) {
+                if (!$(e.target).closest('.table-responsive').length) {
+                    $('.collapse').removeClass('show');
+                }
+            });
+        });
+    </script>
+}
+
+<!-- Bordered Table -->
+<div class="card container-fluid">
+    <h5 class="card-header">Kanal Personelleri</h5>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-responsive table-bordered table-fixed">
+                <thead>
+                    <tr>
+                        <th class="stack-column custom-th">Banko</th>
+                        <th class="stack-column personel-adi">Personel Adı</th>
+                        <th class="stack-column custom-th">Birşey Soracağım</th>
+                        <th class="stack-column custom-th">Borçlanmalar</th>
+                        <th class="stack-column custom-th">Döküm</th>
+                        <th class="stack-column custom-th">Eksik Gün</th>
+                        <th class="stack-column custom-th">Emzirme</th>
+                        <th class="stack-column custom-th">GSS</th>
+                        <th class="stack-column custom-th">İşveren</th>
+                        <th class="stack-column custom-th">İşyeri Tescil</th>
+                        <th class="stack-column custom-th">K. Banko İşlemleri</th>
+                        <th class="stack-column custom-th">Maluliyet</th>
+                        <th class="stack-column custom-th">Rapor Parası</th>
+                        <th class="stack-column custom-th">SGDP</th>
+                        <th class="stack-column custom-th">Uzun B.İ.</th>
+                        <th class="stack-column custom-th">Yurtdışı İşlemler</th>
+                        <th class="stack-column custom-th">Z. 4/B</th>
+                        <th class="stack-column custom-th">Z. Banko İşlemleri</th>
+                        <th class="stack-column custom-th">İcra İşlemleri</th>
+                        <th class="stack-column custom-th">GSS Yap.</th>
+                        <th class="stack-column custom-th">4/A İşveren Yap.</th>
+                        <th class="stack-column custom-th">4/B-SGDP Yap.</th>
+                        <th class="stack-column custom-th">Ekstra İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1" class="accordion-toggle">
+                        <td class="stack-column custom-td">
+                            1
+                        </td>
+                        <td class="stack-column personel-adi">
+                            <div class="d-flex justify-content-start align-items-center user-name">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar avatar-md me-2 pull-up">
+                                        <img src="~/img/avatars/410351.jpeg" alt="Avatar" class="rounded-circle">
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="emp_name text-truncate">Muhammed Bodur</span>
+                                    <small class="emp_post text-truncate text-muted">Mühendis</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button" data-bs-whatever="TcKimlikNo-">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-primary me-1 custom-td-button">Yardımcı</button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="collapse1">
+                        <td colspan="23">
+                            1. Kanala Bağlı Alt Kanallar
+                        </td>
+                    </tr>
+                    <tr data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse1" class="accordion-toggle">
+                        <td class="stack-column custom-td">
+                            1
+                        </td>
+                        <td class="stack-column personel-adi">
+                            <div class="d-flex justify-content-start align-items-center user-name">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar avatar-md me-2 pull-up">
+                                        <img src="~/img/avatars/410351.jpeg" alt="Avatar" class="rounded-circle">
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="emp_name text-truncate">Muhammed Bodur</span>
+                                    <small class="emp_post text-truncate text-muted">Mühendis</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-info me-1 custom-td-button">Kısmi Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="collapse2">
+                        <td colspan="23">
+                            2. Kanala Bağlı Alt Kanallar
+                        </td>
+                    </tr>
+                    <tr data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse1" class="accordion-toggle">
+                        <td class="stack-column custom-td">
+                            1
+                        </td>
+                        <td class="stack-column personel-adi">
+                            <div class="d-flex justify-content-start align-items-center user-name">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar avatar-md me-2 pull-up">
+                                        <img src="~/img/avatars/410351.jpeg" alt="Avatar" class="rounded-circle">
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="emp_name text-truncate">Muhammed Bodur</span>
+                                    <small class="emp_post text-truncate text-muted">Mühendis</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-success me-1 custom-td-button">Uzman</button>
+                        </td>
+                        <td class="stack-column custom-td">
+                            <button type="button" class="btn badge bg-label-danger me-1 custom-td-button">Konusu Değil</button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="collapse3">
+                        <td colspan="23">
+                            3. Kanala Bağlı Alt Kanallar
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!--/ Bordered Table -->

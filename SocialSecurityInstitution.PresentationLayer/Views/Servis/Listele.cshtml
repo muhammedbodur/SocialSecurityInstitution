@@ -1,0 +1,309 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.ServislerDto>
+
+@{
+    int sira = 0;
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var servisId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Servis/Sil",
+                    type: "GET",
+                    data: { servisId: servisId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Servis Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('#modalServisGuncelle').one('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var servisId = button.attr('data-bs-whatever');
+                $.ajax({
+                    url: "/Servis/Getir",
+                    type: "GET",
+                    data: { servisId: servisId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalCenterTitle").text("Servis Düzenle");
+                        $("#modalGuncelleServisId").val(servisId);
+                        $("#modalGuncelleServisAdi").val(result.servisAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        $("#modalServisGuncelle").modal("hide");
+                        $('#modalServisGuncelle').on('hidden.bs.modal', function (e) {
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                        });
+                    }
+                });
+            });
+
+            $("#btnGuncelle").click(function () {
+                var servisId = $("#modalGuncelleServisId").val();
+                var yeniServisAdi = $("#modalGuncelleServisAdi").val();
+
+                $.ajax({
+                    url: "/Servis/Guncelle",
+                    type: "POST",
+                    data: {
+                        servisId: servisId,
+                        servisAdi: yeniServisAdi
+                    },
+                    success: function (result) {
+                        toastr.success("Servis Güncelleme İşlemi Başarılı");
+                        $("#servisAdi_" + servisId).text(yeniServisAdi);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Servis Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $("#btnEkle").click(function () {
+                var servisAdi = $("#modalEkleServisAdi").val();
+
+                $.ajax({
+                    url: "/Servis/Ekle",
+                    type: "POST",
+                    data: {
+                        servisAdi: servisAdi
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Servis Ekleme İşlemi Başarılı");
+                        var sira = $("tbody tr").length + 1;
+                        var yeniSatir = '<tr>' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td>' + servisAdi + '</td>' +
+                            '<td>' + (new Date()).toLocaleString() + '</td>' +
+                            '<td><span class="badge bg-label-success me-1">Aktif</span></td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result + '" data-bs-toggle="modal" data-bs-target="#modalServisGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>' +
+                            '</a>' +
+                            '<a id="activePassiveButton_' + result + '" class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result + '">' +
+                            '<i class="bx bx-pause-circle me-1"></i> <span>Pasif Et</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-botton" href="#" data-bs-whatever="' + result + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+
+                        // Yeni satırı tabloya ekledik
+                        $("tbody").append(yeniSatir);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Servis Ekleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('.active-passive-button').click(function (e) {
+                e.preventDefault(); // Sayfanın yeniden yüklenmesini önler
+
+                var servisId = $(this).data('bs-whatever');
+
+                $.ajax({
+                    url: "/Servis/AktifPasifEt",
+                    type: "GET",
+                    data: { servisId: servisId },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success(result.mesaj);
+                        if (result.islemDurum == 1) {
+                            var badgeClass = result.aktiflikDurum == 'Aktif' ? "bg-label-success" : "bg-label-danger";
+                            $("#aktiflik_span_" + servisId).removeClass("bg-label-success bg-label-danger").addClass(badgeClass).text(result.aktiflikDurum);
+
+                            if (result.aktiflikDurum == 'Aktif') {
+                                $('#activePassiveButton_' + servisId).find('i').removeClass('bx-play-circle').addClass('bx-pause-circle');
+                                $('#activePassiveButton_' + servisId).find('span').text('Pasif Et');
+                            } else {
+                                $('#activePassiveButton_' + servisId).find('i').removeClass('bx-pause-circle').addClass('bx-play-circle');
+                                $('#activePassiveButton_' + servisId).find('span').text('Aktif Et');
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error(error);
+                    }
+                });
+            });
+
+        });
+    </script>
+}
+
+
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="head-label text-left">
+            <h5 class="card-title mb-0">Servisler</h5>
+        </div>
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false"><span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span></button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalServisEkle">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Servis Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive text-nowrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Servis Adı</th>
+                    <th>Düzenlenme Tarihi</th>
+                    <th>Aktiflik</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (Model != null && Model.Count > 0)
+                {
+                    @foreach (var servis in Model)
+                    {
+                        { sira++; }
+                        string badgeClass = servis.ServisAktiflik == Enums.Aktiflik.Aktif ? "bg-label-success" : "bg-label-danger";
+                        string activePassiveLabelClass = servis.ServisAktiflik == Enums.Aktiflik.Aktif ? "bx-pause-circle" : "bx-play-circle";
+                        string activePassiveLabelText = servis.ServisAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
+                        <tr>
+                            <td class="sira">@sira</td>
+                            <td id="servisAdi_@servis.Id">@servis.ServisAdi</td>
+                            <td>@servis.DuzenlenmeTarihi</td>
+                            <td><span id="aktiflik_span_@servis.Id" class="badge @badgeClass me-1">@servis.ServisAktiflik</span></td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@servis.Id" data-bs-toggle="modal" data-bs-target="#modalServisGuncelle">
+                                            <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
+                                        </a>
+
+                                        <a id="activePassiveButton_@servis.Id" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@servis.Id">
+                                            <i class="bx @activePassiveLabelClass me-1"></i> <span>@activePassiveLabelText</span>
+                                        </a>
+
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@servis.Id">
+                                            <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalServisEkle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Servis Ekle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Servis Adı</label>
+                        <input type="text"
+                               id="modalEkleServisAdi"
+                               class="form-control"
+                               placeholder="Servis Adı Giriniz" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEkle">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalServisGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Servis Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="nameWithTitle" class="form-label">Servis Adı</label>
+                        <input type="text"
+                               name="servisAdi"
+                               id="modalGuncelleServisAdi"
+                               class="form-control"
+                               placeholder="Servis Adı" />
+                        <input type="hidden" id="modalGuncelleServisId" name="servisId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

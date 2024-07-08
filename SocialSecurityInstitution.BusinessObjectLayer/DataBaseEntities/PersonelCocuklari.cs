@@ -12,14 +12,11 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class PersonelCocuklari
     {
         [Key]
-        public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
+        public int PersonelCocukId { get; set; }
+        public required string PersonelTcKimlikNo { get; set; }
         public required string CocukAdi { get; set; }
         public DateOnly CocukDogumTarihi { get; set; }
         public OgrenimDurumu OgrenimDurumu { get; set; }
-
-        [ForeignKey("TcKimlikNo")]
-        public required Personeller Personel { get; set; }
     }
 
 }

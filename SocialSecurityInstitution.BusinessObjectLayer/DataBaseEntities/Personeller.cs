@@ -7,20 +7,32 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class Personeller
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public required string TcKimlikNo { get; set; }
+        public string TcKimlikNo { get; set; }
+        public int SicilNo { get; set; }
         public required string AdSoyad { get; set; }
         public string? NickName { get; set; }
-        public int SicilNo { get; set; }
+        public int PersonelKayitNo { get; set; }
+        public int KartNo { get; set; }
+        public DateTime KartNoAktiflikTarihi { get; set; }
+        public DateTime KartNoDuzenlenmeTarihi { get; set; }
+        public DateTime KartNoGonderimTarihi { get; set; }
+        public IslemBasari KartGonderimIslemBasari { get; set; }
         public int DepartmanId { get; set; }
+        [ForeignKey("DepartmanId")]
         public Departmanlar? Departman { get; set; }
         public int ServisId { get; set; }
+        [ForeignKey("ServisId")]
         public Servisler? Servis { get; set; }
         public int UnvanId { get; set; }
+        [ForeignKey("UnvanId")]
         public Unvanlar? Unvan { get; set; }
         public string? Gorev { get; set; }
         public string? Uzmanlik { get; set; }
+        public int AtanmaNedeniId { get; set; }
+        [ForeignKey("AtanmaNedeniId")]
         public AtanmaNedenleri? AtanmaNedeni { get; set; }
+        public int HizmetBinasiId { get; set; }
+        [ForeignKey("HizmetBinasiId")]
         public HizmetBinalari? HizmetBinasi { get; set; }
         public PersonelTipi PersonelTipi { get; set; }
         public required string Email { get; set; }
@@ -29,7 +41,11 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public string? CepTelefonu2 { get; set; }
         public string? EvTelefonu { get; set; }
         public string? Adres { get; set; }
+        public int IlId { get; set; }
+        [ForeignKey("IlId")]
         public Iller? Il { get; set; }
+        public int IlceId { get; set; }
+        [ForeignKey("IlceId")]
         public Ilceler? Ilce { get; set; }
         public string? Semt { get; set; }
         public DateTime DogumTarihi { get; set; }
@@ -47,13 +63,19 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public string? BitirdigiBolum { get; set; }
         public int OgrenimSuresi { get; set; }
         public string? Bransi { get; set; }
+        public int SendikaId { get; set; }
+        [ForeignKey("SendikaId")]
         public Sendikalar? Sendika { get; set; }
         public SehitYakinligi SehitYakinligi { get; set; }
         public string? EsininAdi { get; set; }
         public EsininIsDurumu EsininIsDurumu { get; set; }
         public string? EsininUnvani { get; set; }
         public string? EsininIsAdresi { get; set; }
+        public int EsininIsIlId { get; set; }
+        [ForeignKey("EsininIsIlId")]
         public Iller? EsininIsIl { get; set; }
+        public int EsininIsIlceId { get; set; }
+        [ForeignKey("EsininIsIlceId")]
         public Ilceler? EsininIsIlce { get; set; }
         public string? EsininIsSemt { get; set; }
         public string? HizmetBilgisi { get; set; }
@@ -66,17 +88,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
-        public ICollection<LoginLogoutLog> LoginLogoutLog_ { get; set; }
-        public ICollection<BankolarKullanici> BankolarKullanici_ { get; set; }
-        public ICollection<KanalPersonelleri> KanalPersonelleri_ { get; set; }
-        public ICollection<PersonelCocuklari> PersonelCocuklari_ { get; set; }
-        public ICollection<PersonelYetkileri> PersonelYetkileri_ { get; set; }
-
-
+        public ICollection<BankolarKullanici> BankolarKullanici { get; set; }
+        public ICollection<KanalPersonelleri> KanalPersonelleri { get; set; }
 
         public Personeller() => PassWord = TcKimlikNo;
     }
-
-
-
 }

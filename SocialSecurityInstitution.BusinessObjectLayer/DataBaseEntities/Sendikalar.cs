@@ -10,7 +10,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class Sendikalar
     {
         [Key] 
-        public int Id { get; set; }
+        public int SendikaId { get; set; }
         public required string SendikaAdi { get; set; }
         public ICollection<Personeller>? Personeller_ { get; set; }
     }

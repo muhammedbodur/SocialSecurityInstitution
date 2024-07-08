@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,10 +10,12 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class KanalPersonelleriDto
     {
-        public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
-        public required KanalAltIslemleri KanalAltIslem { get; set; }
-        public Aktiflik PersonelKanalAltIslemAktiflik { get; set; }
+        public int KanalPersonelId { get; set; }
+        public string TcKimlikNo { get; set; }
+        public int KanalAltIslemId { get; set; }
+        public PersonelUzmanlik Uzmanlik { get; set; }
+        public Aktiflik KanalAltIslemPersonelAktiflik { get; set; }
+        public DateTime EklenmeTarihi { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
     public class PersonelYetkileriDto
     {
         public int Id { get; set; }
-        public required string TcKimlikNo { get; set; }
+        public required string PersonelTcKimlikNo { get; set; }
         public required Yetkiler Yetki { get; set; }
         public required YetkiTipleri YetkiTipi { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }

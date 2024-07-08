@@ -25,6 +25,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
                     TcKimlikNo = user.TcKimlikNo,
                     AdSoyad = user.AdSoyad,
                     Email = user.Email,
+                    Resim = user.Resim
                 };
 
                 return loginDto;

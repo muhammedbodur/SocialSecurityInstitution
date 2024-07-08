@@ -68,10 +68,6 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public string? CezaBilgileri { get; set; }
         public string? EngelBilgileri { get; set; }
         public string? Resim { get; set; }
-
-        public List<PersonelCocuklariDto> Cocuklar { get; set; } = new List<PersonelCocuklariDto>();
-
-
         public DateTime DuzenlenmeTarihi { get; set; }
     }
 }

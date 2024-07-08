@@ -11,7 +11,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class Unvanlar
     {
         [Key]
-        public int Id { get; set; }
+        public int UnvanId { get; set; }
         public required string UnvanAdi { get; set; }
 
         /* UnvanAktiflikDurum parametresi Unvanın Aktif edilip edilmemesini belirtmekte */

@@ -1,0 +1,495 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model SocialSecurityInstitution.PresentationLayer.Models.Kiosk.KioskListViewModel
+
+@{
+    int sira = 0;
+
+    // var departmanId = Request.Query["departmanId"];
+    // var hizmetBinasiId = Request.Query["hizmetBinasiId"];
+
+    bool modelIsEmpty = Model.KioskIslemGruplari == null || !Model.KioskIslemGruplari.Any();
+}
+
+@section Styles {
+    <style>
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 5px; /* Hücre içeriğinin kenar boşluğu */
+            text-align: left;
+            white-space: nowrap; /* Metinlerin bir satıra sığması */
+            overflow: hidden; /* Taşan içeriklerin gizlenmesi */
+            text-overflow: ellipsis; /* Taşan metinlerin üç nokta ile kısaltılması */
+        }
+
+        .table th {
+            word-wrap: break-word;
+            background-color: #f2f2f2; /* Başlık arkaplan rengi */
+            font-weight: bold;
+        }
+
+        #goButton {
+            position: absolute;
+            margin-top: 2%;
+        }
+
+        .kioskGrupSiraInput {
+            border: 2px solid #007bff; /* Kenarlık rengi */
+            color: #495057; /* Metin rengi */
+            background-color: #ffffff; /* Arka plan rengi */
+            padding: .375rem .75rem; /* Padding */
+            border-radius: .25rem; /* Kenarlık yuvarlama */
+            font-size: 1rem; /* Yazı boyutu */
+            width: 80px; /* Genişlik */
+            display: inline-block; /* Yan yana görüntülenmesini sağlar */
+        }
+
+        .kioskGrupSiraInput:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Selectpicker'ın normalleştirme işlevini belirt
+        $('.selectpicker').selectpicker({
+            liveSearchNormalize: true,
+            liveSearch: true
+        });
+
+        $('#goButton').click(function () {
+            // Seçili departman ID'sini al
+            var selectedDepartmanId = $('#departmanlarSelect').val();
+            // Seçili hizmet binası ID'sini al
+            var selectedHizmetBinasiId = $('#hizmetBinalariSelect').val();
+            // İstenilen URL'e git
+            var link = '/Kiosk/KioskIslemleriListele?departmanId=' + selectedDepartmanId + '&hizmetBinasiId=' + selectedHizmetBinasiId;
+            window.location.href = link;
+        });
+
+        $(document).ready(function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const departmanId = urlParams.get('departmanId');
+            const hizmetBinasiId = urlParams.get('hizmetBinasiId');
+
+            // Departmanlar listesini al ve <select> öğesini doldur
+            $.ajax({
+                url: '/Departman/ListeleJson',
+                type: 'GET',
+                success: function (data) {
+                    $('#departmanlarSelect').empty();
+                    $('#hizmetBinalariSelect').empty();
+                    $.each(data, function (index, departman) {
+                        if (departman.departmanAktiflik == '1') {
+                            $('#departmanlarSelect').append('<option ' + (departmanId > 0 && departmanId == departman.departmanId ? 'selected' : null) + ' data-tokens="' + departman.departmanId + '" value="' + departman.departmanId + '">' + departman.departmanAdi + '</option>');
+                        }
+                    });
+
+                    // Selectpicker'ı yeniden başlat
+                    $('#departmanlarSelect').selectpicker('refresh');
+
+                    $('#hizmetBinalariSelectDiv').show();
+                    // İlk departman seçiliyse, ona ait hizmet binalarını getir
+                    var firstOptionValue = $('#departmanlarSelect option:first').val();
+                    hizmetBinalariGetir(firstOptionValue, true);
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    toastr.error('Departmanlar listesi alınamadı.');
+                }
+            });
+
+            $('#departmanlarSelect').change(function () {
+                var selectedDepartmanId = $(this).val();
+                hizmetBinalariGetir(selectedDepartmanId);
+            });
+
+            function hizmetBinalariGetir(selectedDepartmanId) {
+                $('#hizmetBinalariSelect').empty();
+                // Hizmet binaları için AJAX çağrısı
+                $.ajax({
+                    url: '/HizmetBinalari/ListeleJson?departmanId=' + selectedDepartmanId,
+                    type: 'GET',
+                    success: function (hizmetBinalari) {
+                        console.log(hizmetBinalari);
+                        $.each(hizmetBinalari, function (index, hizmetBinasi) {
+                            $('#hizmetBinalariSelect').append('<option ' + (hizmetBinasiId > 0 && hizmetBinasiId == hizmetBinasi.hizmetBinasiId ? 'selected' : null) + '  value="' + hizmetBinasi.hizmetBinasiId + '">' + hizmetBinasi.hizmetBinasiAdi + '</option>');
+                        });
+
+                        // Selectpicker'ı yeniden başlat
+                        $('#hizmetBinalariSelect').selectpicker('refresh');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Hizmet binaları listesi alınamadı.');
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function () {
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+
+            $('.kioskGrupSiraInput').on('change', function () {
+                var kioskIslemGrupId = $(this).data('id');
+                var newSira = $(this).val();
+                
+                $.ajax({
+                    url: '/Kiosk/KioskIslemGruplariSiraVer',
+                    method: 'POST',
+                    data: {
+                        kioskIslemGrupId: kioskIslemGrupId,
+                        kioskIslemGrupSira: newSira
+                    },
+                    success: function (result) {
+                        toastr.success("Kiosk Sıra Güncelleme İşlemi Başarılı");
+                        $("#inputKioskGrupSira_" + kioskIslemGrupId).val(newSira);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Kiosk Sıra Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var kioskIslemGrupId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Kiosk/KioskIslemGruplariSil",
+                    type: "GET",
+                    data: { kioskIslemGrupId: kioskIslemGrupId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Kiosk Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('#modalKioskGuncelle').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var kioskIslemGrupId = button.attr('data-bs-whatever');
+                $.ajax({
+                    url: "/Kiosk/KioskIslemGruplariGetir",
+                    type: "GET",
+                    data: { kioskIslemGrupId: kioskIslemGrupId },
+                    success: function (result) {
+                        console.log(result);
+                        $("#modalCenterTitle").text("Kiosk Düzenle");
+                        $("#modalGuncelleKioskIslemGrupId").val(kioskIslemGrupId);
+                        $("#modalGuncelleKioskGrupId").val(result.kioskGrupId);
+                    },
+                    error: function (xhr, status, error) {
+                        $("#modalKioskGuncelle").modal("hide");
+                        $('#modalKioskGuncelle').on('hidden.bs.modal', function (e) {
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                        });
+                        toastr.error(error);
+                        console.error(error);
+                    }
+                });
+            });
+
+            $("#btnGuncelle").click(function () {
+                var kioskIslemGrupId = $("#modalGuncelleKioskIslemGrupId").val();
+                var yeniKioskGrupId = $("#modalGuncelleKioskGrupId").val();
+                var kioskGrupAdi = $("#modalGuncelleKioskGrupId option:selected").text();
+
+                $.ajax({
+                    url: "/Kiosk/KioskIslemGruplariGuncelle",
+                    type: "POST",
+                    data: {
+                        kioskIslemGrupId: kioskIslemGrupId,
+                        kioskGrupId: yeniKioskGrupId
+                    },
+                    success: function (result) {
+                        toastr.success("Kiosk Güncelleme İşlemi Başarılı");
+                        $("#kioskGrupAdi_" + kioskIslemGrupId).text(kioskGrupAdi);
+                        $("#kioskDuzenlenmeTarihi_" + kioskIslemGrupId).text((new Date()).toLocaleString());
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Kiosk Güncelleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $("#btnEkle").click(function () {
+                var hizmetBinasiId = $('#hizmetBinalariSelect').val();
+                var kioskGrupId = $("#modalEkleKioskGrupId").val();
+                var kioskGrupAdi = $("#modalEkleKioskGrupId option:selected").text();
+
+                $.ajax({
+                    url: "/Kiosk/KioskIslemGruplariEkle",
+                    type: "POST",
+                    data: {
+                        hizmetBinasiId: hizmetBinasiId,
+                        kioskGrupId: kioskGrupId
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        $(".table-responsive").show();
+                        toastr.success("Kiosk Ekleme İşlemi Başarılı");
+                        var sira = $("tbody tr").length + 1;
+                        var yeniSatir = '<tr>' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td>' + kioskGrupAdi + '</td>' +
+                            '<td>' +
+                            '<input type="text" class="form-control form-control-sm kioskGrupSiraInput" id="inputKioskGrupSira_' + result.kioskIslemGrupId + '" value="' + result.kioskIslemGrupSira + '" data-id="' + result.kioskIslemGrupId + '">' +
+                            '</td>' +
+                            '<td>' + result.departmanAdi + '</td>' +
+                            '<td>' + result.hizmetBinasiAdi + '</td>' +
+                            '<td>' + (new Date()).toLocaleString() + '</td>' +
+                            '<td><span class="badge bg-label-success me-1">Aktif</span></td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result.kioskIslemGrupId + '" data-bs-toggle="modal" data-bs-target="#modalKioskGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>' +
+                            '</a>' +
+                            '<a id="activePassiveButton_' + result.kioskIslemGrupId + '" class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result.kioskIslemGrupId + '">' +
+                            '<i class="bx bx-pause-circle me-1"></i> <span>Pasif Et</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-botton" href="#" data-bs-whatever="' + result.kioskIslemGrupId + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+
+                        // Yeni satırı tabloya ekledik
+                        $("tbody").append(yeniSatir);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Kiosk Ekleme İşlemi Başarısız!");
+                    }
+                });
+            });
+
+            $('.active-passive-button').click(function (e) {
+                e.preventDefault(); // Sayfanın yeniden yüklenmesini önler
+
+                var kioskIslemGrupId = $(this).data('bs-whatever');
+
+                $.ajax({
+                    url: "/Kiosk/KioskIslemGruplariAktifPasifEt",
+                    type: "GET",
+                    data: { kioskIslemGrupId: kioskIslemGrupId },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success(result.mesaj);
+                        if (result.islemDurum == 1) {
+                            var badgeClass = result.aktiflikDurum == 'Aktif' ? "bg-label-success" : "bg-label-danger";
+
+                            if (result.aktiflikDurum == 'Aktif') {
+                                $("#aktiflik_span_" + kioskIslemGrupId).removeClass("bg-label-danger").addClass(badgeClass).text(result.aktiflikDurum);
+                                $('#activePassiveButton_' + kioskIslemGrupId).find('i').removeClass('bx-play-circle').addClass('bx-pause-circle');
+                                $('#activePassiveButton_' + kioskIslemGrupId).find('span').text('Pasif Et');
+                            } else {
+                                $("#aktiflik_span_" + kioskIslemGrupId).removeClass("bg-label-success").addClass(badgeClass).text(result.aktiflikDurum);
+                                $('#activePassiveButton_' + kioskIslemGrupId).find('i').removeClass('bx-pause-circle').addClass('bx-play-circle');
+                                $('#activePassiveButton_' + kioskIslemGrupId).find('span').text('Aktif Et');
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error(error);
+                    }
+                });
+            });
+
+        });
+    </script>
+}
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="card">
+            <div class="card-header flex-md-row" style="display: flex; align-items: center;">
+                <div class="col-sm-4">
+                    <label for="departmanlarSelect" class="form-label">Departmanlar</label>
+                    <select id="departmanlarSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                </div>
+                <div class="col-sm-4">
+                    <label for="hizmetBinalariSelect" class="form-label">Hizmet Binaları</label>
+                    <select id="hizmetBinalariSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                </div>
+                <div class="col-sm-1 col-4 d-flex align-items-center justify-content-center">
+                    <button id="goButton" class="btn btn-primary btn-sm">Getir</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false"><span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span></button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalKioskGrupEkle">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Kiosk Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive text-nowrap" style="@(modelIsEmpty ? "display:none;'" : null)">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Kiosk Adı</th>
+                    <th>Kiosk Sırası</th>
+                    <th>Deparman Adı</th>
+                    <th>Hizmet Binası Adı</th>
+                    <th>Düzenlenme Tarihi</th>
+                    <th>Aktiflik</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @foreach (var kiosk in Model.KioskIslemGruplari)
+                {
+                    { sira++; }
+                    string badgeClass = kiosk.KioskIslemGrupAktiflik == Enums.Aktiflik.Aktif ? "bg-label-success" : "bg-label-danger";
+                    string activePassiveLabelClass = kiosk.KioskIslemGrupAktiflik == Enums.Aktiflik.Aktif ? "bx-pause-circle" : "bx-play-circle";
+                    string activePassiveLabelText = kiosk.KioskIslemGrupAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
+                    <tr>
+                        <td class="sira">@sira</td>
+                        <td id="kioskGrupAdi_@kiosk.KioskIslemGrupId">@kiosk.KioskIslemGrupAdi</td>
+                        <td id="kioskGrupSira@kiosk.KioskIslemGrupId">
+                            <input type="text" class="form-control form-control-sm kioskGrupSiraInput" id="inputKioskGrupSira_@kiosk.KioskIslemGrupId" value="@kiosk.KioskIslemGrupSira" data-id="@kiosk.KioskIslemGrupId">
+                        </td>
+                        <td id="kioskDepartmanAdi_@kiosk.KioskIslemGrupId">@kiosk.DepartmanAdi</td>
+                        <td id="kioskHizmetBinasiAdi_@kiosk.KioskIslemGrupId">@kiosk.HizmetBinasiAdi</td>
+                        <td id="kioskDuzenlenmeTarihi_@kiosk.KioskIslemGrupId">@kiosk.DuzenlenmeTarihi</td>
+                        <td><span id="aktiflik_span_@kiosk.KioskIslemGrupId" class="badge @badgeClass me-1">@kiosk.KioskIslemGrupAktiflik</span></td>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item edit-button" href="#" data-bs-whatever="@kiosk.KioskIslemGrupId" data-bs-toggle="modal" data-bs-target="#modalKioskGuncelle">
+                                        <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
+                                    </a>
+
+                                    <a id="activePassiveButton_@kiosk.KioskIslemGrupId" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@kiosk.KioskIslemGrupId">
+                                        <i class="bx @activePassiveLabelClass me-1"></i> <span>@activePassiveLabelText</span>
+                                    </a>
+
+                                    <a class="dropdown-item remove-button" href="#" data-bs-whatever="@kiosk.KioskIslemGrupId">
+                                        <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                    </a>
+
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalKioskGrupEkle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Kiosk Ekle</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="modalEkleKioskGrupId" class="form-label">Kiosk Adı</label>
+                        <select id="modalEkleKioskGrupId" class="select2 form-select form-select-lg" data-allow-clear="true">
+                            @foreach (var kiosk in Model.KioskGruplari)
+                            {
+                                <option value="@kiosk.KioskGrupId">@kiosk.KioskGrupAdi</option>
+                            }
+                        </select>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEkle">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalKioskGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Kiosk Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label for="modalGuncelleKioskGrupId" class="form-label">Kiosk Adı</label>
+                        <select id="modalGuncelleKioskGrupId" class="select2 form-select form-select-lg" data-allow-clear="true">
+                            @foreach (var kiosk in Model.KioskGruplari)
+                            {
+                                <option value="@kiosk.KioskGrupId">@kiosk.KioskGrupAdi</option>
+                            }
+                        </select>
+                        <input type="hidden" id="modalGuncelleKioskIslemGrupId" name="kioskIslemGrupId" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
