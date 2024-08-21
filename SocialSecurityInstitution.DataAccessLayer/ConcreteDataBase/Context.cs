@@ -1,20 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
 {
     public class Context : DbContext
     {
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public Context(DbContextOptions<Context> options) : base(options)
         {
-            optionsBuilder.UseSqlServer("server=LAPTOP-O8NO0DOE\\SQLEXPRESS2019; initial catalog=SocialSecInstDB;integrated Security=true;TrustServerCertificate=true;");
         }
 
         public DbSet<Personeller> Personeller { get; set; }
@@ -45,12 +40,39 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
         public DbSet<KioskGruplari> KioskGruplari { get; set; }
         public DbSet<KioskIslemGruplari> KioskIslemGruplari { get; set; }
         public DbSet<Siralar> Siralar { get; set; }
+        public DbSet<DatabaseLog> DatabaseLog { get; set; }
+        public DbSet<HubConnection> HubConnection { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            /* SQL dependecy işlemindeki OUTPUT ifadesini ortadan kaldırmakta */
+            modelBuilder.Entity<Departmanlar>()
+                .ToTable(tb => tb.UseSqlOutputClause(false));
+
+            modelBuilder.Entity<Siralar>()
+                .ToTable(tb => tb.UseSqlOutputClause(false));
+            /* SQL dependecy işlemindeki OUTPUT ifadesini ortadan kaldırmakta */
+
+            /*HubConnection Tablosu için Entitylerde zorunlu düzenlemeler*/
+            /*Index leme işlemi*/
+            modelBuilder.Entity<HubConnection>()
+               .HasIndex(e => new { e.TcKimlikNo, e.ConnectionId, e.ConnectionStatus });
+            /*Unique işlemi*/
+            modelBuilder.Entity<HubConnection>()
+                .HasIndex(e => e.TcKimlikNo)
+                .IsUnique();
+            /*HubConnection Tablosu için Entitylerde zorunlu düzenlemeler*/
+
+            /*DatabaseLog Tablosu için Entitylerde zorunlu düzenlemeler*/
+            modelBuilder.Entity<DatabaseLog>()
+                .Property(e => e.DatabaseAction)
+                .HasConversion<string>();
+            /*DatabaseLog Tablosu için Entitylerde zorunlu düzenlemeler*/
+
             /*Sıralar Tablosu için Entitylerde zorunlu düzenlemeler*/
             /*MultiUnique işlemi*/
             modelBuilder.Entity<Siralar>()
-                .HasIndex(s => new { s.Sira, s.KanalAltIslemId, s.SiraAlisTarihi })
+                .HasIndex(s => new { s.SiraNo, s.HizmetBinasiId, s.SiraAlisTarihi })
                 .IsUnique();
 
             modelBuilder.Entity<Siralar>()
@@ -270,11 +292,11 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase
             /*KioskIslemGruplari Tablosu için Entitylerde zorunlu Düzenlemeler*/
             /*MultiUnique işlemi*/
             modelBuilder.Entity<KioskIslemGruplari>()
-                .HasIndex(e => new { e.KioskGrupId, e.KioskIslemGrupAktiflik })
+                .HasIndex(e => new { e.KioskGrupId, e.HizmetBinasiId })
                 .IsUnique();
-            /*Unique işlemi*/
+            /*MultiUnique işlemi*/
             modelBuilder.Entity<KioskIslemGruplari>()
-                .HasIndex(e => e.KioskIslemGrupSira)
+                .HasIndex(e => new { e.HizmetBinasiId , e.KioskIslemGrupSira})
                 .IsUnique();
             modelBuilder.Entity<KioskIslemGruplari>()
                 .Property(e => e.KioskIslemGrupAktiflik)

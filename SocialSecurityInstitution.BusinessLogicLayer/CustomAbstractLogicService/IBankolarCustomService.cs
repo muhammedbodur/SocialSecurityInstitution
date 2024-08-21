@@ -11,6 +11,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
     {
         Task<List<BankolarRequestDto>> GetBankolarWithDetailsAsync();
         Task<List<DepartmanPersonelleriDto>> GetDeparmanPersonelleriAsync(int bankoId);
+        Task<List<HizmetBinasiPersonelleriDto>> GetHizmetBinasiPersonelleriAsync(int bankoId);
         Task<BankolarRequestDto> GetBankoByIdAsync(int bankoId);
         Task<PersonellerDto> GetBankoPersonelDetailAsync(string tcKimlikNo);
     }

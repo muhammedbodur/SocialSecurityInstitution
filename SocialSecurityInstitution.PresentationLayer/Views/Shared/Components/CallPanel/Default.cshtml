@@ -1,0 +1,35 @@
+﻿@model List<siraCagirmaDto>
+@using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums
+
+<!-- Çağırma Paneli -->
+<div id="template-customizer" class="bg-card">
+    <div class="template-customizer-header">
+        Çağırma Paneli
+    </div>
+    <div class="template-customizer-inner">
+        <button id="callNextButton" class="btn btn-primary w-100 mb-3">Sıradaki Vatandaşı Çağır!</button>
+
+        <!-- Sıra Listesi -->
+        <ul id="siraListe" class="sira-listesi list-unstyled">
+            @foreach (var sira in Model)
+            {
+                string backGroundColor = (sira.IslemiYapan == "kendisi" && sira.BeklemeDurum == BeklemeDurum.Cagrildi ? " background-color:#dff0d8;" : "");
+                <li id="sira_@sira.SiraId" class="card mb-2 p-2 shadow-sm w-100" style="height: auto; min-height: 70px; @backGroundColor">
+                    <div class="card-body text-center p-2">
+                        <h5 class="card-title" style="font-size: 1.50rem; font-weight: bold; margin-bottom: 0.25rem;">
+                            @sira.SiraNo
+                        </h5>
+                        <p class="card-text" style="font-size: 1rem; color: #555; margin-bottom: 0;">
+                            @sira.KanalAltAdi
+                        </p>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+<!-- Paneli açma/kapatma butonu -->
+<button id="callPanelToggleCustomizerButton" class="bx bx-panel toggleCustomizerButtonIcon">
+    <i class="bx bx-panel toggleCustomizerButtonIcon"></i>
+</button>

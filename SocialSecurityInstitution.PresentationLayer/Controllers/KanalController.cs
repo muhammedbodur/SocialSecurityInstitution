@@ -661,19 +661,6 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
             }
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> KanalPersonelleriDemo(int departmanId, int hizmetBinasiId)
-        {
-            return View();
-        }
-        
-        [HttpGet]
-        public async Task<IActionResult> KanalPersonelleriDemo2(int hizmetBinasiId)
-        {
-            return View();
-        }
-
         [HttpGet]
         public async Task<IActionResult> KanalEslestir(int hizmetBinasiId)
         {
@@ -761,18 +748,6 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
             {
                 return Json(new { islemDurum = 0, mesaj = "Alt Kanal Bulunamadı!" });
             }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> DragAndDrop()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> DragAndDropDemo()
-        {
-            return View();
         }
 
     }

@@ -7,13 +7,17 @@ public class Siralar
 {
     [Key]
     public int SiraId { get; set; }
-    public int Sira { get; set; }
-    public int? BankoIslemId { get; set; }
-    [ForeignKey("BankoIslemId")]
-    public BankoIslemleri BankoIslem { get; set; }
+    public int SiraNo { get; set; }
     public int KanalAltIslemId { get; set; }
     [ForeignKey("KanalAltIslemId")]
     public KanalAltIslemleri KanalAltIslem { get; set; }
+    public string KanalAltAdi { get; set; }
+    public int HizmetBinasiId { get; set; }
+    [ForeignKey("HizmetBinasiId")]
+    public HizmetBinalari HizmetBinalari { get; set; }
+    public string? TcKimlikNo { get; set; }
+    [ForeignKey("TcKimlikNo")]
+    public Personeller Personeller { get; set; }
     public DateTime SiraAlisZamani { get; set; } = DateTime.Now;
     public DateTime? IslemBaslamaZamani { get; set; }
     public DateTime? IslemBitisZamani { get; set; }

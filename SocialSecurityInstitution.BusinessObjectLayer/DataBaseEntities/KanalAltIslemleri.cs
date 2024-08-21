@@ -38,5 +38,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
 
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
+
+        public ICollection<Siralar> Siralar { get; set; }
     }
 }

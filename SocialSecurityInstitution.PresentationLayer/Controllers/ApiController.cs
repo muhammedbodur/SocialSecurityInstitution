@@ -18,8 +18,9 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         private readonly IKioskIslemGruplariCustomService _kioskIslemGruplariCustomService;
         private readonly IKanalAltIslemleriService _kanalAltIslemleriService;
         private readonly IHizmetBinalariCustomService _hizmetBinalariCustomService;
+        private readonly ISiralarCustomService _siralarCustomService;
 
-        public ApiController(IMapper mapper, IKioskGruplariService kioskGruplariService, IKioskIslemGruplariService kioskIslemGruplariService, IKioskIslemGruplariCustomService kioskIslemGruplariCustomService, IKanalAltIslemleriService kanalAltIslemleriService, IHizmetBinalariCustomService hizmetBinalariCustomService)
+        public ApiController(IMapper mapper, IKioskGruplariService kioskGruplariService, IKioskIslemGruplariService kioskIslemGruplariService, IKioskIslemGruplariCustomService kioskIslemGruplariCustomService, IKanalAltIslemleriService kanalAltIslemleriService, IHizmetBinalariCustomService hizmetBinalariCustomService, ISiralarCustomService siralarCustomService)
         {
             _mapper = mapper;
             _kioskGruplariService = kioskGruplariService;
@@ -27,6 +28,14 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
             _kioskIslemGruplariCustomService = kioskIslemGruplariCustomService;
             _kanalAltIslemleriService = kanalAltIslemleriService;
             _hizmetBinalariCustomService = hizmetBinalariCustomService;
+            _siralarCustomService = siralarCustomService;
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> SiraNoGetir([FromQuery] int kanalAltIslemId)
+        {
+            var siraNoBilgisiDto = await _siralarCustomService.GetSiraNoAsync(kanalAltIslemId);
+            return Json(siraNoBilgisiDto);
         }
 
         [HttpGet]
@@ -37,11 +46,18 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         }
 
         [HttpGet]
+        public async Task<JsonResult> HizmetBinasiWithDepartmanId([FromQuery] int hizmetBinasiId, [FromQuery] int departmanId)
+        {
+            var hizmetbinasiDto = await _hizmetBinalariCustomService.GetActiveHizmetBinasiAsync(hizmetBinasiId, departmanId);
+            return Json(hizmetbinasiDto);
+        }
+
+        [HttpGet]
         public async Task<JsonResult> KioskGruplari([FromQuery] int hizmetBinasiId)
         {
             List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto> kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(hizmetBinasiId);
 
-            kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto.OrderBy(x => x.KioskIslemGrupSira).ToList();
+            kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto.Where(x => x.EslestirmeSayisi > 0).OrderBy(x => x.KioskIslemGrupSira).ToList();
 
             return Json(kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto);
         }

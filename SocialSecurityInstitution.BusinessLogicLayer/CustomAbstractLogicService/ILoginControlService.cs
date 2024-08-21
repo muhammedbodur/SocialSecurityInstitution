@@ -10,5 +10,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
     public interface ILoginControlService
     {
         Task<LoginDto> LoginControlAsync(string TcKimlikNo, string PassWord);
+        Task<LoginLogoutLogDto> FindBySessionIdAsync(string sessionId);
+        Task LogoutPreviousSessionsAsync(string TcKimlikNo);
     }
 }

@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialSecurityInstitution.BusinessObjectLayer", "SocialSecurityInstitution.BusinessObjectLayer\SocialSecurityInstitution.BusinessObjectLayer.csproj", "{77F766CF-926B-4CD5-B2F6-27992F4495D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocialSecurityInstitution.BusinessObjectLayer", "SocialSecurityInstitution.BusinessObjectLayer\SocialSecurityInstitution.BusinessObjectLayer.csproj", "{77F766CF-926B-4CD5-B2F6-27992F4495D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialSecurityInstitution.BusinessLogicLayer", "SocialSecurityInstitution.BusinessLogicLayer\SocialSecurityInstitution.BusinessLogicLayer.csproj", "{7C4F1939-4B67-45ED-B337-9DDABE9350ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocialSecurityInstitution.BusinessLogicLayer", "SocialSecurityInstitution.BusinessLogicLayer\SocialSecurityInstitution.BusinessLogicLayer.csproj", "{7C4F1939-4B67-45ED-B337-9DDABE9350ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialSecurityInstitution.DataAccessLayer", "SocialSecurityInstitution.DataAccessLayer\SocialSecurityInstitution.DataAccessLayer.csproj", "{635B1CE1-AB13-4B0B-A1D8-01131AAAA5A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocialSecurityInstitution.DataAccessLayer", "SocialSecurityInstitution.DataAccessLayer\SocialSecurityInstitution.DataAccessLayer.csproj", "{635B1CE1-AB13-4B0B-A1D8-01131AAAA5A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialSecurityInstitution.PresentationLayer", "SocialSecurityInstitution.PresentationLayer\SocialSecurityInstitution.PresentationLayer.csproj", "{D1B23279-3B5C-4ED9-A6DE-D6C05D13A50A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocialSecurityInstitution.PresentationLayer", "SocialSecurityInstitution.PresentationLayer\SocialSecurityInstitution.PresentationLayer.csproj", "{D1B23279-3B5C-4ED9-A6DE-D6C05D13A50A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

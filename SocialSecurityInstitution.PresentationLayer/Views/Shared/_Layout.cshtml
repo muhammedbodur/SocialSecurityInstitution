@@ -13,7 +13,6 @@
     @await Html.PartialAsync("_FavIcon")
     @await Html.PartialAsync("_Fonts")
     @await Html.PartialAsync("_Styles")
-
 </head>
 
 <body>
@@ -21,11 +20,13 @@
         <div class="layout-container">
             @await Component.InvokeAsync("LayoutMenu")
             <div class="layout-page">
-               @await Component.InvokeAsync("NavBar")
+                @await Component.InvokeAsync("NavBar")
                 <div class="content-wrapper">
                     <div class="container-fluid flex-grow-1 container-p-y">
 
                         @RenderBody()
+
+                        @await Component.InvokeAsync("CallPanel")
                     </div>
                     @await Component.InvokeAsync("Footer")
                     <div class="content-backdrop fade"></div>

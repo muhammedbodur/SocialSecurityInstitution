@@ -48,6 +48,13 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         }
 
         [HttpGet]
+        public async Task<JsonResult> HizmetBinasiPersonelListeleJson(int bankoId)
+        {
+            List<HizmetBinasiPersonelleriDto> hizmetBinasiPersonelleriDto = await _bankolarCustomService.GetHizmetBinasiPersonelleriAsync(bankoId);
+            return Json(hizmetBinasiPersonelleriDto);
+        }
+
+        [HttpGet]
         public async Task<JsonResult> Getir(int bankoId)
         {
             var bankolarDto = await _bankolarService.TGetByIdAsync(bankoId);

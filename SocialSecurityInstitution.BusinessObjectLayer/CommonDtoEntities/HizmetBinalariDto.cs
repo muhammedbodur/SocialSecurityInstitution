@@ -12,6 +12,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
     {
         public int HizmetBinasiId { get; set; }
         public required string HizmetBinasiAdi { get; set; }
+        public string? Aciklama { get; set; }
         public int DepartmanId { get; set; }
         [ForeignKey("DepartmanId")]
         public DepartmanlarDto Departman { get; set; }

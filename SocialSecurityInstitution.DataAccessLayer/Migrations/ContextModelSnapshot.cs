@@ -17,7 +17,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -30,10 +30,10 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SiraId"));
 
-                    b.Property<int?>("BankoIslemId")
+                    b.Property<int>("BeklemeDurum")
                         .HasColumnType("int");
 
-                    b.Property<int>("BeklemeDurum")
+                    b.Property<int>("HizmetBinasiId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("IslemBaslamaZamani")
@@ -42,10 +42,11 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Property<DateTime?>("IslemBitisZamani")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("KanalAltIslemId")
-                        .HasColumnType("int");
+                    b.Property<string>("KanalAltAdi")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Sira")
+                    b.Property<int>("KanalAltIslemId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SiraAlisTarihi")
@@ -54,16 +55,26 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Property<DateTime>("SiraAlisZamani")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("SiraNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TcKimlikNo")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("SiraId");
 
-                    b.HasIndex("BankoIslemId");
+                    b.HasIndex("HizmetBinasiId");
 
                     b.HasIndex("KanalAltIslemId");
 
-                    b.HasIndex("Sira", "KanalAltIslemId", "SiraAlisTarihi")
+                    b.HasIndex("TcKimlikNo");
+
+                    b.HasIndex("SiraNo", "HizmetBinasiId", "SiraAlisTarihi")
                         .IsUnique();
 
                     b.ToTable("Siralar");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.AtanmaNedenleri", b =>
@@ -148,6 +159,9 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Property<int>("BankoNo")
                         .HasColumnType("int");
 
+                    b.Property<int>("BankoTipi")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DuzenlenmeTarihi")
                         .HasColumnType("datetime2");
 
@@ -155,6 +169,9 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("HizmetBinasiId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("KatTipi")
                         .HasColumnType("int");
 
                     b.HasKey("BankoId");
@@ -200,6 +217,50 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                         .IsUnique();
 
                     b.ToTable("BankolarKullanici");
+                });
+
+            modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities.DatabaseLog", b =>
+                {
+                    b.Property<int>("DatabaseLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DatabaseLogId"));
+
+                    b.Property<DateTime>("ActionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AfterData")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BeforeData")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DatabaseAction")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("IslemZamani")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PersonellerTcKimlikNo")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TableName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TcKimlikNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("DatabaseLogId");
+
+                    b.HasIndex("PersonellerTcKimlikNo");
+
+                    b.ToTable("DatabaseLog");
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities.Kanallar", b =>
@@ -318,12 +379,10 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
 
                     b.HasKey("KioskIslemGrupId");
 
-                    b.HasIndex("HizmetBinasiId");
-
-                    b.HasIndex("KioskIslemGrupSira")
+                    b.HasIndex("HizmetBinasiId", "KioskIslemGrupSira")
                         .IsUnique();
 
-                    b.HasIndex("KioskGrupId", "KioskIslemGrupAktiflik")
+                    b.HasIndex("KioskGrupId", "HizmetBinasiId")
                         .IsUnique();
 
                     b.ToTable("KioskIslemGruplari");
@@ -496,6 +555,8 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                         .IsUnique();
 
                     b.ToTable("Departmanlar");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.HizmetBinalari", b =>
@@ -505,6 +566,9 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HizmetBinasiId"));
+
+                    b.Property<string>("Aciklama")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DepartmanId")
                         .HasColumnType("int");
@@ -532,6 +596,37 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.HasIndex("DepartmanlarDepartmanId");
 
                     b.ToTable("HizmetBinalari");
+                });
+
+            modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.HubConnection", b =>
+                {
+                    b.Property<int>("HubConnectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HubConnectionId"));
+
+                    b.Property<string>("ConnectionId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ConnectionStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("IslemZamani")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TcKimlikNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("HubConnectionId");
+
+                    b.HasIndex("TcKimlikNo")
+                        .IsUnique();
+
+                    b.HasIndex("TcKimlikNo", "ConnectionId", "ConnectionStatus");
+
+                    b.ToTable("HubConnection");
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.Ilceler", b =>
@@ -704,21 +799,26 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("LoginTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LoginTime");
 
-                    b.Property<DateTime>("LogoutTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("LogoutTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LogoutTime");
 
                     b.Property<string>("SessionID")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("SessionID");
 
                     b.Property<string>("TcKimlikNo")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("TcKimlikNo");
 
                     b.HasKey("Id");
 
@@ -964,13 +1064,13 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Property<int>("KartNo")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("KartNoAktiflikTarihi")
+                    b.Property<DateTime?>("KartNoAktiflikTarihi")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("KartNoDuzenlenmeTarihi")
+                    b.Property<DateTime?>("KartNoDuzenlenmeTarihi")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("KartNoGonderimTarihi")
+                    b.Property<DateTime?>("KartNoGonderimTarihi")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("MedeniDurumu")
@@ -1016,6 +1116,9 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
 
                     b.Property<int>("ServisId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SessionID")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SicilNo")
                         .HasColumnType("int");
@@ -1186,19 +1289,27 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
 
             modelBuilder.Entity("Siralar", b =>
                 {
-                    b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.BankoIslemleri", "BankoIslem")
+                    b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.HizmetBinalari", "HizmetBinalari")
                         .WithMany()
-                        .HasForeignKey("BankoIslemId");
+                        .HasForeignKey("HizmetBinasiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.KanalAltIslemleri", "KanalAltIslem")
-                        .WithMany()
+                        .WithMany("Siralar")
                         .HasForeignKey("KanalAltIslemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BankoIslem");
+                    b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.Personeller", "Personeller")
+                        .WithMany()
+                        .HasForeignKey("TcKimlikNo");
+
+                    b.Navigation("HizmetBinalari");
 
                     b.Navigation("KanalAltIslem");
+
+                    b.Navigation("Personeller");
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.Bankolar", b =>
@@ -1233,6 +1344,13 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Navigation("Bankolar");
 
                     b.Navigation("Personel");
+                });
+
+            modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities.DatabaseLog", b =>
+                {
+                    b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.Personeller", null)
+                        .WithMany("DatabaseLog")
+                        .HasForeignKey("PersonellerTcKimlikNo");
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities.KanallarAlt", b =>
@@ -1330,6 +1448,17 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                         .HasForeignKey("DepartmanlarDepartmanId");
 
                     b.Navigation("Departman");
+                });
+
+            modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.HubConnection", b =>
+                {
+                    b.HasOne("SocialSecurityInstitution.BusinessObjectLayer.Personeller", "Personeller")
+                        .WithOne("HubConnection")
+                        .HasForeignKey("SocialSecurityInstitution.BusinessObjectLayer.HubConnection", "TcKimlikNo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Personeller");
                 });
 
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.Ilceler", b =>
@@ -1591,6 +1720,11 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
                     b.Navigation("Ilceler_");
                 });
 
+            modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.KanalAltIslemleri", b =>
+                {
+                    b.Navigation("Siralar");
+                });
+
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.KanalIslemleri", b =>
                 {
                     b.Navigation("KanalAltIslemleri_");
@@ -1599,6 +1733,10 @@ namespace SocialSecurityInstitution.DataAccessLayer.Migrations
             modelBuilder.Entity("SocialSecurityInstitution.BusinessObjectLayer.Personeller", b =>
                 {
                     b.Navigation("BankolarKullanici");
+
+                    b.Navigation("DatabaseLog");
+
+                    b.Navigation("HubConnection");
 
                     b.Navigation("KanalPersonelleri");
                 });

@@ -12,6 +12,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public required string AdSoyad { get; set; }
         public required string Email { get; set; }
         public required string Resim { get; set; }
+        public int HizmetBinasiId { get; set; }
         public string? PassWord { get;}
     }
 }

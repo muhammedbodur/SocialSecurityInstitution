@@ -77,31 +77,37 @@
                             <div class="mb-3 col-md-6">
                                 <label for="DepartmanId" class="form-label">DEPARTMAN</label>
                                 <select id="DepartmanId" asp-for="@Model.DepartmanId" class="select2 form-select">
-                                    @if(Model.Departmanlar != null)
+                                    @if (Model != null && Model.Departmanlar != null)
+                                    {
                                         @foreach (var departman in Model.Departmanlar)
                                         {
                                             <!option value="@departman.DepartmanId">@departman.DepartmanAdi</!option>
                                         }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="birim_id" class="form-label">SERVİS</label>
                                 <select id="birim_id" asp-for="@Model.ServisId" class="select2 form-select">
-                                    @if (Model.Servisler != null)
+                                    @if (Model != null && Model.Servisler != null)
+                                    {
                                         @foreach (var servis in Model.Servisler)
                                         {
                                             <!option value="@servis.Id">@servis.ServisAdi</!option>
                                         }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="UnvanId" class="form-label">ÜNVAN</label>
                                 <select id="UnvanId" asp-for="@Model.UnvanId" class="select2 form-select">
-                                    @if (Model.Unvanlar != null)
+                                    @if (Model != null && Model.Unvanlar != null)
+                                    {
                                         @foreach (var unvan in Model.Unvanlar)
                                         {
                                             <!option value="@unvan.Id">@unvan.UnvanAdi</!option>
                                         }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
@@ -110,6 +116,18 @@
                                        type="text"
                                        placeholder="Peronelin Görevi"
                                        autofocus />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="UnvanId" class="form-label">ATANMA NEDENLERİ</label>
+                                <select id="UnvanId" asp-for="@Model.AtanmaNedenleri" class="select2 form-select">
+                                    @if (Model != null && Model.AtanmaNedenleri != null)
+                                    {
+                                        @foreach (var atanmaNedeni in Model.AtanmaNedenleri)
+                                        {
+                                            <!option value="@atanmaNedeni.">@atanmaNedeni</!option>
+                                        }
+                                    }
+                                </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="PersonelAktiflikDurum" class="form-label">AKTİFLİK DURUMU</label>
@@ -301,14 +319,14 @@
                             </div>
                             <div class="mb-3 col-md-3">
                                 <label for="KartNo" class="form-label">KART NUMARASI</label>
-                                <input id="KartNo" asp-for="@Model" class="form-control"
+                                <input id="KartNo" asp-for="@Model.KartNo" class="form-control"
                                        type="text"
                                        placeholder="Kart Numarası"
                                        autofocus />
                             </div>
                             <div class="mb-3 col-md-3">
                                 <label for="KartNoAktiflikTarihi" class="form-label">KART AKTİFLİK TARİHİ</label>
-                                <input id="KartNoAktiflikTarihi" asp-for="@Model" class="form-control"
+                                <input id="KartNoAktiflikTarihi" asp-for="@Model.KartNoAktiflikTarihi" class="form-control"
                                        type="date"
                                        placeholder="01-01-2023"
                                        autofocus />
@@ -358,7 +376,7 @@
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Sendika" class="form-label">SENDİKA DURUMU</label>
-                                <select id="Sendika" asp-for="@Model" class="select2 form-select">
+                                <select id="Sendika" asp-for="@Model.SendikaId" class="select2 form-select">
                                     <option></option>
                                 </select>
                             </div>
@@ -401,13 +419,13 @@
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininIsIl" class="form-label">EŞ İŞ İL</label>
-                                <select id="EsininIsIl" asp-for="@Model" class="select2 form-select">
+                                <select id="EsininIsIl" asp-for="@Model.EsininIsIlId" class="select2 form-select">
                                     <option></option>
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininIsIlce" class="form-label">EŞ İŞ İLÇE</label>
-                                <select id="EsininIsIlce" asp-for="@Model" class="select2 form-select">
+                                <select id="EsininIsIlce" asp-for="@Model.EsininIsIlceId" class="select2 form-select">
                                     <option></option>
                                 </select>
                             </div>

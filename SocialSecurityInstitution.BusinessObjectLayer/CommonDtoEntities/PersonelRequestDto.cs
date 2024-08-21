@@ -68,6 +68,8 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public string? CezaBilgileri { get; set; }
         public string? EngelBilgileri { get; set; }
         public string? Resim { get; set; }
+        public string? ConnectionId { get; set; }
+        public ConnectionStatus ConnectionStatus { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }
     }
 }

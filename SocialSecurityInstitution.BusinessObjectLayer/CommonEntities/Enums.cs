@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -119,6 +118,22 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
             [Display(Name = "Taşeron")]
             taseron
         }
+
+        public enum DatabaseAction
+        {
+            [Display(Name = "INSERT")]
+            INSERT,
+
+            [Display(Name = "UPDATE")]
+            UPDATE,
+
+            [Display(Name = "DELETE")]
+            DELETE,
+
+            [Display(Name = "NONE")]
+            NONE
+        }
+
         public enum OgrenimDurumu
         {
             [Display(Name = "İlk Okul")]
@@ -255,11 +270,55 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
 
         public enum BeklemeDurum : int
         {
-            [Display(Name = "İşlem Bitmiş")]
-            Bitmis = 1,
+            [Display(Name = "İşlem Bitti")]
+            Bitti = 2,
+
+            [Display(Name = "İşlem Çağrıldı")]
+            Cagrildi = 1,
 
             [Display(Name = "İşlem Beklemede!")]
             Beklemede = 0,
+        }
+
+        public enum ConnectionStatus : int
+        {
+            [Display(Name = "Çevrim İçi")]
+            online = 1,
+
+            [Display(Name = "Çevrim Dışı")]
+            offline = 0,
+        }
+
+        public enum BankoTipi
+        {
+            [Display(Name = "Banko")]
+            banko = 1,
+            [Display(Name = "Masa")]
+            masa = 2,
+        }
+
+        public enum KatTipi : int
+        {
+            [Display(Name = "Zemin")]
+            zemin = 0,
+
+            [Display(Name = "1.Kat")]
+            bir = 1,
+
+            [Display(Name = "2.Kat")]
+            iki = 2,
+            
+            [Display(Name = "3.Kat")]
+            uc = 3,
+            
+            [Display(Name = "4.Kat")]
+            dort = 4,
+            
+            [Display(Name = "5.Kat")]
+            bes = 5,
+            
+            [Display(Name = "6.Kat")]
+            alti = 6
         }
     }
 }

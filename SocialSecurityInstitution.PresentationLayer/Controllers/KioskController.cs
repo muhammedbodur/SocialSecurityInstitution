@@ -100,9 +100,9 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         }
 
         [HttpGet]
-        public async Task<JsonResult> KioskYazdir(int kanalAltIslemId)
+        public JsonResult KioskYazdir(int kanalAltIslemId)
         {
-            int sayi = 1234; 
+            int sayi = 1234;
             string sgmAdi = "BORNOVA NACİ ŞAHİN SOSYAL GÜVENLİK MERKEZİ";
 
             try
@@ -249,7 +249,14 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpPost]
         public async Task<IActionResult> KioskIslemGruplariEkle(int hizmetBinasiId, int kioskGrupId)
         {
-            //verilen sıralama ilk ID 1 ile başlamalı, ardından gelen ise bir öncekinin bitişinden 1 tane fazla olmalı
+            // Mevcut en yüksek KioskIslemGrupSira numarasını bulun
+            var kioskIslemGruplari = await _kioskIslemGruplariService.TGetAllAsync();
+            var maxSiraNumarasi = kioskIslemGruplari
+                .Where(kig => kig.HizmetBinasiId == hizmetBinasiId)
+                .Max(kig => (int?)kig.KioskIslemGrupSira) ?? 0;
+
+            // Yeni KioskIslemGrup için sıra numarasını belirle
+            var yeniSiraNumarasi = maxSiraNumarasi + 1;
 
             var kioskIslemGruplariDto = new KioskIslemGruplariDto
             {
@@ -258,14 +265,15 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
                 KioskIslemGrupAdi = "",
                 EklenmeTarihi = DateTime.Now,
                 DuzenlenmeTarihi = DateTime.Now,
-                KioskIslemGrupAktiflik = Aktiflik.Aktif
+                KioskIslemGrupAktiflik = Aktiflik.Aktif,
+                KioskIslemGrupSira = yeniSiraNumarasi // Yeni sıra numarasını ekliyoruz
             };
 
             var insertResult = await _kioskIslemGruplariService.TInsertAsync(kioskIslemGruplariDto);
 
             if (insertResult.IsSuccess)
             {
-                KioskIslemGruplariRequestDto kanalDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariByIdAsync(Convert.ToInt32(insertResult.LastPrimaryKeyValue));
+                var kanalDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariByIdAsync(Convert.ToInt32(insertResult.LastPrimaryKeyValue));
 
                 return Ok(kanalDto);
             }

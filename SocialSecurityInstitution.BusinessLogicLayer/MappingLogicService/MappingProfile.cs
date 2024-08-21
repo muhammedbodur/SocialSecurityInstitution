@@ -30,6 +30,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.MappingLogicService
             CreateMap<Ilceler, IlcelerDto>().ReverseMap();
             CreateMap<Sendikalar, SendikalarDto>().ReverseMap();
             CreateMap<Siralar, SiralarDto>().ReverseMap();
+            CreateMap<HubConnection, HubConnectionDto>().ReverseMap();
 
             /*Dto to Dto*/
             CreateMap<LoginDto, LoginLogoutLogDto>()
@@ -39,6 +40,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.MappingLogicService
             CreateMap<BankolarDto, BankolarRequestDto>().ReverseMap();
             CreateMap<HizmetBinalariDepartmanlarDto, BankolarHizmetBinalariDepartmanlarDto>();
             CreateMap<PersonellerDto, PersonelRequestDto>().ReverseMap();
+            CreateMap<PersonellerDto, PersonellerLiteDto>().ReverseMap();
             CreateMap<KanalIslemleriDto, KanalIslemleriRequestDto>().ReverseMap();
             CreateMap<PersonellerDto, PersonellerViewDto>();
             CreateMap<KanalPersonelleriDto, KanalPersonelleriViewDto>();

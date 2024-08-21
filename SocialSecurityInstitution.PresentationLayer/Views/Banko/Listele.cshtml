@@ -39,7 +39,7 @@
                 selectBankoPersonelleri.empty();
                 selectBankoPersonelleri.append('<option value="">Personel Seçiniz</option>');
                 $.ajax({
-                    url: "/Banko/DepartmanPersonelListeleJson",
+                    url: "/Banko/HizmetBinasiPersonelListeleJson",
                     type: "GET",
                     data: { bankoId: bankoId },
                     success: function (result) {

@@ -1,6 +1,6 @@
 using AutoMapper;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NToastNotify;
@@ -8,12 +8,22 @@ using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
 using SocialSecurityInstitution.BusinessLogicLayer.ConcreteLogicServices;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService;
+using SocialSecurityInstitution.BusinessLogicLayer.Hubs;
 using SocialSecurityInstitution.BusinessLogicLayer.MappingLogicService;
-using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using SocialSecurityInstitution.BusinessLogicLayer.SqlDependencyServices;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
+using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
 using SocialSecurityInstitution.PresentationLayer.Services.AbstractPresentationServices;
 using SocialSecurityInstitution.PresentationLayer.Services.ConcretePresentationServices;
+using Microsoft.Extensions.Configuration;
+using SocialSecurityInstitution.PresentationLayer.Middleware;
+using Microsoft.AspNetCore.SignalR;
+using SocialSecurityInstitution.BusinessObjectLayer;
+using System;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace SocialSecurityInstitution.PresentationLayer
 {
@@ -22,15 +32,69 @@ namespace SocialSecurityInstitution.PresentationLayer
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-            builder.Services.AddAuthentication(
-                Microsoft.AspNetCore.Authentication.Cookies.
-                CookieAuthenticationDefaults.AuthenticationScheme    
-            ).AddCookie(option => {
-                option.LoginPath = "/Login";
-                option.LogoutPath = "/Logout";
-                option.AccessDeniedPath = "/Login";
-                option.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+
+            builder.Services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddDebug();
+            });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .SetIsOriginAllowed((host) => true);
+                });
+            });
+
+            // Configuration setup
+            var configuration = builder.Configuration;
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme; // API için cookie tabanlý kimlik doðrulama
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer("SignalRJwt", options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/dashboardHub"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            })
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                options.LoginPath = "/Login";
+                options.LogoutPath = "/Logout";
+                options.AccessDeniedPath = "/Login";
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
+                options.SlidingExpiration = true;
+                options.Cookie.HttpOnly = true;
             });
 
             builder.Services.Configure<CookiePolicyOptions>(options =>
@@ -46,23 +110,25 @@ namespace SocialSecurityInstitution.PresentationLayer
                 options.Cookie.IsEssential = true;
             });
 
-
-
-            // Add services to the container.
             builder.Services.AddControllersWithViews()
-            .AddNToastNotifyToastr(new ToastrOptions()
-            {
-                PositionClass = ToastPositions.TopRight,
-                TimeOut = 5000,
-                ProgressBar = true
-            })
-            .AddRazorRuntimeCompilation();
+                .AddNToastNotifyToastr(new ToastrOptions()
+                {
+                    PositionClass = ToastPositions.TopRight,
+                    TimeOut = 5000,
+                    ProgressBar = true
+                })
+                .AddRazorRuntimeCompilation();
 
             builder.Services.AddHttpContextAccessor();
-            
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<Context>(options =>
+                options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
+
+            // Add all Scoped services
             builder.Services.AddScoped<IAtanmaNedenleriDal, AtanmaNedenleriDal>();
             builder.Services.AddScoped<IBankoIslemleriDal, BankoIslemleriDal>();
-            builder.Services.AddScoped<IBankolarKullaniciDal,  BankolarKullaniciDal>();
+            builder.Services.AddScoped<IBankolarKullaniciDal, BankolarKullaniciDal>();
             builder.Services.AddScoped<IBankolarDal, BankolarDal>();
             builder.Services.AddScoped<IDepartmanlarDal, DepartmanlarDal>();
             builder.Services.AddScoped<IHizmetBinalariDal, HizmetBinalariDal>();
@@ -84,9 +150,12 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddScoped<IYetkilerDal, YetkilerDal>();
             builder.Services.AddScoped<IKioskGruplariDal, KioskGruplariDal>();
             builder.Services.AddScoped<IKioskIslemGruplariDal, KioskIslemGruplariDal>();
+            builder.Services.AddScoped<ISiralarDal, SiralarDal>();
+            builder.Services.AddScoped<IDatabaseLogDal, DatabaseLogDal>();
 
-            
-            /* Custom Servisler */
+            builder.Services.AddScoped<IHubConnectionDal, HubConnectionDal>();
+
+            // Custom Services
             builder.Services.AddScoped<IUserInfoService, UserInfoService>();
             builder.Services.AddScoped<ILoginControlService, LoginControlService>();
             builder.Services.AddScoped<IPersonelCustomService, PersonelCustomService>();
@@ -96,11 +165,12 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddScoped<IKanallarCustomService, KanallarCustomService>();
             builder.Services.AddScoped<IKanalPersonelleriCustomService, KanalPersonelleriCustomService>();
             builder.Services.AddScoped<IKioskIslemGruplariCustomService, KioskIslemGruplariCustomService>();
+            builder.Services.AddScoped<ISiralarCustomService, SiralarCustomService>();
+            builder.Services.AddScoped<IHubConnectionCustomService, HubConnectionCustomService>();
 
             builder.Services.AddScoped<PrintService>();
-            /* Custom Servisler */
 
-            /* Concrete Servisler */
+            // Concrete Services
             builder.Services.AddScoped<IAtanmaNedenleriService, AtanmaNedenleriService>();
             builder.Services.AddScoped<IBankoIslemleriService, BankoIslemleriService>();
             builder.Services.AddScoped<IBankolarKullaniciService, BankolarKullaniciService>();
@@ -125,9 +195,44 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddScoped<IYetkilerService, YetkilerService>();
             builder.Services.AddScoped<IKioskGruplariService, KioskGruplariService>();
             builder.Services.AddScoped<IKioskIslemGruplariService, KioskIslemGruplariService>();
-            /* Concrete Servisler */
+            builder.Services.AddScoped<ISiralarService, SiralarService>();
+            builder.Services.AddScoped<IDatabaseLogService, DatabaseLogService>();
+            builder.Services.AddScoped<ILogService, LogService>();
+            builder.Services.AddScoped<IHubConnectionService, HubConnectionService>();
+            builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-            builder.Services.AddSingleton<IMapper>(AutoMapperConfiguration.Configure());
+            builder.Services.AddSingleton<IUserContextService, UserContextService>();
+
+            // Add AutoMapper service
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            // SignalR
+            builder.Services.AddSignalR(options =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromMinutes(1); // Keep-alive aralýðý
+                options.ClientTimeoutInterval = TimeSpan.FromMinutes(2); // Ýstemci zaman aþýmý süresi
+            });
+
+            builder.Services.AddTransient<DashboardHub>();
+            builder.Services.AddSingleton<ISubscribeTableDependency>(provider =>
+            {
+                return new SubscribeTableDependency<Departmanlar>(
+                    provider.GetRequiredService<IServiceProvider>(),
+                    provider.GetRequiredService<IHubContext<DashboardHub>>(),
+                    provider.GetRequiredService<ILogger<SubscribeTableDependency<Departmanlar>>>(),
+                    provider.GetRequiredService<IMapper>()
+                );
+            });
+
+            builder.Services.AddSingleton<ISubscribeTableDependency>(provider =>
+            {
+                return new SubscribeTableDependency<Siralar>(
+                    provider.GetRequiredService<IServiceProvider>(),
+                    provider.GetRequiredService<IHubContext<DashboardHub>>(),
+                    provider.GetRequiredService<ILogger<SubscribeTableDependency<Siralar>>>(),
+                    provider.GetRequiredService<IMapper>()
+                );
+            });
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -147,6 +252,7 @@ namespace SocialSecurityInstitution.PresentationLayer
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
             }
 
             app.UseNToastNotify();
@@ -155,13 +261,30 @@ namespace SocialSecurityInstitution.PresentationLayer
 
             app.UseSession();
 
-            app.UseSessionTimeoutMiddleware();
-
             app.UseRouting();
 
             app.UseAuthentication();
 
+            app.UseCors("CorsPolicy");
+
+            /* MiddleWare */
+            app.UseMiddleware<SessionValidationMiddleware>();//Login Control
+
+            // For scoped services in middleware
+            app.UseMiddleware<UserContextMiddleware>();
+            /* MiddleWare */
+
             app.UseAuthorization();
+
+            var serviceProvider = app.Services;
+            var tableDependencies = serviceProvider.GetServices<ISubscribeTableDependency>();
+
+            foreach (var tableDependency in tableDependencies)
+            {
+                tableDependency.SubscribeTablesDependency(connectionString);
+            }
+
+            app.MapHub<DashboardHub>("/dashboardHub");
 
             app.MapControllerRoute(
                 name: "default",

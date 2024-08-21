@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
@@ -16,21 +17,22 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
     public class KioskIslemGruplariCustomService : IKioskIslemGruplariCustomService
     {
         private readonly IMapper _mapper;
+        private readonly Context _context;
 
-        public KioskIslemGruplariCustomService(IMapper mapper)
+        public KioskIslemGruplariCustomService(IMapper mapper, Context context)
         {
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskAltKanalIslemleriEslestirmeYapilmamisAsync(int hizmetBinasiId)
         {
-            using var context = new Context();
-
-            var query = from kai in context.KanalAltIslemleri
-                join hb in context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                join d in context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                join ka in context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                join kig in context.KioskIslemGruplari on kai.KioskIslemGrupId equals kig.KioskIslemGrupId into kigGroup
+            var query = from kai in _context.KanalAltIslemleri
+                join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId
+                join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
+                join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
+                join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
+                join kig in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kig.KioskIslemGrupId into kigGroup
                 from kig in kigGroup.DefaultIfEmpty()
                 where kai.HizmetBinasiId == hizmetBinasiId && kai.KioskIslemGrupId == null
                     select new KanalAltIslemleriRequestDto
@@ -58,21 +60,21 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto>> GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(int hizmetBinasiId)
         {
-            using var context = new Context();
-
-            var query = from kig in context.KioskIslemGruplari
-                        join hb in context.HizmetBinalari on kig.HizmetBinasiId equals hb.HizmetBinasiId
-                        join kg in context.KioskGruplari on kig.KioskGrupId equals kg.KioskGrupId
-                        join kai in context.KanalAltIslemleri on kig.KioskIslemGrupId equals kai.KioskIslemGrupId into kaiGroup
-                        from subKai in kaiGroup.DefaultIfEmpty()
+            var query = from kig in _context.KioskIslemGruplari
+                        join hb in _context.HizmetBinalari on kig.HizmetBinasiId equals hb.HizmetBinasiId
+                        join kg in _context.KioskGruplari on kig.KioskGrupId equals kg.KioskGrupId
+                        join kai in _context.KanalAltIslemleri on kig.KioskIslemGrupId equals kai.KioskIslemGrupId into kaiGroup
+                        from kai in kaiGroup.DefaultIfEmpty()
+                        join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
+                        from ki in kiGroup.DefaultIfEmpty()
                         where kig.HizmetBinasiId == hizmetBinasiId
-                        group subKai by new { kig.KioskIslemGrupId, kg.KioskGrupAdi , kig.KioskIslemGrupSira} into g
+                        group new { kig, kg , kai } by new { kig.KioskIslemGrupId, kg.KioskGrupAdi, kig.KioskIslemGrupSira } into g
                         select new KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto
                         {
                             KioskIslemGrupId = g.Key.KioskIslemGrupId,
                             KioskIslemGrupAdi = g.Key.KioskGrupAdi,
                             KioskIslemGrupSira = g.Key.KioskIslemGrupSira,
-                            EslestirmeSayisi = g.Count(kai => kai.KioskIslemGrupId != null)
+                            EslestirmeSayisi = g.Count(k => k.kai.KioskIslemGrupId != null)
                         };
 
             var resultList = await query.ToListAsync();
@@ -82,9 +84,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<List<KioskIslemGruplariRequestDto>> GetKioskIslemGruplariAsync(int hizmetBinasiId)
         {
-            using var context = new Context();
-
-            var result = await context.KioskIslemGruplari
+            var result = await _context.KioskIslemGruplari
             .Include(kig => kig.KioskGruplari)
             .Include(kig => kig.HizmetBinalari)
                 .ThenInclude(hb => hb.Departman)
@@ -111,14 +111,12 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<KioskIslemGruplariRequestDto> GetKioskIslemGruplariByIdAsync(int kioskIslemGrupId)
         {
-            using var context = new Context();
-
-            var result = await context.KioskIslemGruplari
+            var result = await _context.KioskIslemGruplari
             .Include(kig => kig.KioskGruplari)
             .Include(kig => kig.HizmetBinalari)
                 .ThenInclude(hb => hb.Departman)
             .Where(kig => kig.KioskIslemGrupId == kioskIslemGrupId)
-            .FirstOrDefaultAsync();
+            .AsNoTracking().FirstOrDefaultAsync();
 
             if (result == null)
             {
@@ -145,15 +143,13 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskIslemGruplariKanalAltIslemleriEslestirmeYapilmamisAsync(int hizmetBinasiId)
         {
-            using var context = new Context();
-
-            var query = from kai in context.KanalAltIslemleri
-                        join ka in context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        join hb in context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                        join d in context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                        join ki in context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
+            var query = from kai in _context.KanalAltIslemleri
+                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
+                        join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
+                        join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
+                        join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
                         from ki in kiGroup.DefaultIfEmpty()
-                        join kg in context.KioskIslemGruplari on kai.KioskIslemGrupId equals kg.KioskIslemGrupId into kgGroup
+                        join kg in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kg.KioskIslemGrupId into kgGroup
                         from kg in kgGroup.DefaultIfEmpty()
                         where kai.HizmetBinasiId == hizmetBinasiId && kai.KioskIslemGrupId == null
                         select new KanalAltIslemleriRequestDto
@@ -181,9 +177,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskKanalAltIslemleriByKioskIslemGrupIdAsync(int kioskIslemGrupId)
         {
-            using var context = new Context();
-
-            var result = await context.KanalAltIslemleri
+            var result = await _context.KanalAltIslemleri
             .Include(kai => kai.HizmetBinalari)
                 .ThenInclude(hb => hb.Departman)
             .Include(kai => kai.KanallarAlt)

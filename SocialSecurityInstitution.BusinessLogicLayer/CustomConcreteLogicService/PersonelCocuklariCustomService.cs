@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
@@ -14,16 +15,17 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
     public class PersonelCocuklariCustomService : IPersonelCocuklariCustomService
     {
         private readonly IMapper _mapper;
+        private readonly Context _context;
 
-        public PersonelCocuklariCustomService(IMapper mapper)
+        public PersonelCocuklariCustomService(IMapper mapper, Context context)
         {
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<PersonelCocuklariDto> TGetByTcKimlikNoAsync(string tcKimlikNo)
         {
-            using var context = new Context();
-            var entity = await context.PersonelCocuklari.FirstOrDefaultAsync(pc => pc.PersonelTcKimlikNo == tcKimlikNo);
+            var entity = await _context.PersonelCocuklari.AsNoTracking().FirstOrDefaultAsync(pc => pc.PersonelTcKimlikNo == tcKimlikNo);
             var dto = _mapper.Map<PersonelCocuklariDto>(entity);
             return dto;
         }

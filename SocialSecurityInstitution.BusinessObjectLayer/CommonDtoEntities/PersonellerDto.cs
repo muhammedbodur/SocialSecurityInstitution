@@ -69,6 +69,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public string PassWord { get; set; }
         public DateTime EklenmeTarihi { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }
+        public string? SessionID { get; set; }
 
         public ICollection<BankolarKullaniciDto> BankolarKullanici { get; set; }
         public ICollection<KanalPersonelleriDto> KanalPersonelleri { get; set; }

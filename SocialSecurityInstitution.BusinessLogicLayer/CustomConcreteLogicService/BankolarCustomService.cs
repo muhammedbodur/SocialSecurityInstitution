@@ -12,19 +12,20 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
     public class BankolarCustomService : IBankolarCustomService
     {
         private readonly IMapper _mapper;
+        private readonly Context _context;
 
-        public BankolarCustomService(IMapper mapper)
+        public BankolarCustomService(IMapper mapper, Context context)
         {
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<BankolarRequestDto> GetBankoByIdAsync(int bankoId)
         {
-            using var context = new Context();
-            var banko = await context.Bankolar
+            var banko = await _context.Bankolar
                 .Include(b => b.HizmetBinalari)
                 .ThenInclude(hb => hb.Departman)
-                .FirstOrDefaultAsync(b => b.BankoId == bankoId);
+                .AsNoTracking().FirstOrDefaultAsync(b => b.BankoId == bankoId);
 
             var bankoDto = new BankolarRequestDto
             {
@@ -46,9 +47,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<List<BankolarRequestDto>> GetBankolarWithDetailsAsync()
         {
-            using var context = new Context();
-
-            var bankolar = await context.Bankolar
+            var bankolar = await _context.Bankolar
                 .Include(b => b.HizmetBinalari)
                     .ThenInclude(hb => hb.Departman)
                 .Include(b => b.BankolarKullanici)
@@ -87,42 +86,35 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
             }).ToList();
 
             return bankolarRequestDto;
-
         }
 
         public async Task<PersonellerDto> GetBankoPersonelDetailAsync(string tcKimlikNo)
         {
-            using var context = new Context();
-
-            var personel = await context.Personeller
+            var personel = await _context.Personeller
                 .Where(p => p.TcKimlikNo == tcKimlikNo)
                 .Include(p => p.Departman)
                     .ThenInclude(d => d.HizmetBinalari)
                 .Include(p => p.BankolarKullanici)
                     .ThenInclude(bk => bk.Bankolar)
-                .FirstOrDefaultAsync();
-
+                .AsNoTracking().FirstOrDefaultAsync();
 
             var personelDto = _mapper.Map<PersonellerDto>(personel);
-
             return personelDto;
         }
 
         public async Task<List<DepartmanPersonelleriDto>> GetDeparmanPersonelleriAsync(int bankoId)
         {
-            using var context = new Context();
-
-            var personeller = await context.Bankolar
+            var personeller = await _context.Bankolar
                 .Where(b => b.BankoId == bankoId)
-                .Join(context.HizmetBinalari,
+                .Join(_context.HizmetBinalari,
                       b => b.HizmetBinasiId,
                       hb => hb.HizmetBinasiId,
                       (b, hb) => new { Banko = b, HizmetBinasi = hb })
-                .Join(context.Departmanlar,
+                .Join(_context.Departmanlar,
                       bh => bh.HizmetBinasi.DepartmanId,
                       d => d.DepartmanId,
                       (bh, d) => new { bh.Banko, bh.HizmetBinasi, Departman = d })
-                .Join(context.Personeller,
+                .Join(_context.Personeller,
                       bd => bd.Departman.DepartmanId,
                       p => p.DepartmanId,
                       (bd, p) => new { bd.Banko, bd.HizmetBinasi, bd.Departman, Personel = p })
@@ -140,6 +132,36 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
             }).ToList();
 
             return departmanPersonelleriDto;
+        }
+
+        public async Task<List<HizmetBinasiPersonelleriDto>> GetHizmetBinasiPersonelleriAsync(int bankoId)
+        {
+            var personellerList = await _context.Bankolar
+                .Where(b => b.BankoId == bankoId)
+                .Join(_context.HizmetBinalari,
+                    b => b.HizmetBinasiId,
+                    hb => hb.HizmetBinasiId,
+                    (b, hb) => new { Banko = b, HizmetBinasi = hb })
+                .Join(_context.Departmanlar,
+                    bh => bh.HizmetBinasi.DepartmanId,
+                    d => d.DepartmanId,
+                    (bh, d) => new { bh.Banko, bh.HizmetBinasi, Departman = d })
+                .Join(_context.Personeller.Where(p => p.PersonelAktiflikDurum == PersonelAktiflikDurum.Aktif),
+                    bhd => bhd.HizmetBinasi.HizmetBinasiId,
+                    p => p.HizmetBinasiId,
+                    (bhd, p) => new HizmetBinasiPersonelleriDto
+                    {
+                        TcKimlikNo = p.TcKimlikNo,
+                        SicilNo = p.SicilNo,
+                        PersonelAdSoyad = p.AdSoyad,
+                        HizmetBinasiId = bhd.HizmetBinasi.HizmetBinasiId,
+                        HizmetBinasiAdi = bhd.HizmetBinasi.HizmetBinasiAdi,
+                        DepartmanId = bhd.Departman.DepartmanId,
+                        DepartmanAdi = bhd.Departman.DepartmanAdi,
+                    })
+                .ToListAsync();
+
+            return personellerList;
         }
     }
 }

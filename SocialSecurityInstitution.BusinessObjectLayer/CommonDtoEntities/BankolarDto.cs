@@ -18,6 +18,8 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         [ForeignKey("HizmetBinasiId")]
         public HizmetBinalariDto HizmetBinalari { get; set; }
         public int BankoNo { get; set; }
+        public BankoTipi BankoTipi { get; set; }
+        public KatTipi KatTipi { get; set; }
         public Aktiflik BankoAktiflik { get; set; }
         public DateTime EklenmeTarihi { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }

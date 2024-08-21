@@ -57,6 +57,8 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpPost]
         public async Task<IActionResult> Kaydet(PersonellerDto personellerDto)
         {
+            personellerDto.PassWord = personellerDto.TcKimlikNo;
+
             var insertResult = await _personellerService.TInsertAsync(personellerDto);
 
             if (insertResult.IsSuccess)

@@ -10,9 +10,11 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
     public class SiralarDto
     {
         public int SiraId { get; set; }
-        public int Sira { get; set; }
-        public int? BankoIslemId { get; set; }
+        public int SiraNo { get; set; }
         public int KanalAltIslemId { get; set; }
+        public string? KanalAltAdi { get; set; }
+        public int HizmetBinasiId { get; set; }
+        public string? TcKimlikNo { get; set; }
         public DateTime SiraAlisZamani { get; set; }
         public DateTime? IslemBaslamaZamani { get; set; }
         public DateTime? IslemBitisZamani { get; set; }

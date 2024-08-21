@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
 
@@ -7,15 +8,15 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
     public class Personeller
     {
         [Key]
-        public string TcKimlikNo { get; set; }
+        public string TcKimlikNo { get; set; } = string.Empty;
         public int SicilNo { get; set; }
-        public required string AdSoyad { get; set; }
+        public string AdSoyad { get; set; } = string.Empty;
         public string? NickName { get; set; }
         public int PersonelKayitNo { get; set; }
         public int KartNo { get; set; }
-        public DateTime KartNoAktiflikTarihi { get; set; }
-        public DateTime KartNoDuzenlenmeTarihi { get; set; }
-        public DateTime KartNoGonderimTarihi { get; set; }
+        public DateTime? KartNoAktiflikTarihi { get; set; }
+        public DateTime? KartNoDuzenlenmeTarihi { get; set; }
+        public DateTime? KartNoGonderimTarihi { get; set; }
         public IslemBasari KartGonderimIslemBasari { get; set; }
         public int DepartmanId { get; set; }
         [ForeignKey("DepartmanId")]
@@ -35,7 +36,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         [ForeignKey("HizmetBinasiId")]
         public HizmetBinalari? HizmetBinasi { get; set; }
         public PersonelTipi PersonelTipi { get; set; }
-        public required string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
         public int Dahili { get; set; }
         public string? CepTelefonu { get; set; }
         public string? CepTelefonu2 { get; set; }
@@ -88,8 +89,12 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
+        public string? SessionID { get; set; }
+
         public ICollection<BankolarKullanici> BankolarKullanici { get; set; }
         public ICollection<KanalPersonelleri> KanalPersonelleri { get; set; }
+        public ICollection<DatabaseLog> DatabaseLog { get; set; }
+        public HubConnection? HubConnection { get; set; }
 
         public Personeller() => PassWord = TcKimlikNo;
     }

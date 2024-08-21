@@ -14,6 +14,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         [Key]
         public int HizmetBinasiId { get; set; }
         public required string HizmetBinasiAdi { get; set; }
+        public string? Aciklama { get; set; }
         public int DepartmanId { get; set; }
         [ForeignKey("DepartmanId")]
         public Departmanlar Departman { get; set; }

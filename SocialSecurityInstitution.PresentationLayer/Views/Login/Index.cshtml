@@ -1,9 +1,8 @@
-﻿@{
-    @model SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.LoginDto;
+﻿@model SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.LoginDto
+@{
     ViewData["Title"] = "Login";
     Layout = null;
-
-    var errorMessage = TempData["ErrorMessage"] as string;
+    var errorMessage = ViewData["ErrorMessage"] as string ?? TempData["ErrorMessage"] as string;
 }
 
 <!DOCTYPE html>

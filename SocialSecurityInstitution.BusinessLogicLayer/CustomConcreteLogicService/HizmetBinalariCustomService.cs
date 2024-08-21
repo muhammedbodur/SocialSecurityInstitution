@@ -1,33 +1,29 @@
-﻿using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.BusinessObjectLayer;
-using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities;
 using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService
 {
     public class HizmetBinalariCustomService : IHizmetBinalariCustomService
     {
         private readonly IMapper _mapper;
+        private readonly Context _context;
 
-        public HizmetBinalariCustomService(IMapper mapper)
+        public HizmetBinalariCustomService(IMapper mapper, Context context)
         {
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<List<HizmetBinalariDto>> GetHizmetBinalariByDepartmanIdAsync(int departmanId)
         {
-            using var context = new Context();
-            var hizmetBinalari = await context.HizmetBinalari
+            var hizmetBinalari = await _context.HizmetBinalari
                                   .Where(x => x.DepartmanId == departmanId && x.HizmetBinasiAktiflik == Enums.Aktiflik.Aktif)
                                   .ToListAsync();
 
@@ -43,13 +39,11 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<HizmetBinalariDepartmanlarDto> GetActiveHizmetBinasiAsync(int hizmetBinasiId, int departmanId)
         {
-            using var context = new Context();
-
-            var hizmetBinalari = await context.HizmetBinalari
+            var hizmetBinalari = await _context.HizmetBinalari
                                 .Include(hb => hb.Departman)
                                 .Where(hb => hb.HizmetBinasiAktiflik == Enums.Aktiflik.Aktif && hb.HizmetBinasiId == hizmetBinasiId && hb.DepartmanId == departmanId)
                                 .Where(hb => hb.Departman.DepartmanAktiflik == Enums.Aktiflik.Aktif)
-                                .FirstOrDefaultAsync();
+                                .AsNoTracking().FirstOrDefaultAsync();
 
             if (hizmetBinalari != null)
             {
@@ -75,12 +69,10 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 
         public async Task<HizmetBinalariDepartmanlarDto> GetDepartmanHizmetBinasiAsync(int hizmetBinasiId)
         {
-            using var context = new Context();
-
-            var hizmetBinalari = await context.HizmetBinalari
+            var hizmetBinalari = await _context.HizmetBinalari
            .Include(hb => hb.Departman)
            .Where(hb => hb.HizmetBinasiId == hizmetBinasiId)
-           .FirstOrDefaultAsync();
+           .AsNoTracking().FirstOrDefaultAsync();
 
             if (hizmetBinalari != null)
             {
@@ -104,5 +96,4 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
             }
         }
     }
-
 }

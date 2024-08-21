@@ -10,18 +10,18 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
     public class BankolarKullaniciCustomService : IBankolarKullaniciCustomService
     {
         private readonly IMapper _mapper;
+        private readonly Context _context;
 
-        public BankolarKullaniciCustomService(IMapper mapper)
+        public BankolarKullaniciCustomService(IMapper mapper, Context context)
         {
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<BankolarKullaniciDto> GetBankolarKullaniciByBankoIdAsync(int bankoId)
         {
-            using var context = new Context();
-
-            var bankoKullanici = await context.BankolarKullanici
-                .FirstOrDefaultAsync(bk => bk.BankoId == bankoId);
+            var bankoKullanici = await _context.BankolarKullanici
+                .AsNoTracking().FirstOrDefaultAsync(bk => bk.BankoId == bankoId);
 
             var bankoKullaniciDto = _mapper.Map<BankolarKullaniciDto>(bankoKullanici);
 

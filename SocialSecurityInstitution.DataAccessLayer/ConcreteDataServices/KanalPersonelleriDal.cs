@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
+using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +15,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
     public class KanalPersonelleriDal : GenericRepository<KanalPersonelleri, KanalPersonelleriDto>, IKanalPersonelleriDal
     {
-        public KanalPersonelleriDal(IMapper mapper) : base(mapper)
+        public KanalPersonelleriDal(Context context, IMapper mapper, ILogService logService) : base(context, mapper, logService)
         {
         }
     }

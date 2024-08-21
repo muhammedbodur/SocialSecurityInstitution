@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
+using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +15,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
     public class LoginLogoutLogDal : GenericRepository<LoginLogoutLog, LoginLogoutLogDto>, ILoginLogoutLogDal
     {
-        public LoginLogoutLogDal(IMapper mapper) : base(mapper)
+        public LoginLogoutLogDal(Context context, IMapper mapper, ILogService logService) : base(context, mapper, logService)
         {
         }
     }

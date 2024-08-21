@@ -1,0 +1,88 @@
+﻿/*********************** Çağırma Paneli ************************/
+.layout-navbar.navbar-online {
+    background-color: #DFF0D8; /* Soft yeşil renk */
+}
+
+.layout-navbar.navbar-offline {
+    background-color: #a3a1ad; /* Soft kırmızı gri */
+}
+
+/* Panelin genel stili */
+#template-customizer {
+    width: 300px;
+    height: 100vh;
+    background-color: #f9f9f9;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 2000; /* Daha yüksek bir z-index */
+    transition: transform 0.3s ease;
+    transform: translateX(100%); /* Gizli durum */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+}
+
+/* Panel açıldığında sağdan sola kaydır */
+#template-customizer.show {
+    transform: translateX(0); /* Görünür durumda */
+}
+
+/* Panel başlığı */
+.template-customizer-header {
+    padding: 20px;
+    background-color: #696bff;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Panel içeriği */
+.template-customizer-inner {
+    padding: 20px;
+}
+
+/* Çağırma butonu stili */
+#callNextButton {
+    background-color: #696bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+#callNextButton:hover {
+    background-color: #696bff;
+}
+
+/* Paneli açma/kapatma butonu */
+#callPanelToggleCustomizerButton {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background-color: #696bff;
+    color: white;
+    padding: 30px 20px; /* Butonun boyutunu */
+    border: none;
+    border-radius: 5px 0 0 5px;
+    cursor: pointer;
+    z-index: 2001; /* Panelin üstünde olacak */
+    transition: right 0.3s ease, background-color 0.3s ease;
+    font-size: 24px; /* Font boyutu artırıldı */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Hafif bir gölge ekleyerek butonun belirginliği artırıldı */
+}
+
+    #callPanelToggleCustomizerButton:hover {
+        background-color: #5052ff; /* Hover durumunda renk değişimi */
+    }
+
+    #callPanelToggleCustomizerButton.hide {
+        right: -100px; /* Panel açıldığında butonun kaybolmasını sağlamak için */
+    }
+
+/* İkon stili */
+.toggleCustomizerButtonIcon {
+    font-size: 28px; /* İkon boyutu artırıldı */
+}
+/*********************** Çağırma Paneli ************************/

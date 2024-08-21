@@ -19,6 +19,8 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         [ForeignKey("HizmetBinasiId")]
         public HizmetBinalari HizmetBinalari { get; set; }
         public int BankoNo { get; set; }
+        public BankoTipi BankoTipi { get; set; }
+        public KatTipi KatTipi { get; set; }
         public Aktiflik BankoAktiflik { get; set; }
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;

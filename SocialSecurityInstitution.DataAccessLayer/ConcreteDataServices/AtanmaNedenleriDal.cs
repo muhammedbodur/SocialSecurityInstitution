@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
@@ -13,7 +15,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
     public class AtanmaNedenleriDal : GenericRepository<AtanmaNedenleri, AtanmaNedenleriDto>, IAtanmaNedenleriDal
     {
-        public AtanmaNedenleriDal(IMapper mapper) : base(mapper)
+        public AtanmaNedenleriDal(Context context, IMapper mapper, ILogService logService) : base(context, mapper, logService)
         {
         }
     }

@@ -1,21 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SocialSecurityInstitution.BusinessObjectLayer
 {
     public class LoginLogoutLog
     {
         [Key]
+        [Column("Id")]
         public int Id { get; set; }
-        public string? TcKimlikNo { get; set; }
-        public DateTime LoginTime { get; set; }
-        public DateTime LogoutTime { get; set; }
-        public string? SessionID { get; set; }
 
+        [Column("TcKimlikNo")]
+        public string? TcKimlikNo { get; set; }
+
+        [Column("LoginTime")]
+        public DateTime LoginTime { get; set; }
+
+        [Column("LogoutTime")]
+        public DateTime? LogoutTime { get; set; }
+
+        [Column("SessionID")]
+        public string? SessionID { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,8 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public int Id { get; set; }
         public string? TcKimlikNo { get; set; }
         public DateTime LoginTime { get; set; }
-        public DateTime LogoutTime { get; set; }
+        public DateTime? LogoutTime { get; set; }
         public string? SessionID { get; set; }
     }
+
 }
