@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NToastNotify;
@@ -64,59 +64,15 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpGet]
         public async Task<JsonResult> AktifPasifEt(int bankoId)
         {
-            var bankolarDto = await _bankolarService.TGetByIdAsync(bankoId);
-
-            if (bankolarDto != null)
-            {
-                var AktiflikDurum = (bankolarDto.BankoAktiflik == Aktiflik.Aktif ? Aktiflik.Pasif : Aktiflik.Aktif);
-                bankolarDto.BankoAktiflik = AktiflikDurum;
-                bankolarDto.DuzenlenmeTarihi = DateTime.Now;
-
-                if (AktiflikDurum == Aktiflik.Pasif)
-                {
-                    var bankolarKullaniciDto = await _bankolarKullaniciCustomService.GetBankolarKullaniciByBankoIdAsync(bankoId);
-                    var deleteResult = true;
-                    if (bankolarKullaniciDto != null)
-                    {
-                        deleteResult = await _bankolarKullaniciService.TDeleteAsync(bankolarKullaniciDto);
-                    }
-                    
-                    if(deleteResult)
-                    {
-                        var updateResult = await _bankolarService.TUpdateAsync(bankolarDto);
-
-                        if (updateResult)
-                        {
-                            return Json(new { islemDurum = 1, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarılı Oldu " });
-                        }
-                        else
-                        {
-                            return Json(new { islemDurum = 0, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarısız Oldu!" });
-                        }
-                    }
-                    else
-                    {
-                        return Json(new { islemDurum = 0, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarısız Oldu!" });
-                    }
-                }
-                else
-                {
-                    var updateResult = await _bankolarService.TUpdateAsync(bankolarDto);
-
-                    if (updateResult)
-                    {
-                        return Json(new { islemDurum = 1, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarılı Oldu " });
-                    }
-                    else
-                    {
-                        return Json(new { islemDurum = 0, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarısız Oldu!" });
-                    }
-                }
-            }
-            else
-            {
-                return Json(new { islemDurum = 0, aktiflikDurum = "", mesaj = "Banko Bulunamadı!" });
-            }
+            // Business logic service katmanına taşındı
+            var (success, message, aktiflikDurum) = await _bankolarCustomService.ToggleBankoAktiflikAsync(bankoId);
+            
+            return Json(new 
+            { 
+                islemDurum = success ? 1 : 0, 
+                aktiflikDurum = aktiflikDurum, 
+                mesaj = message 
+            });
         }
 
         [HttpPost]
@@ -153,136 +109,61 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpGet]
         public async Task<JsonResult> BankoPersonelGuncelle(int bankoId, string tcKimlikNo)
         {
-            try
+            // ✅ Business logic service katmanına taşındı
+            var (success, message, personelData) = await _bankolarCustomService.UpdateBankoPersonelAsync(bankoId, tcKimlikNo);
+            
+            if (success)
             {
-                var personelDto = await _bankolarCustomService.GetBankoPersonelDetailAsync(tcKimlikNo);
-                var bankolarKullaniciDto = await _bankolarKullaniciCustomService.GetBankolarKullaniciByBankoIdAsync(bankoId);
-                var bankolarDto = await _bankolarService.TGetByIdAsync(bankoId);
-
-                if (personelDto != null && bankolarDto.BankoAktiflik == Aktiflik.Aktif)
-                {
-                    if (bankolarKullaniciDto != null)
-                    {
-                        // Daha önce bankoya ait kullanıcı var ve güncelleme yapılacak
-                        var yeniKullanici = new BankolarKullaniciDto
-                        {
-                            BankoKullaniciId = bankolarKullaniciDto.BankoKullaniciId,
-                            BankoId = bankoId,
-                            TcKimlikNo = tcKimlikNo,
-                            EklenmeTarihi = bankolarKullaniciDto.EklenmeTarihi,
-                            DuzenlenmeTarihi = DateTime.Now
-                        };
-
-                        var updateResult = await _bankolarKullaniciService.TUpdateAsync(yeniKullanici);
-
-                        if (updateResult)
-                        {
-                            return Json(new { success = "İşlem başarıyla tamamlandı.", data = _mapper.Map<PersonelRequestDto>(personelDto) });
-                        }
-                        else
-                        {
-                            return Json(new { error = "Güncelleme işlemi başarısız oldu!" , data = false});
-                        }
-                    }
-                    else
-                    {
-                        // Daha önce bankoya ait bir kullanıcı yok, ekleme yapılacak
-                        var yeniKullanici = new BankolarKullaniciDto
-                        {
-                            BankoId = bankoId,
-                            TcKimlikNo = tcKimlikNo,
-                            EklenmeTarihi = DateTime.Now,
-                            DuzenlenmeTarihi = DateTime.Now
-                        };
-
-                        var insertResult = await _bankolarKullaniciService.TInsertAsync(yeniKullanici);
-
-                        if (insertResult.IsSuccess)
-                        {
-                            return Json(new { success = "İşlem başarıyla tamamlandı." , data = _mapper.Map<PersonelRequestDto>(personelDto)});
-                        }
-                        else
-                        {
-                            return Json(new { error = "Ekleme işlemi başarısız oldu!", data = false });
-                        }
-                    }
-                }
-                else if (bankolarDto != null && bankolarDto.BankoAktiflik == Aktiflik.Pasif)
-                {
-                    return Json(new { error = "İşlem yapılan banko pasif durumda ve pasif durumdaki bankoya personel atanamaz!", data = false });
-                }
-                else
-                {
-                    return Json(new { error = "Banko bulunamadı.", data = false });
-                }
+                return Json(new { success = message, data = personelData });
             }
-            catch (Exception ex)
+            else
             {
-                return Json(new { error = ex.Message, data = false });
+                return Json(new { error = message, data = false });
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> Ekle(int bankoNo, int hizmetBinasiId, int departmanId)
         {
-            var bankolarDto = new BankolarDto
+            // ✅ Business logic service katmanına taşındı
+            var (success, message, bankoData) = await _bankolarCustomService.CreateBankoAsync(bankoNo, hizmetBinasiId, departmanId);
+            
+            if (success)
             {
-                BankoNo = bankoNo,
-                HizmetBinasiId = hizmetBinasiId,
-                EklenmeTarihi = DateTime.Now,
-                BankoAktiflik = Aktiflik.Aktif
-            };
-
-            var hizmetBinalariDepartmanlarDto = await _hizmetBinalariCustomService.GetActiveHizmetBinasiAsync(hizmetBinasiId, departmanId);
-
-            if (hizmetBinalariDepartmanlarDto != null)
-            {
-                var insertResult = await _bankolarService.TInsertAsync(bankolarDto);
-
-                if (insertResult.IsSuccess)
-                {
-                    var bankolarHizmetBinalariDepartmanlarDto = _mapper.Map<BankolarHizmetBinalariDepartmanlarDto>(hizmetBinalariDepartmanlarDto);
-                    bankolarHizmetBinalariDepartmanlarDto.BankoId = (int)insertResult.LastPrimaryKeyValue;
-                    bankolarHizmetBinalariDepartmanlarDto.BankoNo = bankoNo;
-                    bankolarHizmetBinalariDepartmanlarDto.BankoAktiflik = Aktiflik.Aktif;
-                    bankolarHizmetBinalariDepartmanlarDto.BankoEklenmeTarihi = DateTime.Now;
-                    bankolarHizmetBinalariDepartmanlarDto.BankoDuzenlenmeTarihi = DateTime.Now;
-
-                    return Ok(bankolarHizmetBinalariDepartmanlarDto);
-                }
-                else
-                {
-                    return BadRequest("Ekleme işlemi başarısız oldu!");
-                }
+                return Ok(bankoData);
             }
             else
             {
-                return BadRequest("Hizmet Binası Bulunamadı!");
+                return BadRequest(message);
             }
         }
 
         [HttpGet]
         public async Task<JsonResult> Sil(int bankoId)
         {
-            var bankolarDto = await _bankolarService.TGetByIdAsync(bankoId);
+            // ✅ Business logic service katmanına taşındı
+            var (success, message) = await _bankolarCustomService.DeleteBankoAsync(bankoId);
+            
+            return Json(new 
+            { 
+                islemDurum = success ? 1 : 0, 
+                mesaj = message 
+            });
+        }
 
-            if (bankolarDto != null)
+        [HttpPost]
+        public async Task<IActionResult> KatTipiGuncelle(int bankoId, int katTipi)
+        {
+            // ✅ Business logic service katmanına taşındı
+            var (success, message) = await _bankolarCustomService.UpdateBankoKatTipiAsync(bankoId, katTipi);
+            
+            if (success)
             {
-
-                var deleteResult = await _bankolarService.TDeleteAsync(bankolarDto);
-
-                if (deleteResult)
-                {
-                    return Json(new { islemDurum = 1, mesaj = "Banko Silme İşlemi Başarılı Oldu " });
-                }
-                else
-                {
-                    return Json(new { islemDurum = 0, mesaj = "Bankoyu Silme İşlemi Başarısız Oldu!" });
-                }
+                return Ok();
             }
             else
             {
-                return Json(new { islemDurum = 0, mesaj = "Banko Bulunamadı!" });
+                return BadRequest(message);
             }
         }
     }

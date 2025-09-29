@@ -1,4 +1,4 @@
-ï»¿<link rel="stylesheet" href="~/vendor/fonts/boxicons.css" />
+<link rel="stylesheet" href="~/vendor/fonts/boxicons.css" />
 <link rel="stylesheet" href="~/vendor/fonts/fontawesome.css" />
 <link rel="stylesheet" href="~/vendor/fonts/flag-icons.css" />
 <link rel="stylesheet" href="~/vendor/css/core.css" class="template-customizer-core-css" />
@@ -12,3 +12,169 @@
 <link rel="stylesheet" href="~/vendor/libs/select2/select2.css" />
 <link rel="stylesheet" href="~/vendor/libs/tagify/tagify.css" />
 <link rel="stylesheet" href="~/vendor/libs/bootstrap-select/bootstrap-select.css" />
+
+<!-- DataTables Bootstrap 5 CSS - Tek Versiyon -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" />
+
+<!-- DataTable Custom Styles -->
+<style>
+    /* DataTables Ana Wrapper */
+    .dataTables_wrapper {
+        overflow: visible !important;
+    }
+
+        .dataTables_wrapper table.dataTable {
+            width: 100% !important;
+            margin: 0 !important;
+            border-collapse: collapse !important;
+        }
+
+        /* Header ve Body Hizalama */
+        .dataTables_wrapper .dataTables_scrollHead {
+            overflow: visible !important;
+        }
+
+        .dataTables_wrapper .dataTables_scrollBody {
+            overflow: auto !important;
+        }
+
+        /* Text Wrapping için DataTable Özel Sýnýfý */
+        .dataTables_wrapper table.dataTable.dt-wrap td,
+        .dataTables_wrapper table.dataTable.dt-wrap th {
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            hyphens: auto;
+            min-width: 80px;
+        }
+
+    /* Tablo Çizgileri */
+    table.dataTable thead th,
+    table.dataTable thead td {
+        border-bottom: 1px solid #dee2e6 !important;
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+
+    table.dataTable tbody td {
+        border-bottom: 1px solid #e9ecef !important;
+        padding: 8px;
+        vertical-align: middle;
+    }
+
+    table.dataTable tbody tr {
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* DataTable Kontrolleri */
+    .dataTables_wrapper .dataTables_length {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start !important;
+    }
+
+        .dataTables_wrapper .dataTables_length label {
+            display: flex !important;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+    .dataTables_wrapper .dataTables_filter {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-end !important;
+    }
+
+        .dataTables_wrapper .dataTables_filter label {
+            display: flex !important;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+    /* Responsive Ayarlarý */
+    table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before,
+    table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
+        background-color: #007bff;
+        border: 2px solid white;
+        border-radius: 14px;
+    }
+
+    /* Avatar ve Kullanýcý Bilgileri */
+    .d-flex.align-items-center {
+        min-height: 40px;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Dropdown Menü */
+    .dataTables_wrapper .dropdown-menu {
+        min-width: 140px;
+        font-size: 0.875rem;
+    }
+
+    /* Form Kontrolleri */
+    .dataTables_filter input {
+        border-radius: 6px;
+        padding: 8px 12px;
+        border: 1px solid #d9dee3;
+        font-size: 0.875rem;
+    }
+
+    .dataTables_length select {
+        border-radius: 6px;
+        padding: 6px 10px;
+        border: 1px solid #d9dee3;
+        font-size: 0.875rem;
+    }
+
+    /* Pagination */
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1rem;
+    }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 6px 12px;
+            margin: 0 2px;
+            border-radius: 4px;
+        }
+
+    /* Mobile Responsive - RAZOR ÝÇÝN @@ KULLANILDI */
+    @@media (max-width: 768px) {
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center;
+            margin-bottom: 10px;
+            justify-content: center !important;
+        }
+
+        table.dataTable tbody td {
+            font-size: 0.8rem;
+            padding: 6px 4px;
+        }
+
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            text-align: center;
+            margin-top: 10px;
+        }
+    }
+
+    /* Print ve Export Butonlarý */
+    .dt-buttons {
+        margin-bottom: 10px;
+    }
+
+    .dt-button {
+        margin-right: 5px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+</style>

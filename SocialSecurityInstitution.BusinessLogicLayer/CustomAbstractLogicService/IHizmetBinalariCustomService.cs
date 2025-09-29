@@ -12,6 +12,9 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
         Task<List<HizmetBinalariDto>> GetHizmetBinalariByDepartmanIdAsync(int departmanId);
         Task<HizmetBinalariDepartmanlarDto> GetActiveHizmetBinasiAsync(int hizmetBinasiId, int departmanId);
         Task<HizmetBinalariDepartmanlarDto> GetDepartmanHizmetBinasiAsync(int hizmetBinasiId);
-    }
 
+        Task<List<HizmetBinalariDto>> GetAllActiveHizmetBinalariAsync();
+        Task<List<HizmetBinalariDepartmanlarDto>> GetHizmetBinalariWithDepartmanDetailsAsync();
+        Task<bool> ValidateHizmetBinasiAsync(int hizmetBinasiId);
+    }
 }

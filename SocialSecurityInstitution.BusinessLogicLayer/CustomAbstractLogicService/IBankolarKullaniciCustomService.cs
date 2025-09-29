@@ -10,5 +10,10 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
     public interface IBankolarKullaniciCustomService
     {
         Task<BankolarKullaniciDto> GetBankolarKullaniciByBankoIdAsync(int bankoId);
+        Task<BankolarKullaniciDto> GetBankolarKullaniciByTcKimlikNoAsync(string tcKimlikNo);
+
+        Task<List<BankolarKullaniciDto>> GetActiveBankolarKullaniciByHizmetBinasiIdAsync(int hizmetBinasiId);
+        Task<bool> IsPersonelAssignedToBankoAsync(string tcKimlikNo);
+        Task<List<BankolarKullaniciDto>> GetBankolarByTcKimlikNoAsync(string tcKimlikNo);
     }
 }

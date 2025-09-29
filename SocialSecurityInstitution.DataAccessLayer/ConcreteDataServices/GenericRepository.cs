@@ -17,8 +17,8 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
         where TEntity : class
         where TDto : class
     {
-        private readonly Context _context;
-        private readonly IMapper _mapper;
+        protected readonly Context _context;
+        protected readonly IMapper _mapper;
         private readonly ILogService _logService;
 
         public GenericRepository(Context context, IMapper mapper, ILogService logService)
@@ -91,21 +91,43 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
         {
             try
             {
+                // DTO'dan entity'yi oluştur
                 var entity = _mapper.Map<TEntity>(dto);
+
+                // Anahtar (Key) bilgilerini al
+                var keyName = GetKeyName();
+                var keyProperty = entity.GetType().GetProperty(keyName);
+
+                if (keyProperty == null)
+                    throw new InvalidOperationException($"Key property '{keyName}' not found on entity type '{typeof(TEntity).Name}'.");
+
+                var keyValue = keyProperty.GetValue(entity);
+
+                // Key türüne uygun şekilde Expression üret
                 var oldEntity = await _context.Set<TEntity>()
                                               .AsNoTracking()
-                                              .FirstOrDefaultAsync(CreateExpressionForId(Convert.ToInt32(entity.GetType().GetProperty(GetKeyName()).GetValue(entity))));
+                                              .FirstOrDefaultAsync(CreateExpressionForId(keyName, keyValue));
 
+                // Önceki veriyi JSON olarak sakla
                 var oldData = JsonSerializer.Serialize(oldEntity);
 
+                // Güncelleme işlemi
                 _context.Entry(entity).State = EntityState.Modified;
                 int affectedRows = await _context.SaveChangesAsync();
 
                 if (affectedRows > 0)
                 {
-                    var afterData = JsonSerializer.Serialize(dto);
-                    _logService.LogAction(typeof(TEntity).Name, DatabaseAction.UPDATE, beforeData: oldData, afterData: afterData);
-                    return true;
+                    try
+                    {
+                        var afterData = JsonSerializer.Serialize(dto);
+                        await _logService.LogActionAsync(typeof(TEntity).Name, DatabaseAction.UPDATE, beforeData: oldData, afterData: afterData);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleException(ex);
+                        throw;
+                    }
                 }
 
                 return false;
@@ -116,6 +138,16 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
                 throw;
             }
         }
+
+        private Expression<Func<TEntity, bool>> CreateExpressionForId(string keyName, object keyValue)
+        {
+            var parameter = Expression.Parameter(typeof(TEntity), "x");
+            var property = Expression.Property(parameter, keyName);
+            var convertedKeyValue = Expression.Constant(Convert.ChangeType(keyValue, property.Type), property.Type);
+            var equal = Expression.Equal(property, convertedKeyValue);
+            return Expression.Lambda<Func<TEntity, bool>>(equal, parameter);
+        }
+
 
         public async Task<bool> DeleteAsync(TDto dto)
         {
@@ -133,7 +165,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 
                 if (affectedRows > 0)
                 {
-                    _logService.LogAction(typeof(TEntity).Name, DatabaseAction.DELETE, beforeData: oldData);
+                    _logService.LogActionAsync(typeof(TEntity).Name, DatabaseAction.DELETE, beforeData: oldData);
                     return true;
                 }
 

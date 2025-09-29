@@ -1,4 +1,4 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using System;
 using System.Collections.Generic;
@@ -10,5 +10,6 @@ namespace SocialSecurityInstitution.DataAccessLayer.AbstractDataServices
 {
     public interface IPersonelCocuklariDal : IGenericDal<PersonelCocuklariDto>
     {
+        Task<PersonelCocuklariDto> TGetByTcKimlikNoAsync(string tcKimlikNo);
     }
 }

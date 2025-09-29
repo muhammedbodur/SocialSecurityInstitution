@@ -1,8 +1,12 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using NToastNotify;
 using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
 using SocialSecurityInstitution.BusinessLogicLayer.ConcreteLogicServices;
@@ -11,18 +15,15 @@ using SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService;
 using SocialSecurityInstitution.BusinessLogicLayer.Hubs;
 using SocialSecurityInstitution.BusinessLogicLayer.MappingLogicService;
 using SocialSecurityInstitution.BusinessLogicLayer.SqlDependencyServices;
+using SocialSecurityInstitution.BusinessLogicLayer.ValidationServices;
+using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
 using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices;
+using SocialSecurityInstitution.PresentationLayer.Middleware;
 using SocialSecurityInstitution.PresentationLayer.Services.AbstractPresentationServices;
 using SocialSecurityInstitution.PresentationLayer.Services.ConcretePresentationServices;
-using Microsoft.Extensions.Configuration;
-using SocialSecurityInstitution.PresentationLayer.Middleware;
-using Microsoft.AspNetCore.SignalR;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using System;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 namespace SocialSecurityInstitution.PresentationLayer
@@ -125,7 +126,7 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddDbContext<Context>(options =>
                 options.UseSqlServer(connectionString), ServiceLifetime.Scoped);
 
-            // Add all Scoped services
+            // Add all Scoped dataAccess services
             builder.Services.AddScoped<IAtanmaNedenleriDal, AtanmaNedenleriDal>();
             builder.Services.AddScoped<IBankoIslemleriDal, BankoIslemleriDal>();
             builder.Services.AddScoped<IBankolarKullaniciDal, BankolarKullaniciDal>();
@@ -152,21 +153,33 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddScoped<IKioskIslemGruplariDal, KioskIslemGruplariDal>();
             builder.Services.AddScoped<ISiralarDal, SiralarDal>();
             builder.Services.AddScoped<IDatabaseLogDal, DatabaseLogDal>();
-
             builder.Services.AddScoped<IHubConnectionDal, HubConnectionDal>();
-
+            builder.Services.AddScoped<ITvlerDal, TvlerDal>();
+            builder.Services.AddScoped<IHubTvConnectionDal, HubTvConnectionDal>();
+            builder.Services.AddScoped<ITvBankolariDal, TvBankolariDal>();
+            
             // Custom Services
             builder.Services.AddScoped<IUserInfoService, UserInfoService>();
             builder.Services.AddScoped<ILoginControlService, LoginControlService>();
             builder.Services.AddScoped<IPersonelCustomService, PersonelCustomService>();
+            builder.Services.AddScoped<IPersonelFacadeService, PersonelFacadeService>();
             builder.Services.AddScoped<IBankolarCustomService, BankolarCustomService>();
             builder.Services.AddScoped<IBankolarKullaniciCustomService, BankolarKullaniciCustomService>();
             builder.Services.AddScoped<IHizmetBinalariCustomService, HizmetBinalariCustomService>();
             builder.Services.AddScoped<IKanallarCustomService, KanallarCustomService>();
+            builder.Services.AddScoped<IKanalFacadeService, KanalFacadeService>();
             builder.Services.AddScoped<IKanalPersonelleriCustomService, KanalPersonelleriCustomService>();
             builder.Services.AddScoped<IKioskIslemGruplariCustomService, KioskIslemGruplariCustomService>();
             builder.Services.AddScoped<ISiralarCustomService, SiralarCustomService>();
             builder.Services.AddScoped<IHubConnectionCustomService, HubConnectionCustomService>();
+            builder.Services.AddScoped<IHubTvConnectionCustomService, HubTvConnectionCustomService>();
+            builder.Services.AddScoped<ITvlerCustomService, TvlerCustomService>();
+            builder.Services.AddScoped<IYetkilerCustomService, YetkilerCustomService>();
+            builder.Services.AddScoped<IPersonelYetkileriCustomService, PersonelYetkileriCustomService>();
+            builder.Services.AddScoped<IIlcelerCustomService, IlcelerCustomService>();
+            builder.Services.AddScoped<IServislerCustomService, ServislerCustomService>();
+
+            builder.Services.AddScoped<ICacheService, CacheService>();
 
             builder.Services.AddScoped<PrintService>();
 
@@ -200,8 +213,17 @@ namespace SocialSecurityInstitution.PresentationLayer
             builder.Services.AddScoped<ILogService, LogService>();
             builder.Services.AddScoped<IHubConnectionService, HubConnectionService>();
             builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+            builder.Services.AddScoped<IHubTvConnectionService, HubTvConnectionService>();
+            builder.Services.AddScoped<ITvlerService, TvlerService>();
+            builder.Services.AddScoped<ITvBankolariService, TvBankolariService>();
 
+            //Singleton services
             builder.Services.AddSingleton<IUserContextService, UserContextService>();
+
+
+            // Validation Services
+            builder.Services.AddScoped<IPersonelValidationService, PersonelValidationService>();
+
 
             // Add AutoMapper service
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -214,21 +236,24 @@ namespace SocialSecurityInstitution.PresentationLayer
             });
 
             builder.Services.AddTransient<DashboardHub>();
-            builder.Services.AddSingleton<ISubscribeTableDependency>(provider =>
-            {
-                return new SubscribeTableDependency<Departmanlar>(
-                    provider.GetRequiredService<IServiceProvider>(),
-                    provider.GetRequiredService<IHubContext<DashboardHub>>(),
-                    provider.GetRequiredService<ILogger<SubscribeTableDependency<Departmanlar>>>(),
-                    provider.GetRequiredService<IMapper>()
-                );
-            });
+            builder.Services.AddTransient<TvHub>();
+            //builder.Services.AddSingleton<ISubscribeTableDependency>(provider =>
+            //{
+            //    return new SubscribeTableDependency<Departmanlar>(
+            //        provider.GetRequiredService<IServiceProvider>(),
+            //        provider.GetRequiredService<IHubContext<DashboardHub>>(),
+            //        provider.GetRequiredService<IHubContext<TvHub>>(),
+            //        provider.GetRequiredService<ILogger<SubscribeTableDependency<Departmanlar>>>(),
+            //        provider.GetRequiredService<IMapper>()
+            //    );
+            //});
 
             builder.Services.AddSingleton<ISubscribeTableDependency>(provider =>
             {
                 return new SubscribeTableDependency<Siralar>(
                     provider.GetRequiredService<IServiceProvider>(),
                     provider.GetRequiredService<IHubContext<DashboardHub>>(),
+                    provider.GetRequiredService<IHubContext<TvHub>>(),
                     provider.GetRequiredService<ILogger<SubscribeTableDependency<Siralar>>>(),
                     provider.GetRequiredService<IMapper>()
                 );
@@ -284,7 +309,12 @@ namespace SocialSecurityInstitution.PresentationLayer
                 tableDependency.SubscribeTablesDependency(connectionString);
             }
 
-            app.MapHub<DashboardHub>("/dashboardHub");
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<TvHub>("/TvHub");
+                endpoints.MapHub<DashboardHub>("/DashboardHub");
+            });
+
 
             app.MapControllerRoute(
                 name: "default",

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -96,7 +96,7 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
                 {
                     new Claim("TcKimlikNo", loginDto.TcKimlikNo),
                     new Claim("AdSoyad", loginDto.AdSoyad),
-                    new Claim("Resim", loginDto.Resim),
+                    new Claim("Resim", loginDto.Resim ?? string.Empty),//resim null olabilir
                     new Claim("HizmetBinasiId", loginDto.HizmetBinasiId.ToString()),
                     new Claim(ClaimTypes.Name, loginDto.AdSoyad),
                     new Claim(ClaimTypes.Email, loginDto.Email),
@@ -110,22 +110,25 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
 
                 var jwtToken = _jwtTokenService.GenerateToken(loginDto.TcKimlikNo, loginDto.AdSoyad, loginDto.Email, sessionId, loginDto.HizmetBinasiId);
 
-                var cookieOptions = new CookieOptions
+                // ✅ Güvenli cookie ayarları - Sadece JWT token için
+                var secureCookieOptions = new CookieOptions
                 {
-                    HttpOnly = false, // Eğer JavaScript üzerinden erişim gerekiyorsa false olarak ayarlayoruz
-                    SameSite = SameSiteMode.Lax, // Çerezin gönderileceği durumlar için Lax veya None seçilebilir
-                    Secure = false,
-                    Expires = DateTime.UtcNow.AddMinutes(120)
+                    HttpOnly = true,        // ✅ JavaScript erişemez - XSS koruması
+                    SameSite = SameSiteMode.Strict,  // ✅ CSRF koruması
+                    Secure = true,          // ✅ Sadece HTTPS (Production'da)
+                    Expires = DateTime.UtcNow.AddMinutes(60)  // ✅ Daha kısa süre
                 };
 
-                Response.Cookies.Append("JwtToken", jwtToken, cookieOptions);
+                // ✅ Sadece JWT token cookie'de - Kullanıcı bilgileri Claims'te güvenli
+                Response.Cookies.Append("JwtToken", jwtToken, secureCookieOptions);
 
-                // Diğer kullanıcı bilgilerini çerez olarak ekliyoruz
-                Response.Cookies.Append("AdSoyad", loginDto.AdSoyad, cookieOptions);
-                Response.Cookies.Append("Email", loginDto.Email, cookieOptions);
-                Response.Cookies.Append("TcKimlikNo", loginDto.TcKimlikNo, cookieOptions);
-                Response.Cookies.Append("HizmetBinasiId", loginDto.HizmetBinasiId.ToString(), cookieOptions);
-                Response.Cookies.Append("SessionID", sessionId, cookieOptions);
+                // ❌ KALDIRILDI - Kullanıcı bilgileri artık Claims'te güvenli şekilde
+                // Bu bilgiler UserInfoService üzerinden Claims'ten alınıyor
+                // Response.Cookies.Append("AdSoyad", loginDto.AdSoyad, cookieOptions);
+                // Response.Cookies.Append("Email", loginDto.Email, cookieOptions);
+                // Response.Cookies.Append("TcKimlikNo", loginDto.TcKimlikNo, cookieOptions);
+                // Response.Cookies.Append("HizmetBinasiId", loginDto.HizmetBinasiId.ToString(), cookieOptions);
+                // Response.Cookies.Append("SessionID", sessionId, cookieOptions);
 
 
                 var existingConnection = await _hubConnectionCustomService.GetHubConnectionWithTcKimlikNoAsync(TcKimlikNo);

@@ -1,0 +1,20 @@
+﻿using AutoMapper;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
+using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
+{
+    public class TvBankolariDal : GenericRepository<TvBankolari, TvBankolariDto>, ITvBankolariDal
+    {
+        public TvBankolariDal(Context context, IMapper mapper, ILogService logService) : base(context, mapper, logService)
+        {
+        }
+    }
+}

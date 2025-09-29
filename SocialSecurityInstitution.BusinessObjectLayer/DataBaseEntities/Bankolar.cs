@@ -26,5 +26,6 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
         public ICollection<BankolarKullanici>? BankolarKullanici { get; set; }
+        public ICollection<TvBankolari>? TvBankolari { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class UnvanlarDto
     {
-        public int Id { get; set; }
+        public int UnvanId { get; set; }
         public required string UnvanAdi { get; set; }
         public Aktiflik UnvanAktiflik { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;

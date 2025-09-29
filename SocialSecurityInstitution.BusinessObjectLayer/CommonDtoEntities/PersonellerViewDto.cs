@@ -30,9 +30,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public List<UnvanlarDto>? Unvanlar { get; set; }
         public string? Gorev { get; set; }
         public string? Uzmanlik { get; set; }
-        public string? AtanmaNedeni { get; set; }
-        public List<KanallarDto>? AtanmaNedenleri { get; set; }
-        public string? HizmetBinasi { get; set; }
+        public int AtanmaNedeniId { get; set; }
+        public List<AtanmaNedenleriDto>? AtanmaNedenleri { get; set; }
+        public int HizmetBinasiId { get; set; }
         public List<HizmetBinalariDto>? HizmetBinalari { get; set; }
         public PersonelTipi PersonelTipi { get; set; }
         public string? Email { get; set; }
@@ -53,9 +53,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public MedeniDurumu MedeniDurumu { get; set; }
         public KanGrubu KanGrubu { get; set; }
         public EvDurumu EvDurumu { get; set; }
-        public int UlasimServis1 { get; set; }
-        public int UlasimServis2 { get; set; }
-        public int Tabldot { get; set; }
+        public int UlasimServis1 { get; set; } = 0;
+        public int UlasimServis2 { get; set; } = 0;
+        public int Tabldot { get; set; } = 0;
         public PersonelAktiflikDurum PersonelAktiflikDurum { get; set; }
         public string? EmekliSicilNo { get; set; }
         public OgrenimDurumu OgrenimDurumu { get; set; }
@@ -68,7 +68,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public List<SendikalarDto>? Sendikalar { get; set; }
         public SehitYakinligi SehitYakinligi { get; set; }
         public string? EsininAdi { get; set; }
-        public EsininIsDurumu EsininIsDurumu { get; set; }
+        public EsininIsDurumu EsininIsDurumu { get; set; } = EsininIsDurumu.belirtilmemis;
         public string? EsininUnvani { get; set; }
         public string? EsininIsAdresi { get; set; }
         public int EsininIsIlId { get; set; }

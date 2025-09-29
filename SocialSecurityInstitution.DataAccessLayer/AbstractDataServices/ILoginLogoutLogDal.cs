@@ -1,4 +1,4 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer;
+using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using System;
 using System.Collections.Generic;
@@ -10,5 +10,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.AbstractDataServices
 {
     public interface ILoginLogoutLogDal : IGenericDal<LoginLogoutLogDto>
     {
+        Task<LoginLogoutLogDto> FindBySessionIdAsync(string sessionId);
+        Task LogoutPreviousSessionsAsync(string tcKimlikNo);
     }
 }

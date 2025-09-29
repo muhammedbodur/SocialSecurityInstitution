@@ -1,165 +1,247 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using SkiaSharp;
-using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
+using Microsoft.Extensions.Logging;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using Enums = SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService
 {
     public class PersonelCustomService : IPersonelCustomService
     {
-        private readonly IMapper _mapper;
-        private readonly Context _context;
+        private readonly IPersonellerDal _personellerDal;
+        private readonly ILogger<PersonelCustomService> _logger;
 
-        public PersonelCustomService(IMapper mapper, Context context)
+        public PersonelCustomService(IPersonellerDal personellerDal, ILogger<PersonelCustomService> logger)
         {
-            _mapper = mapper;
-            _context = context;
+            _personellerDal = personellerDal ?? throw new ArgumentNullException(nameof(personellerDal));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<List<PersonellerDto>> GetPersonellerDepartmanIdAndHizmetBinasiIdAsync(int departmanId, int hizmetBinasiId)
         {
-            var query = await _context.Personeller
-                .Include(p => p.Departman)
-                .Include(p => p.HizmetBinasi)
-                .Where(p => p.DepartmanId == departmanId && p.HizmetBinasiId == hizmetBinasiId)
-                .ToListAsync();
+            try
+            {
+                _logger.LogInformation("Getting personeller by DepartmanId: {DepartmanId} and HizmetBinasiId: {HizmetBinasiId}", departmanId, hizmetBinasiId);
 
-            var dtoList = _mapper.Map<List<PersonellerDto>>(query);
-            return dtoList;
+                // Business validation
+                if (departmanId <= 0)
+                {
+                    _logger.LogWarning("GetPersonellerDepartmanIdAndHizmetBinasiId failed: Invalid DepartmanId: {DepartmanId}", departmanId);
+                    return new List<PersonellerDto>();
+                }
+
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("GetPersonellerDepartmanIdAndHizmetBinasiId failed: Invalid HizmetBinasiId: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<PersonellerDto>();
+                }
+
+                // Get personeller through repository
+                var personellerList = await _personellerDal.GetPersonellerByDepartmanAndHizmetBinasiAsync(departmanId, hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} personeller for DepartmanId: {DepartmanId} and HizmetBinasiId: {HizmetBinasiId}", 
+                    personellerList.Count, departmanId, hizmetBinasiId);
+
+                return personellerList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting personeller by DepartmanId: {DepartmanId} and HizmetBinasiId: {HizmetBinasiId}", 
+                    departmanId, hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<PersonellerLiteDto>> GetPersonellerWithHizmetBinasiIdAsync(int hizmetBinasiId)
         {
-            var personeller = await _context.Personeller
-                .Include(p => p.Departman)
-                .Include(p => p.HizmetBinasi)
-                .Include(p => p.HubConnection)
-                .Where(p => p.HizmetBinasiId == hizmetBinasiId && p.HubConnection != null && p.HubConnection.ConnectionStatus == Enums.ConnectionStatus.online)
-                .ToListAsync();
-
-            var dtoList = personeller.Select(p => new PersonellerLiteDto
+            try
             {
-                TcKimlikNo = p.TcKimlikNo,
-                SicilNo = p.SicilNo,
-                AdSoyad = p.AdSoyad,
-                DepartmanId = p.DepartmanId,
-                HizmetBinasiId = p.HizmetBinasiId,
-                SessionID = p.SessionID,
-                ConnectionId = p.HubConnection?.ConnectionId,
-                ConnectionStatus = p.HubConnection?.ConnectionStatus
-            }).ToList();
+                _logger.LogInformation("Getting personeller with HizmetBinasiId: {HizmetBinasiId}", hizmetBinasiId);
 
-            return dtoList;
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("GetPersonellerWithHizmetBinasiId failed: Invalid HizmetBinasiId: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<PersonellerLiteDto>();
+                }
+
+                // Get personeller through repository
+                var personellerList = await _personellerDal.GetPersonellerWithHizmetBinasiIdAsync(hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} personeller with HizmetBinasiId: {HizmetBinasiId}", 
+                    personellerList.Count, hizmetBinasiId);
+
+                return personellerList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting personeller with HizmetBinasiId: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<PersonelRequestDto>> GetPersonellerWithDetailsAsync()
         {
-            var personeller = await _context.Personeller
-                .Include(p => p.Departman)
-                .Include(p => p.Servis)
-                .Include(p => p.Unvan)
-                .Include(p => p.Sendika)
-                .Include(p => p.Il)
-                .Include(p => p.Ilce)
-                .Include(p => p.HubConnection)
-                .Select(p => new PersonelRequestDto
-                {
-                    TcKimlikNo = p.TcKimlikNo,
-                    AdSoyad = p.AdSoyad,
-                    SicilNo = p.SicilNo,
-                    DepartmanId = p.DepartmanId,
-                    DepartmanAdi = p.Departman.DepartmanAdi,
-                    ServisId = p.ServisId,
-                    ServisAdi = p.Servis.ServisAdi,
-                    UnvanId = p.UnvanId,
-                    UnvanAdi = p.Unvan.UnvanAdi,
-                    Gorev = p.Gorev,
-                    Uzmanlik = p.Uzmanlik,
-                    AtanmaNedeni = p.AtanmaNedeni.AtanmaNedeni,
-                    SendikaAdi = p.Sendika.SendikaAdi,
-                    IlAdi = p.Il.IlAdi,
-                    IlceAdi = p.Ilce.IlceAdi,
-                    EsininIsIlAdi = _context.Iller.Where(i => i.IlId == p.EsininIsIlId).Select(i => i.IlAdi).FirstOrDefault(),
-                    EsininIsIlceAdi = _context.Ilceler.Where(ic => ic.IlceId == p.EsininIsIlceId).Select(ic => ic.IlceAdi).FirstOrDefault(),
-                    PersonelAktiflikDurum = p.PersonelAktiflikDurum,
-                    Resim = p.Resim,
-                    Dahili = p.Dahili,
-                    Email = p.Email,
-                    CepTelefonu = p.CepTelefonu,
-                    CepTelefonu2 = p.CepTelefonu2,
-                    EvTelefonu = p.EvTelefonu,
-                    Adres = p.Adres,
-                    DogumTarihi = p.DogumTarihi,
-                    Cinsiyet = p.Cinsiyet,
-                    MedeniDurumu = p.MedeniDurumu,
-                    KanGrubu = p.KanGrubu,
-                    EvDurumu = p.EvDurumu,
-                    UlasimServis1 = p.UlasimServis1,
-                    UlasimServis2 = p.UlasimServis2,
-                    Tabldot = p.Tabldot,
-                    EmekliSicilNo = p.EmekliSicilNo,
-                    OgrenimDurumu = p.OgrenimDurumu,
-                    BitirdigiOkul = p.BitirdigiOkul,
-                    BitirdigiBolum = p.BitirdigiBolum,
-                    OgrenimSuresi = p.OgrenimSuresi,
-                    Bransi = p.Bransi,
-                    SehitYakinligi = p.SehitYakinligi,
-                    EsininAdi = p.EsininAdi,
-                    EsininIsDurumu = p.EsininIsDurumu,
-                    EsininUnvani = p.EsininUnvani,
-                    EsininIsAdresi = p.EsininIsAdresi,
-                    EsininIsSemt = p.EsininIsSemt,
-                    HizmetBilgisi = p.HizmetBilgisi,
-                    EgitimBilgisi = p.EgitimBilgisi,
-                    ImzaYetkileri = p.ImzaYetkileri,
-                    CezaBilgileri = p.CezaBilgileri,
-                    EngelBilgileri = p.EngelBilgileri,
-                    ConnectionId = p.HubConnection.ConnectionId,
-                    ConnectionStatus = p.HubConnection.ConnectionStatus,
-                    DuzenlenmeTarihi = p.DuzenlenmeTarihi
-                }).ToListAsync();
+            try
+            {
+                _logger.LogInformation("Getting personeller with full details");
 
-            return personeller;
+                var personellerList = await _personellerDal.GetPersonellerWithDetailsAsync();
+
+                _logger.LogInformation("Retrieved {Count} personeller with full details", personellerList.Count);
+
+                return personellerList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting personeller with full details");
+                throw;
+            }
         }
 
         public async Task<PersonellerDto> TGetByTcKimlikNoAsync(string tcKimlikNo)
         {
-            var entity = await _context.Personeller
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.TcKimlikNo == tcKimlikNo);
-            var dto = _mapper.Map<PersonellerDto>(entity);
-            return dto;
+            try
+            {
+                _logger.LogInformation("Getting personel by TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+
+                // Business validation
+                if (string.IsNullOrWhiteSpace(tcKimlikNo))
+                {
+                    _logger.LogWarning("TGetByTcKimlikNo failed: TcKimlikNo is null or empty");
+                    return null;
+                }
+
+                if (tcKimlikNo.Length != 11)
+                {
+                    _logger.LogWarning("TGetByTcKimlikNo failed: Invalid TcKimlikNo format: {TcKimlikNo}", tcKimlikNo);
+                    return null;
+                }
+
+                // Get personel through repository
+                var personelDto = await _personellerDal.GetByTcKimlikNoAsync(tcKimlikNo);
+
+                if (personelDto != null)
+                {
+                    _logger.LogInformation("Retrieved personel for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+                else
+                {
+                    _logger.LogWarning("Personel not found for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+
+                return personelDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting personel by TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                throw;
+            }
         }
 
         public async Task<PersonellerDto> UpdateSessionIDAsync(string tcKimlikNo, string newSessionId)
         {
-            var personel = await _context.Personeller
-                .AsNoTracking().FirstOrDefaultAsync(p => p.TcKimlikNo == tcKimlikNo);
-
-            if (personel != null)
+            try
             {
-                personel.SessionID = newSessionId;
-                _context.Personeller.Update(personel);
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Updating SessionID for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
 
-                var personelDto = _mapper.Map<PersonellerDto>(personel);
+                // Business validation
+                if (string.IsNullOrWhiteSpace(tcKimlikNo))
+                {
+                    _logger.LogWarning("UpdateSessionID failed: TcKimlikNo is null or empty");
+                    return null;
+                }
 
-                return personelDto;
+                if (tcKimlikNo.Length != 11)
+                {
+                    _logger.LogWarning("UpdateSessionID failed: Invalid TcKimlikNo format: {TcKimlikNo}", tcKimlikNo);
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(newSessionId))
+                {
+                    _logger.LogWarning("UpdateSessionID failed: NewSessionId is null or empty for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                    return null;
+                }
+
+                // Update session through repository
+                var updatedPersonelDto = await _personellerDal.UpdateSessionIdAsync(tcKimlikNo, newSessionId);
+
+                if (updatedPersonelDto != null)
+                {
+                    _logger.LogInformation("SessionID updated successfully for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to update SessionID - Personel not found for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+
+                return updatedPersonelDto;
             }
-            else
+            catch (Exception ex)
             {
-                return null;
+                _logger.LogError(ex, "Error occurred while updating SessionID for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                throw;
+            }
+        }
+
+        public async Task<List<PersonellerLiteDto>> GetActivePersonelListAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Getting active personel list");
+
+                // Get active personeller through repository
+                var activePersonellerList = await _personellerDal.GetActivePersonelListAsync();
+
+                _logger.LogInformation("Retrieved {Count} active personeller", activePersonellerList.Count);
+
+                return activePersonellerList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting active personel list");
+                throw;
+            }
+        }
+
+        public async Task<PersonellerViewDto> GetPersonelViewForEditAsync(string tcKimlikNo)
+        {
+            try
+            {
+                _logger.LogInformation("Getting personel view for edit by TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+
+                if (string.IsNullOrWhiteSpace(tcKimlikNo))
+                {
+                    _logger.LogWarning("GetPersonelViewForEdit failed: TcKimlikNo is null or empty");
+                    return null;
+                }
+
+                if (tcKimlikNo.Length != 11)
+                {
+                    _logger.LogWarning("GetPersonelViewForEdit failed: Invalid TcKimlikNo format: {TcKimlikNo}", tcKimlikNo);
+                    return null;
+                }
+
+                var personelViewDto = await _personellerDal.GetPersonelViewForEditAsync(tcKimlikNo);
+
+                if (personelViewDto != null)
+                {
+                    _logger.LogInformation("Retrieved personel view for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+                else
+                {
+                    _logger.LogWarning("Personel not found for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                }
+
+                return personelViewDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting personel view for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                throw;
             }
         }
     }

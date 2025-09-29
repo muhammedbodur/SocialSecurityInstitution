@@ -1,16 +1,15 @@
-﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 @using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
 @using SocialSecurityInstitution.BusinessObjectLayer.Extensions
 
 @model SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.PersonellerViewDto
 
 @{
-
+    ViewBag.Title = "Personel Düzenle";
 }
 
 <div class="card mb-4">
-    <h5 class="card-header">Personel Ekle</h5>
-    <!-- Account -->
+    <h5 class="card-header">Personel Düzenle</h5>
     <hr class="my-0" />
     <div class="card-body">
         <div class="nav-align-top">
@@ -49,217 +48,262 @@
                     <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-pills-top-11" aria-controls="navs-pills-top-11" aria-selected="false">Fotoğraf</button>
                 </li>
             </ul>
-            <form id="formAccountSettings" method="POST" action="Guncelle?TcKimlikNo=@Model.TcKimlikNo">
+
+            <form asp-action="Guncelle" asp-route-TcKimlikNo="@Model.TcKimlikNo" id="formAccountSettings" method="POST">
                 <div class="tab-content">
+                    <!-- TAB 1: PERSONEL -->
                     <div class="tab-pane fade show active" id="navs-pills-top-1" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="TcKimlikNo" class="form-label">T.C. KİMLİK NUMARASI</label>
-                                <input id="TcKimlikNo" asp-for="TcKimlikNo" class="form-control"
-                                       type="text"
-                                       placeholder="T.C. Kimlik No"
-                                       autofocus />
+                                <input id="TcKimlikNo" asp-for="TcKimlikNo" class="form-control" type="text" placeholder="T.C. Kimlik No" readonly />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="AdSoyad" class="form-label">ADI SOYADI</label>
-                                <input id="AdSoyad" asp-for="AdSoyad" class="form-control"
-                                       type="text"
-                                       placeholder="Adı Soyadı"
-                                       autofocus />
+                                <input id="AdSoyad" asp-for="AdSoyad" class="form-control" type="text" placeholder="Adı Soyadı" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="SicilNo" class="form-label">SİCİL NUMARASI</label>
-                                <input id="SicilNo" asp-for="SicilNo" class="form-control"
-                                       type="text"
-                                       placeholder="Sicil No"
-                                       autofocus />
+                                <input id="SicilNo" asp-for="SicilNo" class="form-control" type="text" placeholder="Sicil No" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="DepartmanId" class="form-label">DEPARTMAN</label>
                                 <select id="DepartmanId" asp-for="DepartmanId" class="select2 form-select">
-                                    @if(Model.Departmanlar != null)        
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Departmanlar != null)
+                                    {
                                         @foreach (var departman in Model.Departmanlar)
                                         {
-                                            <!option value="@departman.DepartmanId" @(Model.DepartmanId == departman.DepartmanId ? "selected" : "")>@departman.DepartmanAdi</!option>
+                                            @if (Model.DepartmanId == departman.DepartmanId)
+                                            {
+                                                <option value="@departman.DepartmanId" selected="selected">@departman.DepartmanAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@departman.DepartmanId">@departman.DepartmanAdi</option>
+                                            }
                                         }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="birim_id" class="form-label">SERVİS</label>
-                                <select id="birim_id" asp-for="ServisId" class="select2 form-select">
-                                    @if(Model.Servisler != null)
+                                <label for="ServisId" class="form-label">SERVİS</label>
+                                <select id="ServisId" asp-for="ServisId" class="select2 form-select" data-selected-value="@Model.ServisId">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Servisler != null)
+                                    {
                                         @foreach (var servis in Model.Servisler)
                                         {
-                                            <!option value="@servis.Id" @(Model.ServisId == servis.Id ? "selected" : "")>@servis.ServisAdi</!option>
+                                            @if (Model.ServisId == servis.ServisId)
+                                            {
+                                                <option value="@servis.ServisId" selected="selected">@servis.ServisAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@servis.ServisId">@servis.ServisAdi</option>
+                                            }
                                         }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="UnvanId" class="form-label">ÜNVAN</label>
                                 <select id="UnvanId" asp-for="UnvanId" class="select2 form-select">
-                                    @if (Model.Unvanlar != null)
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Unvanlar != null)
+                                    {
                                         @foreach (var unvan in Model.Unvanlar)
                                         {
-                                            <!option value="@unvan.Id" @(Model.UnvanId == unvan.Id ? "selected" : "")>@unvan.UnvanAdi</!option>
+                                            @if (Model.UnvanId == unvan.UnvanId)
+                                            {
+                                                <option value="@unvan.UnvanId" selected="selected">@unvan.UnvanAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@unvan.UnvanId">@unvan.UnvanAdi</option>
+                                            }
                                         }
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="HizmetBinasiId" class="form-label">HİZMET BİNASI</label>
+                                <select id="HizmetBinasiId" asp-for="HizmetBinasiId" class="select2 form-select">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.HizmetBinalari != null)
+                                    {
+                                        @foreach (var bina in Model.HizmetBinalari)
+                                        {
+                                            @if (Model.HizmetBinasiId == bina.HizmetBinasiId)
+                                            {
+                                                <option value="@bina.HizmetBinasiId" selected="selected">@bina.HizmetBinasiAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@bina.HizmetBinasiId">@bina.HizmetBinasiAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Gorev" class="form-label">GÖREV</label>
-                                <input id="Gorev" asp-for="Gorev" class="form-control"
-                                       type="text"
-                                       placeholder="Peronelin Görevi"
-                                       autofocus />
+                                <input id="Gorev" asp-for="Gorev" class="form-control" type="text" placeholder="Personelin Görevi" />
+                            </div>                            
+                            <div class="mb-3 col-md-6">
+                                <label for="Gorev" class="form-label">UZMANLIK</label>
+                                <input id="Gorev" asp-for="Uzmanlik" class="form-control" type="text" placeholder="Personelin Uzamanlığı" />
+                            </div>                            
+                            <div class="mb-3 col-md-6">
+                                <label for="AtanmaNedeniId" class="form-label">ATANMA NEDENİ</label>
+                                <select id="AtanmaNedeniId" asp-for="AtanmaNedeniId" class="select2 form-select">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.AtanmaNedenleri != null)
+                                    {
+                                        @foreach (var atanmaNedeni in Model.AtanmaNedenleri)
+                                        {
+                                            @if (Model.AtanmaNedeniId == atanmaNedeni.AtanmaNedeniId)
+                                            {
+                                                <option value="@atanmaNedeni.AtanmaNedeniId" selected="selected">@atanmaNedeni.AtanmaNedeni</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@atanmaNedeni.AtanmaNedeniId">@atanmaNedeni.AtanmaNedeni</option>
+                                            }
+                                        }
+                                    }
+                                </select>
                             </div>
+                            
                             <div class="mb-3 col-md-6">
                                 <label for="PersonelAktiflikDurum" class="form-label">AKTİFLİK DURUMU</label>
                                 <select id="PersonelAktiflikDurum" asp-for="PersonelAktiflikDurum" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.PersonelAktiflikDurum)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.PersonelAktiflikDurum == (Enums.PersonelAktiflikDurum)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.PersonelAktiflikDurum)item)</!option>
+                                        @if (Model.PersonelAktiflikDurum == (Enums.PersonelAktiflikDurum)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.PersonelAktiflikDurum)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.PersonelAktiflikDurum)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 2: İLETİŞİM -->
                     <div class="tab-pane fade" id="navs-pills-top-2" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="Email" class="form-label">E-MAİL</label>
-                                <input id="Email" asp-for="Email" class="form-control"
-                                       type="email"
-                                       placeholder="ad.soyad@example.com" />
+                                <input id="Email" asp-for="Email" class="form-control" type="email" placeholder="ad.soyad@example.com" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Dahili" class="form-label">DAHİLİ TELEFON</label>
-                                <input id="Dahili" asp-for="Dahili" class="form-control"
-                                       type="text"
-                                       placeholder="Dahili telefon"
-                                       autofocus />
+                                <input id="Dahili" asp-for="Dahili" class="form-control" type="text" placeholder="Dahili telefon" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="CepTelefonu">CEP TELEFONU 1</label>
-                                <div class="input-group input-group-merge">
-                                    <input id="CepTelefonu" asp-for="CepTelefonu" class="form-control"
-                                           type="tel"
-                                           placeholder="0541 234 56 78"
-                                           autofocus />
-                                </div>
+                                <input id="CepTelefonu" asp-for="CepTelefonu" class="form-control" type="tel" placeholder="0541 234 56 78" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="CepTelefonu2">CEP TELEFONU 2</label>
-                                <div class="input-group input-group-merge">
-                                    <input id="CepTelefonu2" asp-for="CepTelefonu2" class="form-control"
-                                           type="tel"
-                                           placeholder="0542 345 67 89"
-                                           autofocus />
-                                </div>
+                                <input id="CepTelefonu2" asp-for="CepTelefonu2" class="form-control" type="tel" placeholder="0542 345 67 89" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="EvTelefonu">EV TELEFONU</label>
-                                <div class="input-group input-group-merge">
-                                    <input id="EvTelefonu" asp-for="EvTelefonu" class="form-control"
-                                           type="tel"
-                                           placeholder="0232 345 67 89"
-                                           autofocus />
-                                </div>
+                                <input id="EvTelefonu" asp-for="EvTelefonu" class="form-control" type="tel" placeholder="0232 345 67 89" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Adres" class="form-label">ADRES</label>
-                                <input id="Adres" asp-for="Adres" class="form-control"
-                                       type="text"
-                                       placeholder="Adres"
-                                       autofocus />
+                                <input id="Adres" asp-for="Adres" class="form-control" type="text" placeholder="Adres" />
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="Il" class="form-label">İL</label>
-                                <select id="Il" asp-for="Iller" class="select2 form-select">
-                                    <option></option>
+                                <label for="IlId" class="form-label">İL</label>
+                                <select id="IlId" asp-for="IlId" class="select2 form-select">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Iller != null)
+                                    {
+                                        @foreach (var il in Model.Iller)
+                                        {
+                                            @if (Model.IlId == il.IlId)
+                                            {
+                                                <option value="@il.IlId" selected="selected">@il.IlAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@il.IlId">@il.IlAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="Ilce" class="form-label">İLÇE</label>
-                                <select id="Ilce" asp-for="Ilceler" class="select2 form-select">
-                                    <option></option>
+                                <label for="IlceId" class="form-label">İLÇE</label>
+                                <select id="IlceId" asp-for="IlceId" class="select2 form-select" data-selected-value="@Model.IlceId">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Ilceler != null)
+                                    {
+                                        @foreach (var ilce in Model.Ilceler)
+                                        {
+                                            @if (Model.IlceId == ilce.IlceId)
+                                            {
+                                                <option value="@ilce.IlceId" selected="selected">@ilce.IlceAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@ilce.IlceId">@ilce.IlceAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Semt" class="form-label">SEMT</label>
-                                <input id="Semt" asp-for="Semt" class="form-control"
-                                       type="text"
-                                       placeholder="Semt"
-                                       autofocus />
-                            </div>
-
-                            <div class="mb-3 col-md-6">
-                                <label for="language" class="form-label">Language</label>
-                                <select id="language" class="select2 form-select">
-                                    <option value="">Select Language</option>
-                                    <option value="en">English</option>
-                                    <option value="fr">French</option>
-                                    <option value="de">German</option>
-                                    <option value="pt">Portuguese</option>
-                                </select>
-                            </div>
-                            <div class="mb-3 col-md-6">
-                                <label for="timeZones" class="form-label">Timezone</label>
-                                <select id="timeZones" class="select2 form-select">
-                                    <option value="">Select Timezone</option>
-                                    <option value="-12">(GMT-12:00) International Date Line West</option>
-                                    <option value="-11">(GMT-11:00) Midway Island, Samoa</option>
-                                    <option value="-10">(GMT-10:00) Hawaii</option>
-                                    <option value="-9">(GMT-09:00) Alaska</option>
-                                    <option value="-8">(GMT-08:00) Pacific Time (US & Canada)</option>
-                                    <option value="-8">(GMT-08:00) Tijuana, Baja California</option>
-                                    <option value="-7">(GMT-07:00) Arizona</option>
-                                    <option value="-7">(GMT-07:00) Chihuahua, La Paz, Mazatlan</option>
-                                    <option value="-7">(GMT-07:00) Mountain Time (US & Canada)</option>
-                                    <option value="-6">(GMT-06:00) Central America</option>
-                                    <option value="-6">(GMT-06:00) Central Time (US & Canada)</option>
-                                    <option value="-6">(GMT-06:00) Guadalajara, Mexico City, Monterrey</option>
-                                    <option value="-6">(GMT-06:00) Saskatchewan</option>
-                                    <option value="-5">(GMT-05:00) Bogota, Lima, Quito, Rio Branco</option>
-                                    <option value="-5">(GMT-05:00) Eastern Time (US & Canada)</option>
-                                    <option value="-5">(GMT-05:00) Indiana (East)</option>
-                                    <option value="-4">(GMT-04:00) Atlantic Time (Canada)</option>
-                                    <option value="-4">(GMT-04:00) Caracas, La Paz</option>
-                                </select>
-                            </div>
-                            <div class="mb-3 col-md-6">
-                                <label for="currency" class="form-label">Currency</label>
-                                <select id="currency" class="select2 form-select">
-                                    <option value="">Select Currency</option>
-                                    <option value="usd">USD</option>
-                                    <option value="euro">Euro</option>
-                                    <option value="pound">Pound</option>
-                                    <option value="bitcoin">Bitcoin</option>
-                                </select>
+                                <input id="Semt" asp-for="Semt" class="form-control" type="text" placeholder="Semt" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 3: KİŞİSEL -->
                     <div class="tab-pane fade" id="navs-pills-top-3" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="DogumTarihi" class="form-label">DOĞUM TARİHİ</label>
-                                <input id="DogumTarihi" asp-for="DogumTarihi" class="form-control"
-                                       type="date"
-                                       placeholder="01-01-1984" />
+                                <input id="DogumTarihi" asp-for="DogumTarihi" class="form-control" type="date" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Cinsiyet" class="form-label">CİNSİYET</label>
                                 <select id="Cinsiyet" asp-for="Cinsiyet" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.Cinsiyet)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.Cinsiyet == (Enums.Cinsiyet)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.Cinsiyet)item)</!option>
+                                        @if (Model.Cinsiyet == (Enums.Cinsiyet)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.Cinsiyet)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.Cinsiyet)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="medeni_durumu" class="form-label">MEDENİ DURUMU</label>
-                                <select id="medeni_durumu" asp-for="MedeniDurumu" class="select2 form-select">
+                                <label for="MedeniDurumu" class="form-label">MEDENİ DURUMU</label>
+                                <select id="MedeniDurumu" asp-for="MedeniDurumu" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.MedeniDurumu)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.MedeniDurumu == (Enums.MedeniDurumu)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.MedeniDurumu)item)</!option>
+                                        @if (Model.MedeniDurumu == (Enums.MedeniDurumu)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.MedeniDurumu)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.MedeniDurumu)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
@@ -268,98 +312,141 @@
                                 <select id="KanGrubu" asp-for="KanGrubu" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.KanGrubu)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.KanGrubu == (Enums.KanGrubu)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.KanGrubu)item)</!option>
+                                        @if (Model.KanGrubu == (Enums.KanGrubu)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.KanGrubu)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.KanGrubu)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="EvDurumu" class="form-label">EV DURUMU(SAHİPLİK)</label>
+                                <label for="EvDurumu" class="form-label">EV DURUMU (SAHİPLİK)</label>
                                 <select id="EvDurumu" asp-for="EvDurumu" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.EvDurumu)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.EvDurumu == (Enums.EvDurumu)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.EvDurumu)item)</!option>
+                                        @if (Model.EvDurumu == (Enums.EvDurumu)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.EvDurumu)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.EvDurumu)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="UlasimServis1" class="form-label">ULAŞIM SERVİS 1</label>
                                 <select id="UlasimServis1" asp-for="UlasimServis1" class="select2 form-select">
-                                    <option></option>
+                                    @if (Model.UlasimServis1 == 0)
+                                    {
+                                        <option value="0" selected="selected">Boş</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="0">Boş</option>
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="UlasimServis2" class="form-label">ULAŞIM SERVİS 2</label>
                                 <select id="UlasimServis2" asp-for="UlasimServis2" class="select2 form-select">
-                                    <option></option>
+                                    @if (Model.UlasimServis2 == 0)
+                                    {
+                                        <option value="0" selected="selected">Boş</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="0">Boş</option>
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Tabldot" class="form-label">TABLDOT</label>
                                 <select id="Tabldot" asp-for="Tabldot" class="select2 form-select">
-                                    <option></option>
+                                    @if (Model.Tabldot == 0)
+                                    {
+                                        <option value="0" selected="selected">Boş</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="0">Boş</option>
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-3">
                                 <label for="KartNo" class="form-label">KART NUMARASI</label>
-                                <input id="KartNo" asp-for="KartNo" class="form-control"
-                                       type="text"
-                                       placeholder="Kart Numarası"
-                                       autofocus />
+                                <input id="KartNo" asp-for="KartNo" class="form-control" type="text" placeholder="Kart Numarası" />
                             </div>
                             <div class="mb-3 col-md-3">
                                 <label for="KartNoAktiflikTarihi" class="form-label">KART AKTİFLİK TARİHİ</label>
-                                <input id="KartNoAktiflikTarihi" asp-for="KartNoAktiflikTarihi" class="form-control"
-                                       type="date"
-                                       placeholder="01-01-2023"
-                                       autofocus />
+                                <input id="KartNoAktiflikTarihi" asp-for="KartNoAktiflikTarihi" class="form-control" type="date" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 4: ÖZLÜK -->
                     <div class="tab-pane fade" id="navs-pills-top-4" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="EmekliSicilNo" class="form-label">EMEKLİ SİCİL NO</label>
-                                <input id="EmekliSicilNo" asp-for="EmekliSicilNo" class="form-control"
-                                       type="text"
-                                       placeholder="12.345.678.9" />
+                                <input id="EmekliSicilNo" asp-for="EmekliSicilNo" class="form-control" type="text" placeholder="12.345.678.9" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="OgrenimDurumu" class="form-label">ÖĞRENİM DURUMU</label>
                                 <select id="OgrenimDurumu" asp-for="OgrenimDurumu" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.OgrenimDurumu)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.OgrenimDurumu == (Enums.OgrenimDurumu)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.OgrenimDurumu)item)</!option>
+                                        @if (Model.OgrenimDurumu == (Enums.OgrenimDurumu)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.OgrenimDurumu)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.OgrenimDurumu)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="BitirdigiOkul" class="form-label">BİTİRDİĞİ OKUL</label>
-                                <input id="BitirdigiOkul" asp-for="BitirdigiOkul" class="form-control"
-                                       type="text"
-                                       placeholder="..... ÜNİVERSİTESİ" />
+                                <input id="BitirdigiOkul" asp-for="BitirdigiOkul" class="form-control" type="text" placeholder="..... ÜNİVERSİTESİ" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="BitirdigiBolum" class="form-label">BİTİRDİĞİ BÖLÜM</label>
-                                <input id="BitirdigiBolum" asp-for="BitirdigiBolum" class="form-control"
-                                       type="text"
-                                       placeholder="..... BÖLÜMÜ" />
+                                <input id="BitirdigiBolum" asp-for="BitirdigiBolum" class="form-control" type="text" placeholder="..... BÖLÜMÜ" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="OgrenimSuresi" class="form-label">ÖĞRENİM SÜRESİ</label>
-                                <input id="OgrenimSuresi" asp-for="OgrenimSuresi" class="form-control"
-                                       type="number"
-                                       placeholder="4" />
+                                <input id="OgrenimSuresi" asp-for="OgrenimSuresi" class="form-control" type="number" placeholder="4" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="Bransi" class="form-label">BRANŞI</label>
-                                <input id="Bransi" asp-for="Bransi" class="form-control"
-                                       type="text"
-                                       placeholder="BRANŞI" />
+                                <input id="Bransi" asp-for="Bransi" class="form-control" type="text" placeholder="BRANŞI" />
                             </div>
+                            <!-- In TAB 4: ÖZLÜK -->
                             <div class="mb-3 col-md-6">
-                                <label for="Sendika" class="form-label">SENDİKA DURUMU</label>
-                                <select id="Sendika" asp-for="Sendikalar" class="select2 form-select">
-                                    <option></option>
+                                <label for="SendikaId" class="form-label">SENDİKA DURUMU</label>
+                                <select id="SendikaId" asp-for="SendikaId" class="select2 form-select">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Sendikalar != null)
+                                    {
+                                        @foreach (var sendika in Model.Sendikalar)
+                                        {
+                                            @if (Model.SendikaId == sendika.SendikaId)
+                                            {
+                                                <option value="@sendika.SendikaId" selected="selected">@sendika.SendikaAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@sendika.SendikaId">@sendika.SendikaAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
@@ -367,128 +454,158 @@
                                 <select id="SehitYakinligi" asp-for="SehitYakinligi" class="select2 form-select">
                                     @foreach (var item in Enum.GetValues(typeof(Enums.SehitYakinligi)))
                                     {
-                                        <!option value="@item" @(Model != null && Model.SehitYakinligi == (Enums.SehitYakinligi)item ? "selected='selected'" : "")>@EnumExtensions.GetDisplayName((Enums.SehitYakinligi)item)</!option>
+                                        @if (Model.SehitYakinligi == (Enums.SehitYakinligi)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.SehitYakinligi)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.SehitYakinligi)item)</option>
+                                        }
                                     }
                                 </select>
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 5: EŞ VE ÇOCUK -->
                     <div class="tab-pane fade" id="navs-pills-top-5" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="EsininAdi" class="form-label">EŞİNİN ADI</label>
-                                <input id="EsininAdi" asp-for="EsininAdi" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="EsininAdi" asp-for="EsininAdi" class="form-control" type="text" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininIsDurumu" class="form-label">EŞ İŞ DURUMU</label>
                                 <select id="EsininIsDurumu" asp-for="EsininIsDurumu" class="select2 form-select">
-                                    <option></option>
+                                    @foreach (var item in Enum.GetValues(typeof(Enums.EsininIsDurumu)))
+                                    {
+                                        @if (Model.EsininIsDurumu == (Enums.EsininIsDurumu)item)
+                                        {
+                                            <option value="@item" selected="selected">@EnumExtensions.GetDisplayName((Enums.EsininIsDurumu)item)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@item">@EnumExtensions.GetDisplayName((Enums.EsininIsDurumu)item)</option>
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininUnvani" class="form-label">EŞ İŞ ÜNVANI</label>
-                                <input id="EsininUnvani" asp-for="EsininUnvani" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="EsininUnvani" asp-for="EsininUnvani" class="form-control" type="text" />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininIsAdresi" class="form-label">EŞ İŞ ADRESİ</label>
-                                <input id="EsininIsAdresi" asp-for="EsininIsAdresi" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="EsininIsAdresi" asp-for="EsininIsAdresi" class="form-control" type="text" />
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="EsininIsIl" class="form-label">EŞ İŞ İL</label>
-                                <select id="EsininIsIl" asp-for="EsininIsIlAdi" class="select2 form-select">
-                                    <option></option>
+                                <label for="EsininIsIlId" class="form-label">EŞ İŞ İL</label>
+                                <select id="EsininIsIlId" asp-for="EsininIsIlId" class="select2 form-select">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Iller != null)
+                                    {
+                                        @foreach (var il in Model.Iller)
+                                        {
+                                            @if (Model.EsininIsIlId == il.IlId)
+                                            {
+                                                <option value="@il.IlId" selected="selected">@il.IlAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@il.IlId">@il.IlAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
-                                <label for="EsininIsIlce" class="form-label">EŞ İŞ İLÇE</label>
-                                <select id="EsininIsIlce" asp-for="EsininIsIlceAdi" class="select2 form-select">
-                                    <option></option>
+                                <label for="EsininIsIlceId" class="form-label">EŞ İŞ İLÇE</label>
+                                <select id="EsininIsIlceId" asp-for="EsininIsIlceId" class="select2 form-select" data-selected-value="@Model.EsininIsIlceId">
+                                    <option value="">Seçiniz</option>
+                                    @if (Model?.Ilceler != null)
+                                    {
+                                        @foreach (var ilce in Model.Ilceler)
+                                        {
+                                            @if (Model.EsininIsIlceId == ilce.IlceId)
+                                            {
+                                                <option value="@ilce.IlceId" selected="selected">@ilce.IlceAdi</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@ilce.IlceId">@ilce.IlceAdi</option>
+                                            }
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="EsininIsSemt" class="form-label">EŞ İŞ SEMT</label>
-                                <input id="EsininIsSemt" asp-for="EsininIsSemt" class="form-control"
-                                       type="text"
-                                       placeholder="Semt"
-                                       autofocus />
+                                <input id="EsininIsSemt" asp-for="EsininIsSemt" class="form-control" type="text" placeholder="Semt" />
                             </div>
-
                         </div>
                     </div>
+
+                    <!-- TAB 6: HİZMET -->
                     <div class="tab-pane fade" id="navs-pills-top-6" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="HizmetBilgisi" class="form-label">ÇALIŞTIĞI SERVİSLER</label>
-                                <input id="HizmetBilgisi" asp-for="HizmetBilgisi" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="HizmetBilgisi" asp-for="HizmetBilgisi" class="form-control" type="text" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 7: EĞİTİM DURUMU -->
                     <div class="tab-pane fade" id="navs-pills-top-7" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="EgitimBilgisi" class="form-label">EĞİTİM BİLGİLERİ</label>
-                                <input id="EgitimBilgisi" asp-for="EgitimBilgisi" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="EgitimBilgisi" asp-for="EgitimBilgisi" class="form-control" type="text" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 8: YETKİ -->
                     <div class="tab-pane fade" id="navs-pills-top-8" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="ImzaYetkileri" class="form-label">İMZA YETKİLERİ</label>
-                                <input id="ImzaYetkileri" asp-for="ImzaYetkileri" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="ImzaYetkileri" asp-for="ImzaYetkileri" class="form-control" type="text" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 9: CEZA DURUMU -->
                     <div class="tab-pane fade" id="navs-pills-top-9" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="CezaBilgileri" class="form-label">CEZA BİLGİLERİ</label>
-                                <input id="CezaBilgileri" asp-for="CezaBilgileri" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="CezaBilgileri" asp-for="CezaBilgileri" class="form-control" type="text" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 10: ENGEL BİLGİLERİ -->
                     <div class="tab-pane fade" id="navs-pills-top-10" role="tabpanel">
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label for="EngelBilgileri" class="form-label">ENGEL BİLGİLERİ</label>
-                                <input id="EngelBilgileri" asp-for="EngelBilgileri" class="form-control"
-                                       type="text"
-                                       placeholder="" />
+                                <input id="EngelBilgileri" asp-for="EngelBilgileri" class="form-control" type="text" />
                             </div>
                         </div>
                     </div>
+
+                    <!-- TAB 11: FOTOĞRAF -->
                     <div class="tab-pane fade" id="navs-pills-top-11" role="tabpanel">
                         <div class="card-body">
                             <div class="d-flex align-items-start align-items-sm-center gap-4">
-                                <img src="~/img/avatars/empty.png"
-                                     alt="user-avatar"
-                                     class="d-block rounded"
-                                     height="100"
-                                     width="100"
-                                     id="uploadedAvatar" />
+                                <img src="~/img/avatars/@(Model.Resim ?? "empty.png")" alt="user-avatar" class="d-block rounded" height="100" width="100" id="uploadedAvatar" />
                                 <div class="button-wrapper">
                                     <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
                                         <span class="d-none d-sm-block">Yeni Fotoğraf Yükle</span>
                                         <i class="bx bx-upload d-block d-sm-none"></i>
-                                        <input type="file"
-                                               id="upload"
-                                               class="account-file-input"
-                                               hidden
-                                               accept="image/png, image/jpeg" />
+                                        <input type="file" id="upload" class="account-file-input" hidden accept="image/png, image/jpeg" />
                                     </label>
                                     <button type="button" class="btn btn-outline-secondary account-image-reset mb-4">
                                         <i class="bx bx-reset d-block d-sm-none"></i>
@@ -499,13 +616,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- FORM BUTTONS -->
                     <div class="mt-2">
                         <button type="submit" class="btn btn-primary me-2">Güncelle</button>
-                        <button type="reset" class="btn btn-outline-secondary" onclick="return confirm('Formu temizlemek istediğinize emin misiniz? Doldurduğunuz tüm veriler silinecek.');">Temizle</button>
+                        <button type="reset" class="btn btn-outline-secondary">Temizle</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-    <!-- /Account -->
 </div>

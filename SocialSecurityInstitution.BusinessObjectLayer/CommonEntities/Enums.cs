@@ -12,60 +12,25 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
     {
         public enum YetkiTurleri
         {
-            /*
-            *SuperAdmin (Süper Yönetici):
-            Tüm sistem üzerinde tam yetkiye sahiptir. Sayfa içinden bu yetki verilemez, sadece DB içinden bu yetki verilebilir
-            Tüm işlemleri gerçekleştirebilir ve diğer rolleri atayabilir.
+            [Display(Name = "Ana Yetki")]
+            AnaYetki,
 
-            *Admin (Yönetici):
-            Kullanıcı yönetimi ve yetkilendirme işlemleri yapabilir.
-            Belirli işlemleri gerçekleştirmek için gerekli yetkilere sahiptir.
+            [Display(Name = "Orta Yetki")]
+            OrtaYetki,
 
-            *Manager (Yönetici):
-            Belirli bir departmanın yöneticisidir.
-            Kullanıcıları yönetebilir ve departman içinde yetkilendirebilir, departman içindeki tüm yetkilere sahiptir.
-
-            *Editor (Düzenleyici):
-            Veri düzenleme işlemleri yapabilir.
-            Kendi Departmanındaki Kayıtları güncelleyebilir ve silme yetkisi gibi gibi işlemler yapabilir, departman yöneticisinin izin verdiği işlemleri yapabilir.
-
-            *Viewer (Gözlemci):
-            Veri görüntüleme işlemleri yapabilir.
-            Kayıtları listeleme ve detayları görüntüleme yetkisine sahiptir.
-
-            *None (Hiçbiri):
-            Hiçbir yetkiye sahip değildir.
-            Genellikle sistemdeki giriş yetkisi olmayan kullanıcılar için kullanılır.
-            */
-
-            [Display(Name = "Super Admin")]
-            SuperAdmin,
-
-            [Display(Name = "Admin")]
-            Admin,
-
-            [Display(Name = "Yönetici")]
-            Manager,
-
-            [Display(Name = "Editör")]
-            Editor,
-
-            [Display(Name = "Gözlemci")]
-            Viewer,
-
-            [Display(Name = "Yetkisiz")]
-            None
+            [Display(Name = "Alt Yetki")]
+            AltYetki
         }
-        public enum YetkiTipleri
+        public enum YetkiTipleri : int
         {
-            [Display(Name = "Gör")]
-            View,
-
             [Display(Name = "Görme")]
-            None,
+            None = 0,
+
+            [Display(Name = "Gör")]
+            View = 1,
 
             [Display(Name = "Düzenle")]
-            Edit
+            Edit = 2
         }
         public enum BankoGrup
         {

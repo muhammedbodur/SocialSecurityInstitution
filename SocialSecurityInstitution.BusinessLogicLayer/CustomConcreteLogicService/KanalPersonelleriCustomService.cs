@@ -1,147 +1,178 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService
 {
     public class KanalPersonelleriCustomService : IKanalPersonelleriCustomService
     {
-        private readonly IMapper _mapper;
-        private readonly Context _context;
+        private readonly IKanalPersonelleriDal _kanalPersonelleriDal;
+        private readonly IKanalAltIslemleriDal _kanalAltIslemleriDal;
+        private readonly IPersonellerDal _personellerDal;
+        private readonly ILogger<KanalPersonelleriCustomService> _logger;
 
-        public KanalPersonelleriCustomService(IMapper mapper, Context context)
+        public KanalPersonelleriCustomService(
+            IKanalPersonelleriDal kanalPersonelleriDal,
+            IKanalAltIslemleriDal kanalAltIslemleriDal,
+            IPersonellerDal personellerDal,
+            ILogger<KanalPersonelleriCustomService> logger)
         {
-            _mapper = mapper;
-            _context = context;
+            _kanalPersonelleriDal = kanalPersonelleriDal;
+            _kanalAltIslemleriDal = kanalAltIslemleriDal;
+            _personellerDal = personellerDal;
+            _logger = logger;
         }
 
         public async Task<List<KanalAltIslemleriDto>> GetPersonelAltKanallarEslesmeyenlerAsync(string tcKimlikNo, int hizmetBinasiId)
         {
-            // İlk sorgu: HizmetBinasiId'ye göre KanalAltIslemleri ve KanallarAlt
-            var hizmetBinasiAltIslemleri = await _context.KanalAltIslemleri
-                .Where(kai => kai.HizmetBinasiId == hizmetBinasiId)
-                .Join(_context.KanallarAlt,
-                    kai => kai.KanalAltId,
-                    ka => ka.KanalAltId,
-                    (kai, ka) => new { kai, ka.KanalAltAdi })
-                .ToListAsync();
-
-            // İkinci sorgu: tcKimlikNo ve HizmetBinasiId'ye göre KanalAltIslemleri ve KanallarAlt
-            var personelAltIslemleri = await _context.KanalAltIslemleri
-                .Where(kai => kai.HizmetBinasiId == hizmetBinasiId)
-                .Join(_context.KanallarAlt,
-                    kai => kai.KanalAltId,
-                    ka => ka.KanalAltId,
-                    (kai, ka) => new { kai, ka.KanalAltAdi })
-                .Join(_context.KanalPersonelleri,
-                    combined => combined.kai.KanalAltIslemId,
-                    kp => kp.KanalAltIslemId,
-                    (combined, kp) => new { combined.kai, combined.KanalAltAdi, kp.TcKimlikNo })
-                .Where(result => result.TcKimlikNo == tcKimlikNo)
-                .ToListAsync();
-
-            // Kesişmeyenleri bulma
-            var eslesmeyenler = hizmetBinasiAltIslemleri
-                .Where(hba => !personelAltIslemleri.Any(pa => pa.kai.KanalAltIslemId == hba.kai.KanalAltIslemId))
-                .Select(hba => new KanalAltIslemleriDto
+            try
+            {
+                // Business validation
+                if (!IsValidTcKimlikNo(tcKimlikNo))
                 {
-                    KanalAltIslemId = hba.kai.KanalAltIslemId,
-                    KanalAltIslemAdi = hba.KanalAltAdi,
-                    KanalAltId = hba.kai.KanalAltId,
-                    HizmetBinasiId = hba.kai.HizmetBinasiId,
-                    KanalAltIslemAktiflik = hba.kai.KanalAltIslemAktiflik,
-                    DuzenlenmeTarihi = hba.kai.DuzenlenmeTarihi,
-                    EklenmeTarihi = hba.kai.EklenmeTarihi
-                })
-                .ToList();
+                    _logger.LogWarning("Invalid TC Kimlik No provided: {TcKimlikNo}", tcKimlikNo);
+                    return new List<KanalAltIslemleriDto>();
+                }
 
-            return eslesmeyenler;
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriDto>();
+                }
+
+                // Repository'den karmaşık sorguyu al
+                var result = await _kanalPersonelleriDal.GetPersonelAltKanallarEslesmeyenlerAsync(tcKimlikNo, hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} unmatched kanal alt islemleri for personel: {TcKimlikNo}, hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, tcKimlikNo, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving unmatched kanal alt islemleri for personel: {TcKimlikNo}, hizmet binasi: {HizmetBinasiId}",
+                               tcKimlikNo, hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<PersonelAltKanallariRequestDto>> GetPersonelAltKanallariAsync(string tcKimlikNo)
         {
-            var query = from p in _context.Personeller
-                        join kp in _context.KanalPersonelleri on p.TcKimlikNo equals kp.TcKimlikNo
-                        join kai in _context.KanalAltIslemleri on kp.KanalAltIslemId equals kai.KanalAltIslemId
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        where p.TcKimlikNo == tcKimlikNo
-                        orderby kp.Uzmanlik ascending
-                        select new PersonelAltKanallariRequestDto
-                        {
-                            KanalPersonelId = kp.KanalPersonelId,
-                            TcKimlikNo = p.TcKimlikNo,
-                            AdSoyad = p.AdSoyad,
-                            KanalAltIslemId = kp.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            Uzmanlik = kp.Uzmanlik
-                        };
+            try
+            {
+                // Business validation
+                if (!IsValidTcKimlikNo(tcKimlikNo))
+                {
+                    _logger.LogWarning("Invalid TC Kimlik No provided: {TcKimlikNo}", tcKimlikNo);
+                    return new List<PersonelAltKanallariRequestDto>();
+                }
 
-            var result = await query.ToListAsync();
-            return result;
+                // Repository'den personel alt kanallarını al
+                var result = await _kanalPersonelleriDal.GetPersonelAltKanallariAsync(tcKimlikNo);
+
+                _logger.LogInformation("Retrieved {Count} alt kanallar for personel: {TcKimlikNo}", result.Count, tcKimlikNo);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving alt kanallar for personel: {TcKimlikNo}", tcKimlikNo);
+                throw;
+            }
         }
 
         public async Task<List<PersonellerAltKanallarRequestDto>> GetPersonellerAltKanallarAsync(int hizmetBinasiId)
         {
-            var personellerAltKanallarDto = await _context.Personeller
-                .Where(p => p.HizmetBinasiId == hizmetBinasiId)
-                .GroupJoin(_context.KanalPersonelleri,
-                    p => p.TcKimlikNo,
-                    kp => kp.TcKimlikNo,
-                    (p, kps) => new { Personel = p, KanalPersonelleri = kps })
-                .SelectMany(
-                    pk => pk.KanalPersonelleri.DefaultIfEmpty(),
-                    (pk, kp) => new { pk.Personel, KanalPersonel = kp })
-                .GroupBy(pkp => new { pkp.Personel.TcKimlikNo, pkp.Personel.AdSoyad })
-                .Select(g => new
-                {
-                    g.Key.TcKimlikNo,
-                    g.Key.AdSoyad,
-                    UzmanSayisi = g.Count(pkp => pkp.KanalPersonel != null && pkp.KanalPersonel.Uzmanlik == Enums.PersonelUzmanlik.Uzman),
-                    UzmanYrdSayisi = g.Count(pkp => pkp.KanalPersonel != null && pkp.KanalPersonel.Uzmanlik == Enums.PersonelUzmanlik.YrdUzman)
-                })
-            .ToListAsync();
-
-            var requestDtos = personellerAltKanallarDto.Select(p => new PersonellerAltKanallarRequestDto
+            try
             {
-                TcKimlikNo = p.TcKimlikNo,
-                AdSoyad = p.AdSoyad,
-                UzmanSayisi = p.UzmanSayisi,
-                UzmanYrdSayisi = p.UzmanYrdSayisi,
-            }).ToList();
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<PersonellerAltKanallarRequestDto>();
+                }
 
-            return requestDtos;
+                // Repository'den personeller alt kanallar istatistiklerini al
+                var result = await _kanalPersonelleriDal.GetPersonellerAltKanallarAsync(hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} personeller alt kanallar statistics for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving personeller alt kanallar for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<PersonelAltKanallariRequestDto>> GetKanalPersonelleriWithHizmetBinasiIdAsync(int hizmetBinasiId)
         {
-            var query = from p in _context.Personeller
-                        join kp in _context.KanalPersonelleri on p.TcKimlikNo equals kp.TcKimlikNo
-                        join kai in _context.KanalAltIslemleri on kp.KanalAltIslemId equals kai.KanalAltIslemId
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        where p.HizmetBinasiId == hizmetBinasiId
-                        orderby kp.Uzmanlik ascending
-                        select new PersonelAltKanallariRequestDto
-                        {
-                            KanalPersonelId = kp.KanalPersonelId,
-                            TcKimlikNo = p.TcKimlikNo,
-                            AdSoyad = p.AdSoyad,
-                            KanalAltIslemId = kp.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            Uzmanlik = kp.Uzmanlik
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<PersonelAltKanallariRequestDto>();
+                }
 
-            var result = await query.ToListAsync();
-            return result;
+                // Repository'den kanal personellerini al
+                var result = await _kanalPersonelleriDal.GetKanalPersonelleriWithHizmetBinasiIdAsync(hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} kanal personelleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal personelleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
+        }
+
+        // ✅ Eksik metodu implement et
+        public async Task<List<KanalPersonelleriViewRequestDto>> GetKanalAltPersonelleriAsync(int kanalAltIslemId)
+        {
+            try
+            {
+                // Business validation
+                if (kanalAltIslemId <= 0)
+                {
+                    _logger.LogWarning("Invalid kanalAltIslemId provided: {KanalAltIslemId}", kanalAltIslemId);
+                    return new List<KanalPersonelleriViewRequestDto>();
+                }
+
+                // Repository'den kanal alt işlemindeki personelleri al
+                var result = await _kanalPersonelleriDal.GetKanalAltPersonelleriAsync(kanalAltIslemId);
+
+                _logger.LogInformation("Retrieved {Count} personeller for kanal alt islem: {KanalAltIslemId}",
+                                     result.Count, kanalAltIslemId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving personeller for kanal alt islem: {KanalAltIslemId}", kanalAltIslemId);
+                throw;
+            }
+        }
+
+        // ✅ Private business logic method
+        private bool IsValidTcKimlikNo(string tcKimlikNo)
+        {
+            return !string.IsNullOrWhiteSpace(tcKimlikNo) &&
+                   tcKimlikNo.Length == 11 &&
+                   tcKimlikNo.All(char.IsDigit) &&
+                   tcKimlikNo != "00000000000" &&
+                   tcKimlikNo != "11111111111";
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 function getJwtToken() {
     const name = "JwtToken=";
     const decodedCookie = decodeURIComponent(document.cookie);
@@ -16,9 +16,7 @@ function getJwtToken() {
 }
 
 var connection = new signalR.HubConnectionBuilder()
-    .withUrl("/dashboardHub", {
-        accessTokenFactory: () => getJwtToken() // JWT token'ı burada gönderiyoruz
-    })
+    .withUrl("/dashboardHub") // Cookie authentication - JWT token gerekmez
     .withAutomaticReconnect() // Otomatik yeniden bağlanma
     .configureLogging(signalR.LogLevel.Information)
     .build();
@@ -142,24 +140,29 @@ async function OnConnected() {
     }
 }
 
-// Sıra alma butonuna tıklama olayını dinle
-document.getElementById("callNextButton").addEventListener("click", async function () {
+// Sıra alma butonuna tıklama olayı
+document.addEventListener("DOMContentLoaded", function () {
     var button = document.getElementById("callNextButton");
 
-    // Butonu devre dışı bırak
-    button.disabled = true;
+    if (button) { // Butonun var olup olmadığını kontrol et
+        button.addEventListener("click", async function () {
+            // Butonu devre dışı bırak
+            button.disabled = true;
 
-    try {
-        await connection.invoke("GetSiraCagirma");
-    } catch (err) {
-        console.error("Sıra alma işlemi sırasında hata oluştu: " + err.toString());
-        toastr.error("Sıra alma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.", "Hata");
+            try {
+                await connection.invoke("GetSiraCagirma");
+            } catch (err) {
+                console.error("Sıra alma işlemi sırasında hata oluştu: " + err.toString());
+                toastr.error("Sıra alma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.", "Hata");
+            }
+
+            setTimeout(function () {
+                button.disabled = false;
+            }, 5000);
+        });
     }
-    
-    setTimeout(function () {
-        button.disabled = false;
-    }, 5000);
 });
+
 
 connection.on("ReceiveSiraCagirmaBilgisi", function (siraCagirma) {
     try {

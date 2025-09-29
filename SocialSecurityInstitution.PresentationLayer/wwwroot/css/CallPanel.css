@@ -1,11 +1,4 @@
 ﻿/*********************** Çağırma Paneli ************************/
-.layout-navbar.navbar-online {
-    background-color: #DFF0D8; /* Soft yeşil renk */
-}
-
-.layout-navbar.navbar-offline {
-    background-color: #a3a1ad; /* Soft kırmızı gri */
-}
 
 /* Panelin genel stili */
 #template-customizer {
@@ -14,17 +7,17 @@
     background-color: #f9f9f9;
     position: fixed;
     top: 0;
-    right: 0;
-    z-index: 2000; /* Daha yüksek bir z-index */
+    right: 0; /* Panel sayfanın sağında */
+    z-index: 2000;
     transition: transform 0.3s ease;
-    transform: translateX(100%); /* Gizli durum */
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    transform: translateX(100%); /* Başlangıçta gizli (sağdan kaymış durumda) */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Sağda gölge */
 }
 
-/* Panel açıldığında sağdan sola kaydır */
-#template-customizer.show {
-    transform: translateX(0); /* Görünür durumda */
-}
+    /* Panel açıldığında sağdan sola kaydır */
+    #template-customizer.show {
+        transform: translateX(0); /* Panel açıldığında */
+    }
 
 /* Panel başlığı */
 .template-customizer-header {
@@ -33,7 +26,32 @@
     color: white;
     font-size: 18px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
 }
+
+/* Pin icon (sabitleme simgesi) - Panelin dışına taşacak şekilde sağda */
+.pin-icon {
+    font-size: 24px;
+    cursor: pointer;
+    color: white;
+    position: absolute;
+    top: 50%;
+    right: -40px; /* Panelin sağ dışına taşacak şekilde */
+    transform: translateY(-50%);
+    background-color: #696bff; /* Arka plan panelle aynı renkte */
+    padding: 10px;
+    border-radius: 50%;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+    transition: right 0.3s ease, background-color 0.3s ease;
+}
+
+    /* Pin ikonunun üzerine gelindiğinde renk değişimi */
+    .pin-icon:hover {
+        background-color: #5052ff; /* Hover durumunda renk değişimi */
+    }
 
 /* Panel içeriği */
 .template-customizer-inner {
@@ -51,9 +69,9 @@
     width: 100%;
 }
 
-#callNextButton:hover {
-    background-color: #696bff;
-}
+    #callNextButton:hover {
+        background-color: #5052ff; /* Butonun hover durumu */
+    }
 
 /* Paneli açma/kapatma butonu */
 #callPanelToggleCustomizerButton {
@@ -63,26 +81,29 @@
     transform: translateY(-50%);
     background-color: #696bff;
     color: white;
-    padding: 30px 20px; /* Butonun boyutunu */
+    padding: 30px 20px;
     border: none;
     border-radius: 5px 0 0 5px;
     cursor: pointer;
-    z-index: 2001; /* Panelin üstünde olacak */
+    z-index: 2001;
     transition: right 0.3s ease, background-color 0.3s ease;
-    font-size: 24px; /* Font boyutu artırıldı */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Hafif bir gölge ekleyerek butonun belirginliği artırıldı */
+    font-size: 24px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sağda hafif bir gölge */
 }
 
     #callPanelToggleCustomizerButton:hover {
-        background-color: #5052ff; /* Hover durumunda renk değişimi */
+        background-color: #5052ff; /* Hover durumunda buton rengi değişimi */
     }
 
+    /* Buton gizlendiğinde sağa kaydır */
     #callPanelToggleCustomizerButton.hide {
-        right: -100px; /* Panel açıldığında butonun kaybolmasını sağlamak için */
+        right: -100px; /* Panel açıldığında butonun kaybolması */
     }
 
-/* İkon stili */
-.toggleCustomizerButtonIcon {
-    font-size: 28px; /* İkon boyutu artırıldı */
+/* Sayfa layout'u daraltılmış haldeyken kullanılacak stil */
+body.layout-shifted {
+    margin-right: 300px; /* Panelin genişliği kadar sağa boşluk bırak */
+    transition: margin-right 0.3s ease; /* Yumuşak geçiş efekti */
 }
-/*********************** Çağırma Paneli ************************/
+
+/*********************** Çağırma Paneli Sonu ************************/

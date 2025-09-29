@@ -1,0 +1,353 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@model SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.YetkilerDto
+
+@{
+    var anaYetkiler = ViewBag.AnaYetkiler as List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.YetkilerDto>;
+    var personeller = ViewBag.Personeller as List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.PersonellerLiteDto>;
+    var enumOptionsJson = Json.Serialize(Html.GetEnumSelectList<Enums.YetkiTipleri>());
+}
+
+@section Styles {
+    <style>
+        .yetki-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .yetki-item {
+            margin-bottom: 10px;
+        }
+
+        .yetki-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .yetki-name {
+            flex-grow: 1;
+        }
+
+        .ana-yetki {
+            font-weight: bold;
+        }
+
+        .orta-yetki {
+            padding-left: 20px;
+        }
+
+        .alt-yetki {
+            padding-left: 40px;
+        }
+
+        .form-check-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-check {
+            margin-right: 10px;
+        }
+
+        .form-check-input {
+            margin-right: 5px;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .card {
+            margin-bottom: 15px;
+        }
+
+        #yetkiListesi {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Ortalamak için */
+        }
+
+        /* Kartların maksimum genişliğini ayarlayalım */
+        #yetkiListesi .card {
+            max-width: 600px; /* Maksimum genişlik belirliyoruz */
+            width: 100%; /* Kartların genişliğini %100 olarak ayarlıyoruz ki max-width ile sınırlansın */
+            margin-bottom: 15px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#YetkiId').select2({
+                placeholder: 'Yetki Seçiniz veya Yeni Yetki Giriniz',
+                allowClear: true,
+                templateResult: formatState,
+                templateSelection: formatState
+            });
+
+            $('#PersonelSelect').select2({
+                placeholder: 'Kullanıcı Seçiniz',
+                allowClear: true
+            });
+
+            function formatState(state) {
+                if (!state.id) {
+                    return state.text;
+                }
+
+                if ($(state.element).hasClass('optionGroup')) {
+                    return $('<span class="ana-yetki">' + state.text + '</span>');
+                }
+
+                if ($(state.element).hasClass('optionMiddle')) {
+                    return $('<span class="orta-yetki">' + state.text + '</span>');
+                }
+
+                if ($(state.element).hasClass('optionChild')) {
+                    return $('<span class="alt-yetki">' + state.text + '</span>');
+                }
+
+                return state.text;
+            }
+
+            $('#PersonelSelect').change(function () {
+                var tcKimlikNo = $(this).val();
+                if (tcKimlikNo) {
+                    $.ajax({
+                        url: 'Yetkiler/GetYetkilerByPersonel?tcKimlikNo=' + tcKimlikNo,
+                        method: 'GET',
+                        success: function (data) {
+                            console.log(data);
+                            generateYetkiListesi(data, tcKimlikNo);
+                        },
+                        error: function () {
+                            $('#yetkiListesi').html('<p>Yetkiler yüklenirken bir hata oluştu.</p>');
+                        }
+                    });
+                } else {
+                    $('#yetkiListesi').empty();
+                }
+            });
+
+            function generateYetkiListesi(data, tcKimlikNo) {
+                var yetkiListesi = $('#yetkiListesi');
+                yetkiListesi.empty();
+
+                console.log(data);
+
+                if (data && data.length > 0) {
+                    $.each(data, function (i, anaYetki) {
+                        var card = $('<div class="card"></div>');
+                        var cardHeader = $('<div class="card-header"></div>').text(anaYetki.yetkiAdi.toLocaleUpperCase('tr-TR')).css('font-weight', 'bold');
+                        var cardBody = $('<div class="card-body"></div>');
+                        var ul = $('<ul class="yetki-list"></ul>');
+
+                        var anaLi = $('<li class="yetki-item"></li>');
+                        var anaContent = $('<div class="yetki-content"></div>');
+                        var anaName = $('<span class="yetki-name ana-yetki"></span>').text(anaYetki.yetkiAdi);
+                        anaContent.append(anaName);
+
+                        // Eğer personelYetkileri varsa kullan, yoksa boş bir string ('') gönder
+                        var yetkiTipi = (anaYetki.personelYetkileri && anaYetki.personelYetkileri.length > 0)
+                            ? anaYetki.personelYetkileri[0].yetkiTipleri
+                            : '';  // Boş veri olduğunda boş bir string veya varsayılan bir değer gönder
+
+                        anaContent.append(generateYetkiTipleriChecks(anaYetki.yetkiId, yetkiTipi));
+                        anaLi.append(anaContent);
+                        ul.append(anaLi);
+
+                        if (anaYetki.ortaYetkiler && anaYetki.ortaYetkiler.length > 0) {
+                            $.each(anaYetki.ortaYetkiler, function (j, ortaYetki) {
+                                var ortaLi = $('<li class="yetki-item"></li>');
+                                var ortaContent = $('<div class="yetki-content"></div>');
+                                var ortaName = $('<span class="yetki-name orta-yetki"></span>').text(ortaYetki.yetkiAdi);
+                                ortaContent.append(ortaName);
+
+                                var ortaYetkiTipi = (ortaYetki.personelYetkileri && ortaYetki.personelYetkileri.length > 0)
+                                    ? ortaYetki.personelYetkileri[0].yetkiTipleri
+                                    : '';  // Boş olduğunda varsayılan bir değer gönder
+
+                                ortaContent.append(generateYetkiTipleriChecks(ortaYetki.yetkiId, ortaYetkiTipi));
+                                ortaLi.append(ortaContent);
+                                ul.append(ortaLi);
+
+                                if (ortaYetki.altYetkiler && ortaYetki.altYetkiler.length > 0) {
+                                    $.each(ortaYetki.altYetkiler, function (k, altYetki) {
+                                        var altLi = $('<li class="yetki-item"></li>');
+                                        var altContent = $('<div class="yetki-content"></div>');
+                                        var altName = $('<span class="yetki-name alt-yetki"></span>').text(altYetki.yetkiAdi);
+                                        altContent.append(altName);
+
+                                        var altYetkiTipi = (altYetki.personelYetkileri && altYetki.personelYetkileri.length > 0)
+                                            ? altYetki.personelYetkileri[0].yetkiTipleri
+                                            : '';  // Boş olduğunda varsayılan bir değer gönder
+
+                                        altContent.append(generateYetkiTipleriChecks(altYetki.yetkiId, altYetkiTipi));
+                                        altLi.append(altContent);
+                                        ul.append(altLi);
+                                    });
+                                }
+                            });
+                        }
+
+                        cardBody.append(ul);
+                        card.append(cardHeader).append(cardBody);
+                        yetkiListesi.append(card);
+                    });
+
+                    var saveButton = $('<button class="btn btn-primary mt-3">Kaydet</button>');
+                    saveButton.on('click', function () {
+                        savePersonelYetkileri(tcKimlikNo);
+                    });
+                    yetkiListesi.append(saveButton);
+                }
+            }
+
+            function generateYetkiTipleriChecks(yetkiId, selectedYetkiTipi) {
+                console.log(yetkiId + '-' + selectedYetkiTipi);
+                var yetkiTipleri = @Html.Raw(enumOptionsJson);
+                var checkDiv = $('<div class="form-check-group"></div>');
+
+                // Eğer selectedYetkiTipi undefined ise, onu boş bir stringe çevir
+                selectedYetkiTipi = selectedYetkiTipi !== undefined ? selectedYetkiTipi.toString() : '';
+
+                $.each(yetkiTipleri, function (index, yetkiTipi) {
+                    var isChecked = (selectedYetkiTipi === yetkiTipi.value); // Normal seçili olup olmadığını kontrol ediyoruz
+                    var isIndeterminate = (selectedYetkiTipi === ''); // Eğer undefined veya boş geliyorsa indeterminate yapacağız
+
+                    var check = $('<div class="form-check"></div>'); // Checkbox container
+
+                    // Checkbox yerine radio button gibi davranmasını sağlayacağız
+                    var checkbox = $('<input class="form-check-input" type="radio" />')  // Type'ı "radio" yapıyoruz
+                        .val(yetkiTipi.value)
+                        .attr('name', 'YetkiTipi_' + yetkiId) // Aynı yetki için tek seçim yapılabilmesi için aynı "name" veriyoruz
+                        .attr('id', 'YetkiTipi_' + yetkiId + '_' + yetkiTipi.value)
+                        .attr('data-yetkiid', yetkiId) // `yetkiId`'yi data attribute olarak ekliyoruz
+                        .prop('checked', isChecked) // Seçili olup olmadığını kontrol et
+                        .prop('indeterminate', isIndeterminate); // Eğer indeterminate ise checkbox'ı çizgili göster
+
+                    var label = $('<label class="form-check-label" for="YetkiTipi_' + yetkiId + '_' + yetkiTipi.value + '"></label>')
+                        .text(yetkiTipi.text);
+
+                    check.append(checkbox).append(label);
+                    checkDiv.append(check);
+                });
+
+                return checkDiv;
+            }
+        });
+
+        function savePersonelYetkileri(tcKimlikNo) {
+            var yetkiler = [];
+
+            // Tüm seçili yetkileri topluyoruz
+            $('#yetkiListesi .form-check-input:checked').each(function () {
+                var yetkiId = $(this).data('yetkiid');
+                var yetkiTipi = $(this).val();
+
+                yetkiler.push({
+                    TcKimlikNo: tcKimlikNo,
+                    YetkiId: yetkiId,
+                    YetkiTipi: yetkiTipi
+                });
+            });
+
+            if (yetkiler.length > 0) {
+                $.ajax({
+                    url: '/Yetkiler/PersonelYetkileriKaydet',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(yetkiler),
+                    success: function (response) {
+                        toastr.success('Yetkiler başarıyla kaydedildi!');
+                    },
+                    error: function (error) {
+                        toastr.error(error.text);
+                    }
+                });
+            } else {
+                toastr.error('Yetki seçimi yapılmadı.');
+            }
+        }
+    </script>
+}
+
+<!-- Yeni Yetki Tanımlama Formu -->
+<div class="card">
+    <div class="card-header">
+        <h2>Yeni Bir Yetki Tanımla</h2>
+    </div>
+
+    <div class="card-body">
+        <form asp-action="AddYetki" method="post">
+            <div class="form-group">
+                <label for="YetkiSelect">Yetki Seçin veya Yeni Yetki Girin:</label>
+                <div class="row align-items-start">
+                    <div class="col-md-4 mb-3">
+                        <select id="YetkiId" name="YetkiId" class="form-control select2">
+                            <option value="-1">Yeni Ana Yetki Gir</option>
+                            @if (anaYetkiler != null && anaYetkiler.Any())
+                            {
+                                @foreach (var anaYetki in anaYetkiler)
+                                {
+                                    <option value="@anaYetki.YetkiId" class="optionGroup">@anaYetki.YetkiAdi</option>
+                                    @foreach (var ortaYetki in anaYetki.OrtaYetkiler)
+                                    {
+                                        <option value="@ortaYetki.YetkiId" class="optionMiddle">@ortaYetki.YetkiAdi</option>
+                                        @foreach (var altYetki in ortaYetki.AltYetkiler)
+                                        {
+                                            <option value="@altYetki.YetkiId" class="optionChild" disabled>@altYetki.YetkiAdi.ToLower()</option>
+                                        }
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <input type="text" id="YetkiAdi" name="YetkiAdi" class="form-control" placeholder="Yeni Yetki Adı Girin" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <textarea id="Aciklama" name="Aciklama" class="form-control" rows="3" placeholder="Yetki Açıklaması Girin"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-12 text-end">
+                        <button type="submit" class="btn btn-primary">Yetki Ekle</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Kullanıcı Yetkileri Seçimi -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h2>Kullanıcı Yetkileri</h2>
+    </div>
+
+    <div class="card-body">
+        <div class="form-group">
+            <label for="PersonelSelect">Personel Seçin:</label>
+            <div class="row align-items-start">
+                <div class="col-md-4 mb-3">
+                    <select id="PersonelSelect" class="form-control select2">
+                        <option value="">Personel Seçin</option>
+                        @foreach (var personel in personeller)
+                        {
+                            <option value="@personel.TcKimlikNo">@personel.AdSoyad</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="yetkiListesi" class="mt-3"></div>
+    </div>
+</div>

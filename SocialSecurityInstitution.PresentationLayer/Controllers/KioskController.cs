@@ -398,18 +398,9 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> KioskEslestir(int hizmetBinasiId)
+        public async Task<IActionResult> KioskEslestir()
         {
-            var kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(hizmetBinasiId);
-            var kioskIslemGruplariKanalAltIslemleriRequestDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariKanalAltIslemleriEslestirmeYapilmamisAsync(hizmetBinasiId);
-
-            var viewModel = new KioskIslemGruplariEslestirViewModel
-            {
-                KioskIslemGruplariKanalAltIslemleri = kioskIslemGruplariKanalAltIslemleriRequestDto,
-                KioskIslemGruplariAltIslemlerEslestirmeSayisi = kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto
-            };
-
-            return View(viewModel);
+            return View();
         }
 
         [HttpGet]

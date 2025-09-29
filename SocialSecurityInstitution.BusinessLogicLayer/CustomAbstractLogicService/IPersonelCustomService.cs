@@ -15,5 +15,7 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
         Task<List<PersonellerDto>> GetPersonellerDepartmanIdAndHizmetBinasiIdAsync(int departmanId, int hizmetBinasiId);
         Task<List<PersonellerLiteDto>> GetPersonellerWithHizmetBinasiIdAsync(int hizmetBinasiId);
         Task<PersonellerDto> UpdateSessionIDAsync(string tcKimlikNo, string newSessionId);
+        Task<List<PersonellerLiteDto>> GetActivePersonelListAsync();
+        Task<PersonellerViewDto> GetPersonelViewForEditAsync(string tcKimlikNo);
     }
 }

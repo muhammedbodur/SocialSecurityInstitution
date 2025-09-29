@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,247 +11,272 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicServic
 {
     public class KanallarCustomService : IKanallarCustomService
     {
-        private readonly IMapper _mapper;
-        private readonly Context _context;
+        private readonly IKanalAltIslemleriDal _kanalAltIslemleriDal;
+        private readonly IKanalIslemleriDal _kanalIslemleriDal;
+        private readonly IPersonellerDal _personellerDal;
+        private readonly ILogger<KanallarCustomService> _logger;
 
-        public KanallarCustomService(IMapper mapper, Context context)
+        public KanallarCustomService(
+            IKanalAltIslemleriDal kanalAltIslemleriDal,
+            IKanalIslemleriDal kanalIslemleriDal,
+            IPersonellerDal personellerDal,
+            ILogger<KanallarCustomService> logger)
         {
-            _mapper = mapper;
-            _context = context;
+            _kanalAltIslemleriDal = kanalAltIslemleriDal;
+            _kanalIslemleriDal = kanalIslemleriDal;
+            _personellerDal = personellerDal;
+            _logger = logger;
         }
 
         public async Task<List<KanalAltIslemleriDto>> GetKanalAltIslemleriAsync()
         {
-            var kanalAltIslemleri = await _context.KanalAltIslemleri
-                .Include(b => b.KanalIslem)
-                .ToListAsync();
+            try
+            {
+                // Repository'den tüm kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetAllKanalAltIslemleriAsync();
 
-            return _mapper.Map<List<KanalAltIslemleriDto>>(kanalAltIslemleri);
+                _logger.LogInformation("Retrieved {Count} kanal alt islemleri", result.Count);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all kanal alt islemleri");
+                throw;
+            }
         }
 
         public async Task<List<KanalIslemleriRequestDto>> GetKanalIslemleriAsync(int hizmetBinasiId)
         {
-            var kanalIslemleri = await _context.KanalIslemleri
-                .Where(ki => ki.HizmetBinasiId == hizmetBinasiId)
-                .Include(ki => ki.Kanallar)
-                .Include(ki => ki.HizmetBinalari)
-                    .ThenInclude(hb => hb.Departman)
-                .ToListAsync();
-
-            var requestDtos = kanalIslemleri.Select(ki => new KanalIslemleriRequestDto
+            try
             {
-                KanalIslemId = ki.KanalIslemId,
-                KanalIslemAdi = ki.Kanallar.KanalAdi,
-                HizmetBinasiId = ki.HizmetBinalari.HizmetBinasiId,
-                HizmetBinasiAdi = ki.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = ki.HizmetBinalari.Departman.DepartmanId,
-                DepartmanAdi = ki.HizmetBinalari.Departman.DepartmanAdi,
-                BaslangicNumara = ki.BaslangicNumara,
-                BitisNumara = ki.BitisNumara,
-                KanalIslemAktiflik = ki.KanalIslemAktiflik,
-                EklenmeTarihi = ki.EklenmeTarihi,
-                DuzenlenmeTarihi = ki.DuzenlenmeTarihi
-            }).ToList();
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalIslemleriRequestDto>();
+                }
 
-            return requestDtos;
+                // Repository'den kanal işlemlerini al
+                var result = await _kanalIslemleriDal.GetKanalIslemleriByHizmetBinasiIdAsync(hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} kanal islemleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal islemleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<KanalIslemleriRequestDto> GetKanalIslemleriByIdAsync(int kanalIslemId)
         {
-            var kanalIslemleri = await _context.KanalIslemleri
-                .Where(ki => ki.KanalIslemId == kanalIslemId)
-                .Include(ki => ki.Kanallar)
-                .Include(ki => ki.HizmetBinalari)
-                    .ThenInclude(hb => hb.Departman)
-                .AsNoTracking().FirstOrDefaultAsync();
-
-            if (kanalIslemleri == null)
+            try
             {
-                return null; // veya başka bir işlem yapılabilir
+                // Business validation
+                if (kanalIslemId <= 0)
+                {
+                    _logger.LogWarning("Invalid kanalIslemId provided: {KanalIslemId}", kanalIslemId);
+                    return null;
+                }
+
+                // Repository'den kanal işlemini al
+                var result = await _kanalIslemleriDal.GetKanalIslemleriByIdWithDetailsAsync(kanalIslemId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Kanal islemi not found with ID: {KanalIslemId}", kanalIslemId);
+                }
+                else
+                {
+                    _logger.LogInformation("Kanal islemi retrieved: {KanalIslemAdi} for ID: {KanalIslemId}",
+                                         result.KanalIslemAdi, kanalIslemId);
+                }
+
+                return result;
             }
-
-            var requestDto = new KanalIslemleriRequestDto
+            catch (Exception ex)
             {
-                KanalIslemId = kanalIslemleri.KanalIslemId,
-                KanalIslemAdi = kanalIslemleri.Kanallar.KanalAdi,
-                HizmetBinasiId = kanalIslemleri.HizmetBinalari.HizmetBinasiId,
-                HizmetBinasiAdi = kanalIslemleri.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = kanalIslemleri.HizmetBinalari.Departman.DepartmanId,
-                DepartmanAdi = kanalIslemleri.HizmetBinalari.Departman.DepartmanAdi,
-                BaslangicNumara = kanalIslemleri.BaslangicNumara,
-                BitisNumara = kanalIslemleri.BitisNumara,
-                KanalIslemAktiflik = kanalIslemleri.KanalIslemAktiflik,
-                EklenmeTarihi = kanalIslemleri.EklenmeTarihi,
-                DuzenlenmeTarihi = kanalIslemleri.DuzenlenmeTarihi
-            };
-
-            return requestDto;
+                _logger.LogError(ex, "Error retrieving kanal islemi by ID: {KanalIslemId}", kanalIslemId);
+                throw;
+            }
         }
 
         public async Task<List<KanalPersonelleriViewDto>> GetKanalPersonelleriAsync(int hizmetBinasiId)
         {
-            var kanalPersonelleri = await _context.Personeller
-                .Where(p => p.HizmetBinasi.HizmetBinasiId == hizmetBinasiId)
-                .Include(p => p.Departman)
-                .Include(p => p.HizmetBinasi)
-                .ToListAsync();
-
-            var requestDtos = kanalPersonelleri.Select(p => new KanalPersonelleriViewDto
+            try
             {
-                TcKimlikNo = p.TcKimlikNo,
-                SicilNo = p.SicilNo,
-                AdSoyad = p.AdSoyad,
-                DepartmanId = p.DepartmanId,
-                DepartmanAdi = p.Departman.DepartmanAdi,
-                ServisId = p.ServisId,
-                ServisAdi = p.Servis.ServisAdi,
-                UnvanId = p.UnvanId,
-                UnvanAdi = p.Unvan.UnvanAdi,
-                //KanalIslemleri = 
-            }).ToList();
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalPersonelleriViewDto>();
+                }
 
-            return requestDtos;
+                var requestResult = await _personellerDal.GetKanalPersonelleriViewByHizmetBinasiIdAsync(hizmetBinasiId);
+
+                var result = requestResult.Select(r => new KanalPersonelleriViewDto
+                {
+                    TcKimlikNo = r.TcKimlikNo,
+                    SicilNo = r.SicilNo,
+                    AdSoyad = r.AdSoyad,
+                    DepartmanId = r.DepartmanId,
+                    DepartmanAdi = r.DepartmanAdi,
+                    ServisId = r.ServisId,
+                    ServisAdi = r.ServisAdi,
+                    UnvanId = r.UnvanId,
+                    UnvanAdi = r.UnvanAdi
+                }).ToList();
+
+                _logger.LogInformation("Retrieved {Count} kanal personelleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal personelleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKanalAltIslemleriAsync(int hizmetBinasiId)
         {
-            var query = from kai in _context.KanalAltIslemleri
-                        join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                        join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        join kig in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kig.KioskIslemGrupId into kigGroup
-                        from kig in kigGroup.DefaultIfEmpty()
-                        where kai.HizmetBinasiId == hizmetBinasiId
-                        select new KanalAltIslemleriRequestDto
-                        {
-                            KanalAltIslemId = kai.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            KanalAltId = ka.KanalAltId,
-                            KanalAltAdi = ka.KanalAltAdi,
-                            KanalIslemId = kai.KanalIslemId, //null olabilir
-                            HizmetBinasiId = kai.HizmetBinasiId,
-                            HizmetBinasiAdi = hb.HizmetBinasiAdi,
-                            DepartmanId = hb.DepartmanId,
-                            DepartmanAdi = d.DepartmanAdi,
-                            KioskIslemGrupId = kai.KioskIslemGrupId, //null olabilir
-                            KioskIslemGrupAdi = kig.KioskGruplari.KioskGrupAdi, // null olabilir
-                            EklenmeTarihi = kai.EklenmeTarihi,
-                            DuzenlenmeTarihi = kai.DuzenlenmeTarihi,
-                            KanalAltIslemAktiflik = kai.KanalAltIslemAktiflik
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            var requestDtos = await query.ToListAsync();
+                // Repository'den kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKanalAltIslemleriByHizmetBinasiIdAsync(hizmetBinasiId);
 
-            return requestDtos;
+                _logger.LogInformation("Retrieved {Count} kanal alt islemleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal alt islemleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<KanalAltIslemleriRequestDto> GetKanalAltIslemleriByIdAsync(int kanalAltIslemId)
         {
-            var query = from kai in _context.KanalAltIslemleri
-                        join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                        join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        join kig in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kig.KioskIslemGrupId into kigGroup
-                        from kig in kigGroup.DefaultIfEmpty()
-                        where kai.KanalAltIslemId == kanalAltIslemId
-                        select new KanalAltIslemleriRequestDto
-                        {
-                            KanalAltIslemId = kai.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            KanalAltId = ka.KanalAltId,
-                            KanalAltAdi = ka.KanalAltAdi,
-                            HizmetBinasiId = kai.HizmetBinasiId,
-                            HizmetBinasiAdi = hb.HizmetBinasiAdi,
-                            DepartmanId = hb.DepartmanId,
-                            DepartmanAdi = d.DepartmanAdi,
-                            KioskIslemGrupId = kai.KioskIslemGrupId,
-                            KioskIslemGrupAdi = kig.KioskGruplari.KioskGrupAdi, // null olabilir
-                            EklenmeTarihi = kai.EklenmeTarihi,
-                            DuzenlenmeTarihi = kai.DuzenlenmeTarihi
-                        };
+            try
+            {
+                // Business validation
+                if (kanalAltIslemId <= 0)
+                {
+                    _logger.LogWarning("Invalid kanalAltIslemId provided: {KanalAltIslemId}", kanalAltIslemId);
+                    return null;
+                }
 
-            var requestDtos = await query.AsNoTracking().FirstOrDefaultAsync();
+                // Repository'den kanal alt işlemini al
+                var result = await _kanalAltIslemleriDal.GetKanalAltIslemleriByIdWithDetailsAsync(kanalAltIslemId);
 
-            return requestDtos;
+                if (result == null)
+                {
+                    _logger.LogWarning("Kanal alt islemi not found with ID: {KanalAltIslemId}", kanalAltIslemId);
+                }
+                else
+                {
+                    _logger.LogInformation("Kanal alt islemi retrieved: {KanalAltIslemAdi} for ID: {KanalAltIslemId}",
+                                         result.KanalAltIslemAdi, kanalAltIslemId);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal alt islemi by ID: {KanalAltIslemId}", kanalAltIslemId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKanalAltIslemleriByIslemIdAsync(int kanalIslemId)
         {
-            var result = await _context.KanalAltIslemleri
-            .Include(kai => kai.HizmetBinalari)
-                .ThenInclude(hb => hb.Departman)
-            .Include(kai => kai.KanallarAlt)
-            .Include(kai => kai.KanalIslem)
-                .ThenInclude(ki => ki.Kanallar)
-            .Where(kai => kai.KanalIslemId == kanalIslemId)
-            .ToListAsync();
-
-            var requestDtos = result.Select(k => new KanalAltIslemleriRequestDto
+            try
             {
-                KanalAltIslemId = k.KanalAltIslemId,
-                KanalAltIslemAdi = k.KanallarAlt.KanalAltAdi,
-                KanalAltAdi = k.KanallarAlt.KanalAltAdi,
-                KanalAltId = k.KanalAltId,
-                HizmetBinasiAdi = k.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = k.HizmetBinalari.DepartmanId,
-                DepartmanAdi = k.HizmetBinalari.Departman.DepartmanAdi
-            }).ToList();
+                // Business validation
+                if (kanalIslemId <= 0)
+                {
+                    _logger.LogWarning("Invalid kanalIslemId provided: {KanalIslemId}", kanalIslemId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            return requestDtos;
+                // Repository'den kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKanalAltIslemleriByIslemIdAsync(kanalIslemId);
+
+                _logger.LogInformation("Retrieved {Count} kanal alt islemleri for kanal islem: {KanalIslemId}",
+                                     result.Count, kanalIslemId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal alt islemleri for kanal islem: {KanalIslemId}", kanalIslemId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriEslestirmeSayisiRequestDto>> GetKanalAltIslemleriEslestirmeSayisiAsync(int hizmetBinasiId)
         {
-            var query = from ki in _context.KanalIslemleri
-                        join k in _context.Kanallar on ki.KanalId equals k.KanalId
-                        join kai in _context.KanalAltIslemleri on ki.KanalIslemId equals kai.KanalIslemId into kaiGroup
-                        from kai in kaiGroup.DefaultIfEmpty()
-                        where ki.HizmetBinasiId == hizmetBinasiId
-                        group kai by new { ki.KanalIslemId, k.KanalAdi } into g
-                        select new KanalAltIslemleriEslestirmeSayisiRequestDto
-                        {
-                            KanalIslemId = g.Key.KanalIslemId,
-                            KanalIslemAdi = g.Key.KanalAdi,
-                            EslestirmeSayisi = g.Count(kai => kai.KanalAltIslemId != null)
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriEslestirmeSayisiRequestDto>();
+                }
 
-            var result = await query.ToListAsync();
+                // Repository'den eşleştirme sayılarını al
+                var result = await _kanalAltIslemleriDal.GetKanalAltIslemleriEslestirmeSayisiAsync(hizmetBinasiId);
 
-            return result;
+                _logger.LogInformation("Retrieved {Count} kanal alt islemleri eslestirme sayisi for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kanal alt islemleri eslestirme sayisi for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKanalAltIslemleriEslestirmeYapilmamisAsync(int hizmetBinasiId)
         {
-            var query = from kai in _context.KanalAltIslemleri
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                        join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                        join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
-                        from ki in kiGroup.DefaultIfEmpty()
-                        join kg in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kg.KioskIslemGrupId into kgGroup
-                        from kg in kgGroup.DefaultIfEmpty()
-                        where kai.HizmetBinasiId == hizmetBinasiId && ki.KanalIslemId == null
-                        select new KanalAltIslemleriRequestDto
-                        {
-                            KanalAltIslemId = kai.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            KanalAltId = ka.KanalAltId,
-                            KanalAltAdi = ka.KanalAltAdi,
-                            KanalIslemId = kai.KanalIslemId, //null olabilir
-                            HizmetBinasiId = kai.HizmetBinasiId,
-                            HizmetBinasiAdi = hb.HizmetBinasiAdi,
-                            DepartmanId = hb.DepartmanId,
-                            DepartmanAdi = d.DepartmanAdi,
-                            KioskIslemGrupId = kai.KioskIslemGrupId, //null olabilir
-                            KioskIslemGrupAdi = kg.KioskGruplari.KioskGrupAdi, // null olabilir
-                            EklenmeTarihi = kai.EklenmeTarihi,
-                            DuzenlenmeTarihi = kai.DuzenlenmeTarihi,
-                            KanalAltIslemAktiflik = kai.KanalAltIslemAktiflik
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            var requestDtos = await query.ToListAsync();
+                // Repository'den eşleştirilmemiş kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKanalAltIslemleriEslestirmeYapilmamisAsync(hizmetBinasiId);
 
-            return requestDtos;
+                _logger.LogInformation("Retrieved {Count} unmatched kanal alt islemleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving unmatched kanal alt islemleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
     }
 }

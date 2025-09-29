@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,7 +15,6 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         [Key]
         public int HizmetBinasiId { get; set; }
         public required string HizmetBinasiAdi { get; set; }
-        public string? Aciklama { get; set; }
         public int DepartmanId { get; set; }
         [ForeignKey("DepartmanId")]
         public Departmanlar Departman { get; set; }
@@ -23,6 +23,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
         public ICollection<Bankolar>? Bankolar { get; set; }
+        public ICollection<Tvler>? Tvler { get; set; }
         public ICollection<Personeller>? Personeller { get; set; }
     }
 }

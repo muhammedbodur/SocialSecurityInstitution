@@ -1,4 +1,4 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +11,9 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
     {
         Task<SiraNoBilgisiDto> GetSiraNoAsync(int kanalAltIslemId);
         Task<List<siraCagirmaDto>> GetSiraListeAsync(string tcKimlikNo);
-        Task<siraCagirmaDto> GetSiraCagirmaAsync(string tcKimlikNo);
+        Task<siraCagirmaDto?> GetSiraCagirmaAsync(string tcKimlikNo);
         Task<List<SiralarDto>> GetSiralarWithHizmetBinasiAsync(int hizmetBinasiId);
         Task<List<SiralarTvListeDto>> GetSiralarForTvWithHizmetBinasi(int hizmetBinasiId);
+        Task<List<SiralarTvListeDto>> GetSiralarForTvWithTvId(int tvId);
     }
 }

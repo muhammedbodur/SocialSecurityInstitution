@@ -1,4 +1,4 @@
-﻿using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +14,10 @@ namespace SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicServic
         Task<List<HizmetBinasiPersonelleriDto>> GetHizmetBinasiPersonelleriAsync(int bankoId);
         Task<BankolarRequestDto> GetBankoByIdAsync(int bankoId);
         Task<PersonellerDto> GetBankoPersonelDetailAsync(string tcKimlikNo);
+        Task<(bool Success, string Message, string AktiflikDurum)> ToggleBankoAktiflikAsync(int bankoId);
+        Task<(bool Success, string Message, PersonelRequestDto PersonelData)> UpdateBankoPersonelAsync(int bankoId, string tcKimlikNo);
+        Task<(bool Success, string Message, BankolarHizmetBinalariDepartmanlarDto BankoData)> CreateBankoAsync(int bankoNo, int hizmetBinasiId, int departmanId);
+        Task<(bool Success, string Message)> DeleteBankoAsync(int bankoId);
+        Task<(bool Success, string Message)> UpdateBankoKatTipiAsync(int bankoId, int katTipi);
     }
 }

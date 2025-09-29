@@ -1,8 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NToastNotify;
 using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
+using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
 using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
 
@@ -13,12 +14,14 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
     {
         private readonly IMapper _mapper;
         private readonly IDepartmanlarService _departmanlarService;
+        private readonly IDepartmanlarCustomService _departmanlarCustomService;
         private readonly IToastNotification _toast;
 
-        public DepartmanController(IMapper mapper, IDepartmanlarService departmanlarService, IToastNotification toast)
+        public DepartmanController(IMapper mapper, IDepartmanlarService departmanlarService, IDepartmanlarCustomService departmanlarCustomService, IToastNotification toast)
         {
             _mapper = mapper;
             _departmanlarService = departmanlarService;
+            _departmanlarCustomService = departmanlarCustomService;
             _toast = toast;
         }
 
@@ -46,103 +49,60 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpGet]
         public async Task<JsonResult> AktifPasifEt(int departmanId)
         {
-            var departmanlarDto = await _departmanlarService.TGetByIdAsync(departmanId);
-
-            if (departmanlarDto != null)
-            {
-                var AktiflikDurum = (departmanlarDto.DepartmanAktiflik == Aktiflik.Aktif ? Aktiflik.Pasif : Aktiflik.Aktif);
-                departmanlarDto.DepartmanAktiflik = AktiflikDurum;
-                departmanlarDto.DuzenlenmeTarihi = DateTime.Now;
-
-                var updateResult = await _departmanlarService.TUpdateAsync(departmanlarDto);
-
-                if (updateResult)
-                {
-                    return Json(new { islemDurum = 1, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarılı Oldu "});
-                }
-                else
-                {
-                    return Json(new { islemDurum = 0, aktiflikDurum = AktiflikDurum.ToString(), mesaj = AktiflikDurum + " Etme İşlemi Başarısız Oldu!" });
-                }
-            }
-            else
-            {
-                return Json(new { islemDurum = 0, aktiflikDurum = "", mesaj = "Departman Bulunamadı!" });
-            }
+            // ✅ Business logic service katmanına taşındı
+            var (success, message, aktiflikDurum) = await _departmanlarCustomService.ToggleDepartmanAktiflikAsync(departmanId);
+            
+            return Json(new 
+            { 
+                islemDurum = success ? 1 : 0, 
+                aktiflikDurum = aktiflikDurum, 
+                mesaj = message 
+            });
         }
 
         [HttpPost]
         public async Task<IActionResult> Guncelle(int departmanId, string departmanAdi)
         {
-            var departmanlarDto = await _departmanlarService.TGetByIdAsync(departmanId);
-
-            if (departmanlarDto != null)
+            // ✅ Business logic service katmanına taşındı
+            var (success, message) = await _departmanlarCustomService.UpdateDepartmanAsync(departmanId, departmanAdi);
+            
+            if (success)
             {
-                departmanlarDto.DepartmanAdi = departmanAdi;
-                departmanlarDto.DuzenlenmeTarihi = DateTime.Now;
-
-                var updateResult = await _departmanlarService.TUpdateAsync(departmanlarDto);
-
-                if (updateResult)
-                {
-                    return Ok();
-                }
-                else
-                {
-                    return BadRequest("Güncelleme işlemi başarısız oldu!");
-                }
+                return Ok();
             }
             else
             {
-                return NotFound("Departman bulunamadı.");
+                return BadRequest(message);
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> Ekle(string departmanAdi)
         {
-            var departmanlarDto = new DepartmanlarDto
+            // ✅ Business logic service katmanına taşındı
+            var (success, message, departmanId) = await _departmanlarCustomService.CreateDepartmanAsync(departmanAdi);
+            
+            if (success)
             {
-                DepartmanAdi = departmanAdi,
-                DuzenlenmeTarihi = DateTime.Now,
-                DepartmanAktiflik = Aktiflik.Aktif
-            };
-
-            var insertResult = await _departmanlarService.TInsertAsync(departmanlarDto);
-
-            if (insertResult.IsSuccess)
-            {
-                return Ok(insertResult.LastPrimaryKeyValue);
+                return Ok(departmanId);
             }
             else
             {
-                return BadRequest("Ekleme işlemi başarısız oldu!");
+                return BadRequest(message);
             }
         }
 
         [HttpGet]
         public async Task<JsonResult> Sil(int departmanId)
         {
-            var departmanlarDto = await _departmanlarService.TGetByIdAsync(departmanId);
-
-            if (departmanlarDto != null)
-            {
-                
-                var deleteResult = await _departmanlarService.TDeleteAsync(departmanlarDto);
-
-                if (deleteResult)
-                {
-                    return Json(new { islemDurum = 1, mesaj = "Departmanı Silme İşlemi Başarılı Oldu " });
-                }
-                else
-                {
-                    return Json(new { islemDurum = 0, mesaj = "Departmanı Silme İşlemi Başarısız Oldu!" });
-                }
-            }
-            else
-            {
-                return Json(new { islemDurum = 0, mesaj = "Departman Bulunamadı!" });
-            }
+            // ✅ Business logic service katmanına taşındı
+            var (success, message) = await _departmanlarCustomService.DeleteDepartmanAsync(departmanId);
+            
+            return Json(new 
+            { 
+                islemDurum = success ? 1 : 0, 
+                mesaj = message 
+            });
         }
     }
 }

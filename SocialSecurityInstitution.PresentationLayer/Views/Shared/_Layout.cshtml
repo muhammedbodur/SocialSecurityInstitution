@@ -36,10 +36,67 @@
         <div class="layout-overlay layout-menu-toggle"></div>
     </div>
 
-
     @await Html.PartialAsync("_Scripts")
 
     @await Component.InvokeAsync("NToastNotify")
+
+    <!-- Global Script Loader -->
+    <script src="~/js/common/script-loader.js" asp-append-version="true"></script>
+
+    <!-- Page-specific script loading -->
+    <script>
+        // Tüm dependency'lerin yüklenmesi için bekle
+        $(window).on('load', function() {
+            // Biraz daha bekle ki Select2 vs yüklensin
+            setTimeout(function() {
+                // ViewContext'ten controller ve action bilgisini al
+                var controller = '@ViewContext.RouteData.Values["Controller"]';
+                var action = '@ViewContext.RouteData.Values["Action"]';
+
+                if (controller && action) {
+                    console.log('Loading scripts for ' + controller + '/' + action);
+
+                    // Controller ve action'a göre script dependency'lerini belirle
+                    var dependencies = ['jquery'];
+
+                    // Sayfa bazında dependency'leri tanımla
+                    switch(controller.toLowerCase()) {
+                        case 'personel':
+                            dependencies = ['jquery', 'select2', 'bootstrap', 'toastr'];
+                            break;
+                        case 'departman':
+                            dependencies = ['jquery', 'select2'];
+                            break;
+                        case 'bankolar':
+                            dependencies = ['jquery', 'bootstrap'];
+                            break;
+                        // Diğer controller'lar için buraya ekleyin...
+                        default:
+                            // Default dependency'ler
+                            dependencies = ['jquery'];
+                            break;
+                    }
+
+                    // Page-specific script'i yükle
+                    ScriptLoader.loadPageScript(controller, action, dependencies)
+                        .then(function() {
+                            console.log('✅ ' + controller + '/' + action + ' scripts loaded successfully');
+
+                            // Script yüklendikten sonra ek işlemler varsa buraya
+                            if (typeof window.initializePageFeatures === 'function') {
+                                window.initializePageFeatures();
+                            }
+                        })
+                        .catch(function(error) {
+                            // Hata sadece console'da görünsün, kullanıcıya gösterilmesin
+                            if (error && error.statusText !== 'Not Found') {
+                                console.warn('⚠️ Script loading failed for ' + controller + '/' + action + ':', error);
+                            }
+                        });
+                }
+            }, 3000); // 3000ms bekle
+        });
+    </script>
 
     @RenderSection("PageScripts", required: false)
     @RenderSection("Scripts", required: false)

@@ -1,84 +1,134 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using SkiaSharp;
-using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
+using Microsoft.Extensions.Logging;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService
 {
     public class LoginControlService : ILoginControlService
     {
-        private readonly IMapper _mapper;
-        private readonly Context _context;
+        private readonly IPersonellerDal _personellerDal;
+        private readonly ILoginLogoutLogDal _loginLogoutLogDal;
+        private readonly ILogger<LoginControlService> _logger;
 
-        public LoginControlService(IMapper mapper, Context context)
+        public LoginControlService(IPersonellerDal personellerDal, ILoginLogoutLogDal loginLogoutLogDal, ILogger<LoginControlService> logger)
         {
-            _mapper = mapper;
-            _context = context;
+            _personellerDal = personellerDal ?? throw new ArgumentNullException(nameof(personellerDal));
+            _loginLogoutLogDal = loginLogoutLogDal ?? throw new ArgumentNullException(nameof(loginLogoutLogDal));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<LoginDto> LoginControlAsync(string TcKimlikNo, string PassWord)
         {
-            var user = await _context.Personeller.AsNoTracking().FirstOrDefaultAsync(x => x.TcKimlikNo == TcKimlikNo && x.PassWord == PassWord);
-
-            if (user != null)
+            try
             {
-                var loginDto = new LoginDto
+                _logger.LogInformation("Login attempt for TcKimlikNo: {TcKimlikNo}", TcKimlikNo);
+
+                // Business validation
+                if (string.IsNullOrWhiteSpace(TcKimlikNo))
                 {
-                    TcKimlikNo = user.TcKimlikNo,
-                    AdSoyad = user.AdSoyad,
-                    Email = user.Email,
-                    Resim = user.Resim,
-                    HizmetBinasiId = user.HizmetBinasiId
-                };
+                    _logger.LogWarning("Login failed: TcKimlikNo is null or empty");
+                    return null;
+                }
 
-                return loginDto;
+                if (string.IsNullOrWhiteSpace(PassWord))
+                {
+                    _logger.LogWarning("Login failed: Password is null or empty for TcKimlikNo: {TcKimlikNo}", TcKimlikNo);
+                    return null;
+                }
+
+                if (TcKimlikNo.Length != 11)
+                {
+                    _logger.LogWarning("Login failed: Invalid TcKimlikNo format for: {TcKimlikNo}", TcKimlikNo);
+                    return null;
+                }
+
+                // Authenticate user through repository
+                var loginDto = await _personellerDal.AuthenticateUserAsync(TcKimlikNo, PassWord);
+
+                if (loginDto != null)
+                {
+                    _logger.LogInformation("Login successful for TcKimlikNo: {TcKimlikNo}", TcKimlikNo);
+                    return loginDto;
+                }
+                else
+                {
+                    _logger.LogWarning("Login failed: Invalid credentials for TcKimlikNo: {TcKimlikNo}", TcKimlikNo);
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Kullanıcı bulunamadı veya şifre hatalı
-                return null;
+                _logger.LogError(ex, "Error occurred during login for TcKimlikNo: {TcKimlikNo}", TcKimlikNo);
+                throw;
             }
         }
 
         public async Task<LoginLogoutLogDto> FindBySessionIdAsync(string sessionId)
         {
-            var log = await _context.LoginLogoutLog
-                .AsNoTracking().FirstOrDefaultAsync(log => log.SessionID == sessionId);
-
-            if (log == null) return null;
-
-            return new LoginLogoutLogDto
+            try
             {
-                Id = log.Id,
-                TcKimlikNo = log.TcKimlikNo,
-                LoginTime = log.LoginTime,
-                LogoutTime = log.LogoutTime,
-                SessionID = log.SessionID
-            };
+                _logger.LogInformation("Finding session by SessionId: {SessionId}", sessionId);
+
+                // Business validation
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    _logger.LogWarning("FindBySessionId failed: SessionId is null or empty");
+                    return null;
+                }
+
+                // Find session through repository
+                var loginLogoutLogDto = await _loginLogoutLogDal.FindBySessionIdAsync(sessionId);
+
+                if (loginLogoutLogDto != null)
+                {
+                    _logger.LogInformation("Session found for SessionId: {SessionId}", sessionId);
+                }
+                else
+                {
+                    _logger.LogWarning("Session not found for SessionId: {SessionId}", sessionId);
+                }
+
+                return loginLogoutLogDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while finding session by SessionId: {SessionId}", sessionId);
+                throw;
+            }
         }
 
         public async Task LogoutPreviousSessionsAsync(string tcKimlikNo)
         {
-            var activeSessions = await _context.LoginLogoutLog
-                .Where(log => log.TcKimlikNo == tcKimlikNo && log.LogoutTime == null)
-                .ToListAsync(); // LogoutTime nullable olduğu için null kontrolü yapıldı
-
-            foreach (var session in activeSessions)
+            try
             {
-                session.LogoutTime = DateTime.Now;
-                _context.Update(session);
-            }
+                _logger.LogInformation("Logging out previous sessions for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
 
-            await _context.SaveChangesAsync();
+                // Business validation
+                if (string.IsNullOrWhiteSpace(tcKimlikNo))
+                {
+                    _logger.LogWarning("LogoutPreviousSessions failed: TcKimlikNo is null or empty");
+                    return;
+                }
+
+                if (tcKimlikNo.Length != 11)
+                {
+                    _logger.LogWarning("LogoutPreviousSessions failed: Invalid TcKimlikNo format for: {TcKimlikNo}", tcKimlikNo);
+                    return;
+                }
+
+                // Logout previous sessions through repository
+                await _loginLogoutLogDal.LogoutPreviousSessionsAsync(tcKimlikNo);
+
+                _logger.LogInformation("Previous sessions logged out successfully for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while logging out previous sessions for TcKimlikNo: {TcKimlikNo}", tcKimlikNo);
+                throw;
+            }
         }
     }
 }

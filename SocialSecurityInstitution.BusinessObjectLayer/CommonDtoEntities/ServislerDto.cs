@@ -9,7 +9,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class ServislerDto
     {
-        public int Id { get; set; }
+        public int ServisId { get; set; }
         public required string ServisAdi { get; set; }
         public Aktiflik ServisAktiflik { get; set; }
         public DateTime DuzenlenmeTarihi { get; set; }

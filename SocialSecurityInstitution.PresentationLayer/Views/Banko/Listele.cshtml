@@ -1,11 +1,13 @@
 ﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 @using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
 @using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+@using SocialSecurityInstitution.BusinessLogicLayer.Helpers
 
 @model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.BankolarRequestDto>
 
 @{
     int sira = 0;
+    var enumOptionsJson = Json.Serialize(Html.GetEnumSelectList<Enums.KatTipi>());
 }
 
 @section Styles {
@@ -24,6 +26,17 @@
 
         .light-red {
             background-color: #FFCCCB;
+        }
+        .bootstrap-select .dropdown-menu {
+            max-width: 100px;
+            width: 100px;
+            min-width: 100px;
+        }
+
+        .bootstrap-select .dropdown-menu.inner {
+            max-width: 100px;
+            width: 100px;
+            min-width: 100px;
         }
     </style>
 }
@@ -91,7 +104,7 @@
                 selectHizmetBinasi.append('<option value="">Hizmet Binası Seçiniz</option>');
                 if (selectedDepartmanId) {
                     $.ajax({
-                        url: '/HizmetBinalari/Getir',
+                        url: '/HizmetBinalari/ListeleJson',
                         type: 'GET',
                         data: { departmanId: selectedDepartmanId },
                         dataType: 'json',
@@ -119,6 +132,7 @@
                     $(this).find('.sira').text(index + 1);
                 });
             }
+
             $('.remove-button').click(function (event) {
                 var button = $(event.relatedTarget);
                 var bankoId = $(this).data('bs-whatever');
@@ -181,7 +195,7 @@
                     success: function (result) {
                         console.log(result);
                         toastr.success("Banko Güncelleme İşlemi Başarılı");
-
+                        $('.modal').modal('hide');
                         var bankoHtml = '<button id="bankoButton_' + bankoId + '" data-bs-whatever="' + bankoId + '" type="button" class="bankoButton btn bg-success" data-bs-toggle="modal" data-bs-target="#modalBankoyaPersonelAta">' +
                             '<span class="badge bg-success">Banko <span class="badge bg-secondary bg-success" style="font-size: larger;">' + yeniBankoNo + '</span></span>' +
                             '</button>';
@@ -238,6 +252,8 @@
 
                             $("#bankoPersonelResim_" + bankoId).html(yeniIcerik);
                             $("#bankoPersonelAdi_" + bankoId).html(data.adSoyad);
+
+                            $('.modal').modal('hide');
                         }
                     },
                     error: function (xhr, status, error) {
@@ -253,6 +269,10 @@
                 var bankoNo = $("#modalEkleBankoNo").val();
                 var departmanId = $("#selectDepartmanlar option:selected").val();
                 var hizmetBinasiId = $("#selectHizmetBinalari option:selected").val();
+
+                var enumOptions = @Html.Raw(enumOptionsJson);
+
+                console.log(enumOptions);
 
                 $.ajax({
                     url: "/Banko/Ekle",
@@ -284,6 +304,14 @@
                             '<span class="badge bg-success">Banko<span class="badge bg-secondary bg-success" style="font-size: larger;">' + result.bankoNo + '</span></span>' +
                             '</button>' +
                             '</td>' +
+                            '<td>' +
+                            '<select id="bankoKat_' + result.bankoId + '" class="selectpicker form-select" data-width="100px"  data-bs-whatever="' + result.bankoId + '">';
+                            for (var i = 0; i < enumOptions.length; i++) {
+                                var option = '<option value="' + enumOptions[i].value + '">' + enumOptions[i].text + '</option>';
+                                yeniSatir += option;
+                            }
+                            yeniSatir += '</select>' +
+                            '</td>' +
                             '<td><a class="dropdown-item active-passive-button" href="#" data-bs-whatever="' + result.bankoId + '"><span id="aktiflik_span_' + result.bankoId + '" class="badge bg-label-success me-1">Aktif</span></a></td>' +
                             '<td>' +
                             '<div class="dropdown">' +
@@ -304,7 +332,11 @@
                             '</div>' +
                             '</td>' +
                             '</tr>';
+
                         $("tbody").append(yeniSatir);
+                        $('.modal').modal('hide');
+                        $('.selectpicker').selectpicker('destroy').selectpicker();
+                        guncelleSiralama();
                     },
                     error: function (xhr, status, error) {
                         console.error(error);
@@ -362,8 +394,28 @@
                     }
                 });
             });
-
         });
+
+        function katTipiGuncelle(element) {
+            var katTipi = $(element).val();
+            var bankoId = $(element).data('bs-whatever');
+
+            $.ajax({
+                url: '/Banko/KatTipiGuncelle',
+                type: 'POST',
+                data: {
+                    bankoId: bankoId,
+                    katTipi: katTipi
+                },
+                success: function (response) {
+                    toastr.success('Kat tipi başarıyla güncellendi!');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Güncelleme işlemi başarısız: ', error);
+                    toastr.error('Kat tipi güncelleme işlemi başarısız oldu.');
+                }
+            });
+        }
     </script>
 }
 
@@ -399,6 +451,7 @@
                     <th></th>
                     <th>Banko Personeli</th>
                     <th>Bankolar</th>
+                    <th>Banko Kat</th>
                     <th>Aktiflik</th>
                     <th>İşlemler</th>
                 </tr>
@@ -414,6 +467,7 @@
                         string activePassiveLabelClass = banko.BankoAktiflik == Enums.Aktiflik.Aktif ? "bx-pause-circle" : "bx-play-circle";
                         string activePassiveLabelText = banko.BankoAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
                         string oddEvenSituationClass = sira % 2 == 0 ? "bg-danger" : "bg-success";
+
                         <tr id="bankoTr_@banko.BankoId" class="@trClass">
                             <td class="sira">@sira</td>
                             <td id="departmanAdi_@banko.BankoId">@banko.DepartmanAdi</td>
@@ -437,6 +491,10 @@
                                     <span class="badge @oddEvenSituationClass">Banko<span class="badge bg-secondary @oddEvenSituationClass" style="font-size: larger;">@banko.BankoNo</span></span>
                                 </button>
                             </td>
+                            <td>
+                                <select id="bankoKat_@banko.BankoId" data-bs-whatever="@banko.BankoId" class="selectpicker form-select" onchange="katTipiGuncelle(this);" asp-for="@banko.KatTipi" asp-items="Html.GetEnumSelectList<Enums.KatTipi>()" data-width="100px"></select>
+                            </td>
+
                             <td><a class="dropdown-item active-passive-button" href="#" data-bs-whatever="@banko.BankoId"><span id="aktiflik_span_@banko.BankoId" class="badge @badgeClass me-1">@banko.BankoAktiflik</span></a></td>
                             <td>
                                 <div class="dropdown">
@@ -463,6 +521,7 @@
                     }
                 }
             </tbody>
+
         </table>
     </div>
 </div>

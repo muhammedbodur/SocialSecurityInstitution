@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -13,7 +13,7 @@ using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.Hubs
 {
-    [Authorize(AuthenticationSchemes = "SignalRJwt")]
+    [Authorize(AuthenticationSchemes = "Cookies")]
     public class DashboardHub : Hub
     {
         private readonly ILogger<DashboardHub> _logger;

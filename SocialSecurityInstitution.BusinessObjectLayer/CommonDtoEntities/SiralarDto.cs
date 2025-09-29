@@ -14,7 +14,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public int KanalAltIslemId { get; set; }
         public string? KanalAltAdi { get; set; }
         public int HizmetBinasiId { get; set; }
-        public string? TcKimlikNo { get; set; }
+        public required string TcKimlikNo { get; set; }
         public DateTime SiraAlisZamani { get; set; }
         public DateTime? IslemBaslamaZamani { get; set; }
         public DateTime? IslemBitisZamani { get; set; }

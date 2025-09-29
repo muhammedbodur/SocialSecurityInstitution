@@ -213,24 +213,24 @@
                         string activePassiveLabelText = servis.ServisAktiflik == Enums.Aktiflik.Aktif ? "Pasif Et" : "Aktif Et";
                         <tr>
                             <td class="sira">@sira</td>
-                            <td id="servisAdi_@servis.Id">@servis.ServisAdi</td>
+                            <td id="servisAdi_@servis.ServisId">@servis.ServisAdi</td>
                             <td>@servis.DuzenlenmeTarihi</td>
-                            <td><span id="aktiflik_span_@servis.Id" class="badge @badgeClass me-1">@servis.ServisAktiflik</span></td>
+                            <td><span id="aktiflik_span_@servis.ServisId" class="badge @badgeClass me-1">@servis.ServisAktiflik</span></td>
                             <td>
                                 <div class="dropdown">
                                     <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@servis.Id" data-bs-toggle="modal" data-bs-target="#modalServisGuncelle">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@servis.ServisId" data-bs-toggle="modal" data-bs-target="#modalServisGuncelle">
                                             <i class="bx bx-edit-alt me-1"></i> <span>Düzenle</span>
                                         </a>
 
-                                        <a id="activePassiveButton_@servis.Id" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@servis.Id">
+                                        <a id="activePassiveButton_@servis.ServisId" class="dropdown-item active-passive-button" href="#" data-bs-whatever="@servis.ServisId">
                                             <i class="bx @activePassiveLabelClass me-1"></i> <span>@activePassiveLabelText</span>
                                         </a>
 
-                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@servis.Id">
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@servis.ServisId">
                                             <i class="bx bx-trash me-1"></i> <span>Sil</span>
                                         </a>
 

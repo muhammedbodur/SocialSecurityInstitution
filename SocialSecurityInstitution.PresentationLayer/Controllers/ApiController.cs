@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using NToastNotify;
 using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
@@ -55,11 +55,8 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
         [HttpGet]
         public async Task<JsonResult> KioskGruplari([FromQuery] int hizmetBinasiId)
         {
-            List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto> kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = await _kioskIslemGruplariCustomService.GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(hizmetBinasiId);
-
-            kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto = kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto.Where(x => x.EslestirmeSayisi > 0).OrderBy(x => x.KioskIslemGrupSira).ToList();
-
-            return Json(kioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto);
+            var kioskGruplari = await _kioskIslemGruplariCustomService.GetActiveKioskGruplariWithSortingAsync(hizmetBinasiId);
+            return Json(kioskGruplari);
         }
 
         [HttpGet]

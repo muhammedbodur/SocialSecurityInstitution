@@ -1,14 +1,8 @@
-﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NToastNotify;
-using SocialSecurityInstitution.BusinessLogicLayer.AbstractLogicServices;
-using SocialSecurityInstitution.BusinessLogicLayer.ConcreteLogicServices;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.PresentationLayer.Models;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.PresentationLayer.Controllers
@@ -16,127 +10,286 @@ namespace SocialSecurityInstitution.PresentationLayer.Controllers
     [Authorize]
     public class PersonelController : Controller
     {
-        private readonly IMapper _mapper;
-        private readonly IPersonelCustomService _personelCustomService;
-        private readonly IPersonellerService _personellerService;
-        private readonly IPersonelCocuklariService _personelCocuklariService;
-        private readonly IDepartmanlarService _departmanlarService;
-        private readonly IServislerService _servislerService;
-        private readonly IUnvanlarService _unvanlarService;
-        private readonly IAtanmaNedenleriService _atanmaNedenleriService;
-        private readonly IHizmetBinalariService _hizmetBinalariService;
-        private readonly IIllerService _illerService;
-        private readonly IIlcelerService _ilcelerService;
-        private readonly ISendikalarService _sendikalarService;
+        private readonly IPersonelFacadeService _personelFacadeService;
         private readonly IToastNotification _toast;
 
-        public PersonelController(IMapper mapper, IPersonelCustomService personelCustomService, IPersonellerService personellerService, IPersonelCocuklariService personelCocuklariService, IDepartmanlarService departmanlarService, IServislerService servislerService, IUnvanlarService unvanlarService, IAtanmaNedenleriService atanmaNedenleriService, IHizmetBinalariService hizmetBinalariService, IIllerService illerService, IIlcelerService ilcelerService, ISendikalarService sendikalarService, IToastNotification toast)
+        public PersonelController(
+            IPersonelFacadeService personelFacadeService,
+            IToastNotification toast)
         {
-            _mapper = mapper;
-            _personelCustomService = personelCustomService;
-            _personellerService = personellerService;
-            _personelCocuklariService = personelCocuklariService;
-            _departmanlarService = departmanlarService;
-            _servislerService = servislerService;
-            _unvanlarService = unvanlarService;
-            _atanmaNedenleriService = atanmaNedenleriService;
-            _hizmetBinalariService = hizmetBinalariService;
-            _illerService = illerService;
-            _ilcelerService = ilcelerService;
-            _sendikalarService = sendikalarService;
+            _personelFacadeService = personelFacadeService;
             _toast = toast;
         }
 
+        #region Personel CRUD Operations
         [HttpGet]
-        public IActionResult Ekle()
+        public async Task<IActionResult> Ekle()
         {
-            return View();
+            var viewModel = await _personelFacadeService.CreateEmptyPersonelViewDtoWithDropdownsAsync();
+            return View(viewModel);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Kaydet(PersonellerDto personellerDto)
         {
-            personellerDto.PassWord = personellerDto.TcKimlikNo;
+            var result = await _personelFacadeService.CreatePersonelAsync(personellerDto);
 
-            var insertResult = await _personellerService.TInsertAsync(personellerDto);
-
-            if (insertResult.IsSuccess)
+            if (result.Success)
             {
-                _toast.AddSuccessToastMessage("Personel Ekleme İşlemi Başarılı");
-                return View();
+                _toast.AddSuccessToastMessage(result.Message);
+                return RedirectToAction("Listele");
             }
             else
             {
-                TempData["ErrorMessage"] = "Personel eklenirken bir hata oluştu.";
-                _toast.AddErrorToastMessage("Personel eklenirken bir hata oluştu.");
-                return View("ErrorView");
+                _toast.AddErrorToastMessage(result.Message);
+                return View("Ekle");
             }
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Duzenle(string TcKimlikNo)
         {
-            if (!string.IsNullOrEmpty(TcKimlikNo))
+            if (string.IsNullOrEmpty(TcKimlikNo))
             {
-                var personelBilgisi = await _personelCustomService.TGetByTcKimlikNoAsync(TcKimlikNo);
-
-                if (personelBilgisi != null)
-                {
-                    var viewModel = _mapper.Map<PersonellerViewDto>(personelBilgisi);
-                    viewModel.DuzenlenmeTarihi = DateTime.Now;
-
-                    viewModel.Departmanlar = await _departmanlarService.TGetAllAsync();
-                    viewModel.Servisler = await _servislerService.TGetAllAsync();
-                    viewModel.Unvanlar = await _unvanlarService.TGetAllAsync();
-                    //viewModel.AtanmaNedenleri = await _atanmaNedenleriService.TGetAllAsync();
-                    viewModel.HizmetBinalari = await _hizmetBinalariService.TGetAllAsync();
-                    viewModel.Iller = await _illerService.TGetAllAsync();
-                    viewModel.Ilceler = await _ilcelerService.TGetAllAsync();
-                    viewModel.Sendikalar = await _sendikalarService.TGetAllAsync();
-                    return View(viewModel);
-                }
+                _toast.AddErrorToastMessage("Geçersiz TC Kimlik No parametresi");
+                return RedirectToAction("Listele");
             }
 
-            TempData["ErrorMessage"] = "Geçersiz TcKimlikNo parametresi.";
-            return RedirectToAction("Listele", "Personel");
+            var viewModel = await _personelFacadeService.GetPersonelForEditAsync(TcKimlikNo);
+
+            if (viewModel == null)
+            {
+                _toast.AddErrorToastMessage("Personel bulunamadı");
+                return RedirectToAction("Listele");
+            }
+
+            return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Guncelle(string TcKimlikNo)
+        public async Task<IActionResult> Guncelle(PersonellerViewDto model)
         {
-            if (!string.IsNullOrEmpty(TcKimlikNo))
+            try
             {
-                var personelBilgisiDto = await _personelCustomService.TGetByTcKimlikNoAsync(TcKimlikNo);
-
-                if (personelBilgisiDto != null)
+                // Model validation (Data Annotations)
+                if (!ModelState.IsValid)
                 {
-                    var updateResult = _personellerService.TUpdateAsync(personelBilgisiDto);
-                    if (updateResult != null)
+                    // Validation hatalarını logla
+                    foreach (var modelError in ModelState)
                     {
-                        _toast.AddSuccessToastMessage("Personel Güncelleme İşlemi Başarılı");
-                        return View(updateResult);
+                        var key = modelError.Key;
+                        var errors = modelError.Value.Errors;
+
+                        foreach (var error in errors)
+                        {
+                            Console.WriteLine($"ModelState Error - Key: {key}, Error: {error.ErrorMessage}");
+                            _toast.AddErrorToastMessage($"{key}: {error.ErrorMessage}");
+                        }
                     }
-                    else
+
+                    // Dropdownları tekrar doldur ve view'e geri dön
+                    await _personelFacadeService.PopulateDropdownListsAsync(model);
+                    return View("Duzenle", model);
+                }
+
+                // Business validation ve güncelleme
+                var result = await _personelFacadeService.UpdatePersonelAsync(model);
+
+                if (result.Success)
+                {
+                    _toast.AddSuccessToastMessage(result.Message);
+                    return RedirectToAction("Listele");
+                }
+                else
+                {
+                    // Business validation hatalarını toast olarak göster
+                    _toast.AddErrorToastMessage(result.Message);
+
+                    // Validation hatalarını ModelState'e ekle (form'da göstermek için)
+                    if (result.Message.Contains("Validation Error:"))
                     {
-                        _toast.AddErrorToastMessage("Personel Güncelleme İşlemi Başarısız!");
-                        return View(updateResult);
+                        var errors = result.Message.Replace("Validation Error: ", "").Split(", ");
+                        foreach (var error in errors)
+                        {
+                            ModelState.AddModelError("", error);
+                        }
                     }
+
+                    await _personelFacadeService.PopulateDropdownListsAsync(model);
+                    return View("Duzenle", model);
                 }
             }
+            catch (Exception ex)
+            {
+                _toast.AddErrorToastMessage($"Beklenmeyen bir hata oluştu: {ex.Message}");
+                await _personelFacadeService.PopulateDropdownListsAsync(model);
+                return View("Duzenle", model);
+            }
+        }
 
-            _toast.AddErrorToastMessage("Personel Bilgisi Bulunamadı!");
-            return RedirectToAction("Listele", "Personel");
+        [HttpPost]
+        public async Task<JsonResult> ValidatePersonelUpdate([FromBody] PersonellerViewDto model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    return Json(new { success = false, errors = errors });
+                }
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> Listele()
         {
-            List<PersonelRequestDto> personelRequests = await _personelCustomService.GetPersonellerWithDetailsAsync();
-            
+            var personelRequests = await _personelFacadeService.GetPersonellerWithDetailsAsync();
             return View("Listele", personelRequests);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> AktifPasifEt(string TcKimlikNo)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(TcKimlikNo))
+                {
+                    return Json(new { islemDurum = 0, aktiflikDurum = "", mesaj = "Geçersiz TC Kimlik No" });
+                }
+
+                var viewModel = await _personelFacadeService.GetPersonelForEditAsync(TcKimlikNo);
+                if (viewModel == null)
+                {
+                    return Json(new { islemDurum = 0, aktiflikDurum = "", mesaj = "Personel Bulunamadı!" });
+                }
+
+                // Toggle only between Aktif and Pasif. If current is other (e.g., Emekli), block the toggle.
+                var current = viewModel.PersonelAktiflikDurum;
+                var aktifType = SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums.PersonelAktiflikDurum.Aktif;
+                var pasifType = SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums.PersonelAktiflikDurum.Pasif;
+
+                if (current != aktifType && current != pasifType)
+                {
+                    return Json(new { islemDurum = 0, aktiflikDurum = current.ToString(), mesaj = "Bu aktiflik durumunda değişiklik yapılamaz" });
+                }
+
+                var yeniDurum = (current == aktifType) ? pasifType : aktifType;
+                viewModel.PersonelAktiflikDurum = yeniDurum;
+
+                var updateResult = await _personelFacadeService.UpdatePersonelAsync(viewModel);
+                if (updateResult.Success)
+                {
+                    return Json(new { islemDurum = 1, aktiflikDurum = yeniDurum.ToString(), mesaj = $"{yeniDurum} Etme İşlemi Başarılı Oldu " });
+                }
+                else
+                {
+                    return Json(new { islemDurum = 0, aktiflikDurum = current.ToString(), mesaj = updateResult.Message ?? "Güncelleme işlemi başarısız oldu!" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { islemDurum = 0, aktiflikDurum = "", mesaj = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Sil(string TcKimlikNo)
+        {
+            if (string.IsNullOrEmpty(TcKimlikNo))
+            {
+                _toast.AddErrorToastMessage("Geçersiz TC Kimlik No parametresi");
+                return RedirectToAction("Listele");
+            }
+
+            var result = await _personelFacadeService.DeletePersonelAsync(TcKimlikNo);
+
+            if (result.Success)
+            {
+                _toast.AddSuccessToastMessage(result.Message);
+            }
+            else
+            {
+                _toast.AddErrorToastMessage(result.Message);
+            }
+
+            return RedirectToAction("Listele");
+        }
+        #endregion
+
+        #region Advanced Queries (Optional - Facade'e delegate edildi)
+        [HttpGet]
+        public async Task<JsonResult> GetPersonellerByDepartman(int departmanId, int hizmetBinasiId)
+        {
+            var personeller = await _personelFacadeService.GetPersonellerByDepartmanAndHizmetBinasiAsync(departmanId, hizmetBinasiId);
+            return Json(personeller);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetActivePersonelList()
+        {
+            var activePersoneller = await _personelFacadeService.GetActivePersonelListAsync();
+            return Json(activePersoneller);
+        }
+        #endregion
+
+        [HttpGet]
+        public async Task<JsonResult> GetIlcelerByIlId(int ilId)
+        {
+            try
+            {
+                if (ilId <= 0)
+                {
+                    return Json(new List<object>());
+                }
+
+                var ilceler = await _personelFacadeService.GetIlcelerByIlIdAsync(ilId);
+                var result = ilceler.Select(x => new {
+                    ilceId = x.IlceId,
+                    ilceAdi = x.IlceAdi
+                });
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = "İlçeler yüklenirken hata oluştu" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetServislerByDepartmanId(int departmanId)
+        {
+            try
+            {
+                if (departmanId <= 0)
+                {
+                    return Json(new List<object>());
+                }
+
+                var servisler = await _personelFacadeService.GetServislerByDepartmanIdAsync(departmanId);
+                var result = servisler.Select(x => new {
+                    id = x.ServisId,
+                    servisAdi = x.ServisAdi
+                });
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = "Servisler yüklenirken hata oluştu" });
+            }
         }
     }
 }

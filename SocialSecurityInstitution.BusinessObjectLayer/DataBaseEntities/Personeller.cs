@@ -54,9 +54,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public MedeniDurumu MedeniDurumu { get; set; }
         public KanGrubu KanGrubu { get; set; }
         public EvDurumu EvDurumu { get; set; }
-        public int UlasimServis1 { get; set; }
-        public int UlasimServis2 { get; set; }
-        public int Tabldot { get; set; }
+        public int UlasimServis1 { get; set; } = 0;
+        public int UlasimServis2 { get; set; } = 0;
+        public int Tabldot { get; set; } = 0;
         public PersonelAktiflikDurum PersonelAktiflikDurum { get; set; }
         public string? EmekliSicilNo { get; set; }
         public OgrenimDurumu OgrenimDurumu { get; set; }
@@ -69,13 +69,13 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         public Sendikalar? Sendika { get; set; }
         public SehitYakinligi SehitYakinligi { get; set; }
         public string? EsininAdi { get; set; }
-        public EsininIsDurumu EsininIsDurumu { get; set; }
+        public EsininIsDurumu EsininIsDurumu { get; set; } = EsininIsDurumu.belirtilmemis;
         public string? EsininUnvani { get; set; }
         public string? EsininIsAdresi { get; set; }
-        public int EsininIsIlId { get; set; }
+        public int EsininIsIlId { get; set; } = 0;
         [ForeignKey("EsininIsIlId")]
-        public Iller? EsininIsIl { get; set; }
-        public int EsininIsIlceId { get; set; }
+        public Iller? EsininIsIl { get; set; } 
+        public int EsininIsIlceId { get; set; } = 0;
         [ForeignKey("EsininIsIlceId")]
         public Ilceler? EsininIsIlce { get; set; }
         public string? EsininIsSemt { get; set; }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
+using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
 using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
 using System;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
 {
-    public class PersonelYetkileriDal : GenericRepository<PersonelYetkileriii, PersonelYetkileriDto>, IPersonelYetkileriDal
+    public class PersonelYetkileriDal : GenericRepository<PersonelYetkileri, PersonelYetkileriDto>, IPersonelYetkileriDal
     {
         public PersonelYetkileriDal(Context context, IMapper mapper, ILogService logService) : base(context, mapper, logService)
         {

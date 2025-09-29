@@ -33,7 +33,9 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public string? CepTelefonu2 { get; set; }
         public string? EvTelefonu { get; set; }
         public string? Adres { get; set; }
+        public int IlId { get; set; }
         public IllerDto? Il { get; set; }
+        public int IlceId { get; set; }
         public IlcelerDto? Ilce { get; set; }
         public string? Semt { get; set; }
         public DateTime DogumTarihi { get; set; }
@@ -51,13 +53,17 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
         public string? BitirdigiBolum { get; set; }
         public int OgrenimSuresi { get; set; }
         public string? Bransi { get; set; }
+
+        public int SendikaId { get; set; }
         public SendikalarDto? Sendika { get; set; }
         public SehitYakinligi SehitYakinligi { get; set; }
         public string? EsininAdi { get; set; }
         public EsininIsDurumu EsininIsDurumu { get; set; }
         public string? EsininUnvani { get; set; }
         public string? EsininIsAdresi { get; set; }
+        public int EsininIsIlId { get; set; }
         public IllerDto? EsininIsIl { get; set; }
+        public int EsininIsIlceId { get; set; }
         public IlcelerDto? EsininIsIlce { get; set; }
         public string? EsininIsSemt { get; set; }
         public string? HizmetBilgisi { get; set; }

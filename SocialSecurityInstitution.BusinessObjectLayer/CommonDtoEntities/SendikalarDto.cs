@@ -8,7 +8,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class SendikalarDto
     {
-        public int Id { get; set; }
+        public int SendikaId { get; set; }
         public required string SendikaAdi { get; set; }
     }
 }

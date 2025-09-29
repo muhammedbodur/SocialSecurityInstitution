@@ -1,9 +1,7 @@
-﻿using System;
+﻿using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SocialSecurityInstitution.BusinessObjectLayer.CommonEntities.Enums;
 
 namespace SocialSecurityInstitution.BusinessObjectLayer
@@ -13,19 +11,28 @@ namespace SocialSecurityInstitution.BusinessObjectLayer
         [Key]
         public int YetkiId { get; set; }
 
-        // AnaYetki, OrtaYetki, AltYetki olarak 3 e ayrılır, Yetkiler ile YetkiTipleri arasında bir ilişki tanımlanıyor
+        // Yetki türü (Ana, Orta, Alt Yetki)
         public required YetkiTurleri YetkiTuru { get; set; }
+
+        // Yetki adı ve açıklama
         public string YetkiAdi { get; set; } = null!;
         public string Aciklama { get; set; } = null!;
 
-        /* AnaYetki değilse UstYetkiId yi eklemek mecburi(-1 demek AnaYetki demektir), bu veri yine seviyesine göre eklenecek */
-        public int UstYetkiId { get; set; } = -1;
+        /*
+         UstYetkiId, yetkinin üst yetkisini temsil eder.
+         Eğer AnaYetki ise UstYetkiId -1 olabilir.
+        */
+        public int? UstYetkiId { get; set; }
 
-        /* YetkiAktiflik parametresi Yetkinin Aktif edilip edilmemesini belirtmekte */
-        public Aktiflik YetkiAktiflik { get; set; }
+        // Controller ve Action ile ilişkilendirme
+        public string? ControllerAdi { get; set; }  // Ana Yetki için Controller atanır
+        public string? ActionAdi { get; set; }      // Orta ve Alt Yetkiler için Action atanır
+
+        // Ekleme ve düzenleme tarihleri
         public DateTime EklenmeTarihi { get; set; } = DateTime.Now;
         public DateTime DuzenlenmeTarihi { get; set; } = DateTime.Now;
 
-        public ICollection<PersonelYetkileriii>? PersonelYetkileri_ { get; set; }
+        // Personel ile Yetki ilişkisi
+        public ICollection<PersonelYetkileri>? PersonelYetkileri { get; set; }
     }
 }

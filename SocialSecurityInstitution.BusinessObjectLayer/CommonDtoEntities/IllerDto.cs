@@ -8,7 +8,7 @@ namespace SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
 {
     public class IllerDto
     {
-        public int Id { get; set; }
+        public int IlId { get; set; }
         public required string IlAdi { get; set; }
     }
 }

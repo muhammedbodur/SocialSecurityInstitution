@@ -1,0 +1,394 @@
+﻿@using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.CommonEntities
+@using SocialSecurityInstitution.BusinessObjectLayer.Extensions
+
+@model List<SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities.TvlerDetailDto>
+
+@{
+    int sira = 0;
+    bool modelIsEmpty = Model == null || !Model.Any();
+    var enumOptionsJson = Json.Serialize(Html.GetEnumSelectList<Enums.KatTipi>());
+}
+
+@section Styles {
+    <style>
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 5px; 
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table th {
+            word-wrap: break-word;
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        #goButton {
+            position: absolute;
+            margin-top: 2%;
+        }
+
+        .bootstrap-select .dropdown-menu {
+            max-width: 100px;
+            width: 100px;
+            min-width: 100px;
+        }
+
+        .bootstrap-select .dropdown-menu.inner {
+            max-width: 100px;
+            width: 100px;
+            min-width: 100px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+
+
+        $('#goButton').click(function () {
+            // Seçili departman ID'sini al
+            var selectedDepartmanId = $('#departmanlarSelect').val();
+            // Seçili hizmet binası ID'sini al
+            var selectedHizmetBinasiId = $('#hizmetBinalariSelect').val();
+            // İstenilen URL'e git
+            var link = '/Tv/TvIslemleriListele?departmanId=' + selectedDepartmanId + '&hizmetBinasiId=' + selectedHizmetBinasiId;
+            window.location.href = link;
+        });
+
+        $(document).ready(function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const departmanId = urlParams.get('departmanId');
+            const hizmetBinasiId = urlParams.get('hizmetBinasiId');
+
+            // Departmanlar listesini al ve <select> öğesini doldur
+            $.ajax({
+                url: '/Departman/ListeleJson',
+                type: 'GET',
+                success: function (data) {
+                    $('#departmanlarSelect').empty();
+                    $('#hizmetBinalariSelect').empty();
+                    $.each(data, function (index, departman) {
+                        if (departman.departmanAktiflik == '1') {
+                            $('#departmanlarSelect').append('<option ' + (departmanId > 0 && departmanId == departman.departmanId ? 'selected' : null) + ' data-tokens="' + departman.departmanId + '" value="' + departman.departmanId + '">' + departman.departmanAdi + '</option>');
+                        }
+                    });
+
+                    // Selectpicker'ı yeniden başlat
+                    $('#departmanlarSelect').selectpicker('refresh');
+
+                    $('#hizmetBinalariSelectDiv').show();
+                    // İlk departman seçiliyse, ona ait hizmet binalarını getir
+                    var firstOptionValue = $('#departmanlarSelect option:first').val();
+                    hizmetBinalariGetir(firstOptionValue, true);
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    toastr.error('Departmanlar listesi alınamadı.');
+                }
+            });
+
+            $('#departmanlarSelect').change(function () {
+                var selectedDepartmanId = $(this).val();
+                hizmetBinalariGetir(selectedDepartmanId);
+            });
+
+            function hizmetBinalariGetir(selectedDepartmanId) {
+                $('#hizmetBinalariSelect').empty();
+                // Hizmet binaları için AJAX çağrısı
+                $.ajax({
+                    url: '/HizmetBinalari/ListeleJson?departmanId=' + selectedDepartmanId,
+                    type: 'GET',
+                    success: function (hizmetBinalari) {
+                        console.log(hizmetBinalari);
+                        $.each(hizmetBinalari, function (index, hizmetBinasi) {
+                            $('#hizmetBinalariSelect').append('<option ' + (hizmetBinasiId > 0 && hizmetBinasiId == hizmetBinasi.hizmetBinasiId ? 'selected' : null) + '  value="' + hizmetBinasi.hizmetBinasiId + '">' + hizmetBinasi.hizmetBinasiAdi + '</option>');
+                        });
+
+                        // Selectpicker'ı yeniden başlat
+                        $('#hizmetBinalariSelect').selectpicker('refresh');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error('Hizmet binaları listesi alınamadı.');
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function () {
+            function guncelleSiralama() {
+                $('tbody tr').each(function (index) {
+                    $(this).find('.sira').text(index + 1);
+                });
+            }
+
+            $('.remove-button').click(function (event) {
+                var button = $(event.relatedTarget);
+                var tvId = $(this).data('bs-whatever');
+                var trElement = $(this).closest('tr');
+                $.ajax({
+                    url: "/Tv/TvSil",
+                    type: "POST",
+                    data: { tvId: tvId },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.islemDurum == 1) {
+                            trElement.remove();
+                            guncelleSiralama();
+                        }
+                        toastr.success(result.mesaj);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Tv Silme İşlemi Başarısız!");
+                    }
+                });
+            });
+        });
+
+        $(document).ready(function () {
+            $('.edit-button').click(function () {
+                var tvId = $(this).data('bs-whatever');
+                var aciklama = $('#tvAciklamaTd_' + tvId).text().trim();
+
+                $('#modalGuncelleTvId').val(tvId);
+                $('#modalGuncelleAciklama').val(aciklama);
+            });
+
+            $('#btnGuncelle').click(function () {
+                var tvId = $('#modalGuncelleTvId').val();
+                var yeniAciklama = $('#modalGuncelleAciklama').val();
+
+                $.ajax({
+                    url: '/Tv/AciklamaGuncelle',
+                    type: 'POST',
+                    data: {
+                        tvId: tvId,
+                        aciklama: yeniAciklama
+                    },
+                    success: function (response) {
+                        var targetTd = $('#tvAciklamaTd_' + tvId);
+                        targetTd.attr('title', yeniAciklama);
+                        targetTd.text(yeniAciklama);
+
+                        toastr.success('Açıklama başarıyla güncellendi!');
+                        $('#modalTvAciklamaGuncelle').modal('hide');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Güncelleme işlemi başarısız: ', error);
+                        toastr.error('Açıklama güncelleme işlemi başarısız oldu.');
+
+                        return false;
+                    }
+                });
+            });
+        });
+
+        function btnEkle() {
+            if (confirm("Yeni TV eklensin mi?")) {
+                var hizmetBinasiId = $('#hizmetBinalariSelect').val();
+                var enumOptions = @Html.Raw(enumOptionsJson);
+
+                $.ajax({
+                    url: "/Tv/TvEkle",
+                    type: "POST",
+                    data: {
+                        hizmetBinasiId: hizmetBinasiId
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        toastr.success("Tv Ekleme İşlemi Başarılı");
+                        
+                        var sira = $("tbody tr").length + 1;
+                        var yeniSatir = '<tr id="tvTr_' + result.tvId + '">' +
+                            '<td class="sira">' + sira + '</td>' +
+                            '<td>' + result.tvId + '</td>' +
+                            '<td>' +
+                            '<select id="bankoKat_' + result.bankoId + '" class="selectpicker form-select" data-width="100px" onchange="katTipiGuncelle(this);" data-bs-whatever="' + result.tvId + '">';
+                        for (var i = 0; i < enumOptions.length; i++) {
+                            var option = '<option value="' + enumOptions[i].value + '">' + enumOptions[i].text + '</option>';
+                            yeniSatir += option;
+                        }
+                        yeniSatir += '</select>' +
+                            '</td>' +
+                            '<td>' + result.departmanAdi + '</td>' +
+                            '<td>' + result.hizmetBinasiAdi + '</td>' +
+                            '<td id="tvAciklamaTd_' + result.tvId + '" class="text-truncate" style="max-width: 200px;" data-bs-toggle="tooltip" title=""></td>' +
+                            '<td>' +
+                            '<div class="dropdown">' +
+                            '<button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">' +
+                            '<i class="bx bx-dots-vertical-rounded"></i>' +
+                            '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<a class="dropdown-item edit-button" href="#" data-bs-whatever="' + result.tvId + '" data-bs-toggle="modal" data-bs-target="#modalTvAciklamaGuncelle">' +
+                            '<i class="bx bx-edit-alt me-1"></i> <span>Açıklama Düzenle</span>' +
+                            '</a>' +
+                            '<a class="dropdown-item remove-button" href="#" data-bs-whatever="' + result.tvId + '">' +
+                            '<i class="bx bx-trash me-1"></i> <span>Sil</span>' +
+                            '</a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</td>' +
+                            '</tr>';
+
+                        $("tbody").append(yeniSatir);
+
+                        $('.selectpicker').selectpicker('destroy').selectpicker();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        toastr.error("Tv Ekleme İşlemi Başarısız!");
+                    }
+                });
+            }
+        }
+
+        function katTipiGuncelle(element) {
+            var katTipi = $(element).val();
+            var tvId = $(element).data('bs-whatever');
+
+            console.log(katTipi + '' + tvId);
+
+            $.ajax({
+                url: '/Tv/KatTipiGuncelle',
+                type: 'POST',
+                data: {
+                    tvId: tvId,
+                    katTipi: katTipi
+                },
+                success: function (response) {
+                    toastr.success('Kat tipi başarıyla güncellendi!');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Güncelleme işlemi başarısız: ', error);
+                    toastr.error('Kat tipi güncelleme işlemi başarısız oldu.');
+
+                    return false;
+                }
+            });
+        }
+    </script>
+}
+
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header flex-column flex-md-row">
+        <div class="card">
+            <div class="card-header flex-md-row" style="display: flex; align-items: center;">
+                <div class="col-sm-4">
+                    <label for="departmanlarSelect" class="form-label">Departmanlar</label>
+                    <select id="departmanlarSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                </div>
+                <div class="col-sm-4">
+                    <label for="hizmetBinalariSelect" class="form-label">Hizmet Binaları</label>
+                    <select id="hizmetBinalariSelect" class="selectpicker w-100" data-style="btn-default" data-live-search="true"></select>
+                </div>
+                <div class="col-sm-1 col-4 d-flex align-items-center justify-content-center">
+                    <button id="goButton" class="btn btn-primary btn-sm">Getir</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dt-action-buttons text-end pt-3 pt-md-0">
+            <div class="dt-buttons btn-group flex-wrap">
+                <button class="btn buttons-collection dropdown-toggle btn-label-primary me-2" tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="dialog" aria-expanded="false">
+                    <span><i class="bx bx-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Export</span></span>
+                </button>
+                <button type="button" class="btn btn-secondary create-new btn-primary" tabindex="0" onclick="btnEkle()">
+                    <span>
+                        <i class="bx bx-plus me-sm-1"></i>
+                        <span class="d-none d-sm-inline-block">Yeni Tv Ekle</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive text-nowrap" style="@(modelIsEmpty ? "display:none;'" : null)">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sıra</th>
+                    <th>Tv ID</th>
+                    <th>Tv Kat Bilgisi</th>
+                    <th>Deparman Adı</th>
+                    <th>Hizmet Binası Adı</th>
+                    <th>Açıklama</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (!modelIsEmpty)
+                {
+                    foreach (var tv in Model)
+                    {
+                        { sira++; }
+                        <tr id="tvTr_@tv.TvId">
+                            <td class="sira">@sira</td>
+                            <td>@tv.TvId</td>
+                            <td>
+                                <select id="tvKat_@tv.TvId" data-bs-whatever="@tv.TvId" class="selectpicker form-select" onchange="katTipiGuncelle(this);" asp-for="@tv.KatTipi" asp-items="Html.GetEnumSelectList<Enums.KatTipi>()" data-width="100px" data-dropup-auto="false"></select>
+                            </td>
+                            <td>@tv.DepartmanAdi</td>
+                            <td>@tv.HizmetBinasiAdi</td>
+                            <td id="tvAciklamaTd_@tv.TvId" class="text-truncate" style="max-width: 200px;" data-bs-toggle="tooltip" title="@tv.Aciklama">@tv.Aciklama</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item edit-button" href="#" data-bs-whatever="@tv.TvId" data-bs-toggle="modal" data-bs-target="#modalTvAciklamaGuncelle">
+                                            <i class="bx bx-edit-alt me-1"></i> <span>Açıklama Düzenle</span>
+                                        </a>
+                                        <a class="dropdown-item remove-button" href="#" data-bs-whatever="@tv.TvId">
+                                            <i class="bx bx-trash me-1"></i> <span>Sil</span>
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--/ Basic Bootstrap Table -->
+<!-- Modal -->
+<div class="modal fade" id="modalTvAciklamaGuncelle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle">Tv Açıklama Düzenle</h5>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <input type="hidden" id="modalGuncelleTvId" name="tvId" />
+
+                        <label for="modalGuncelleAciklama" class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="modalGuncelleAciklama" name="aciklama" rows="3" placeholder="Açıklamayı giriniz..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Kapat
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuncelle">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

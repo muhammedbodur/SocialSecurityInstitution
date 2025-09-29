@@ -9,6 +9,7 @@ namespace SocialSecurityInstitution.DataAccessLayer.AbstractDataServices
 {
     public interface ILogService
     {
-        void LogAction(string entityName, DatabaseAction action, string beforeData = null, string afterData = null);
+        Task LogActionAsync(string entityName, DatabaseAction action, string beforeData = null, string afterData = null);
     }
 }
+

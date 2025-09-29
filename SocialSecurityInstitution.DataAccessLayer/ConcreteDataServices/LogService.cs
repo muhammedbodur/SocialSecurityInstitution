@@ -20,12 +20,12 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
             _context = context;
         }
 
-        public void LogAction(string entityName, DatabaseAction action, string beforeData = null, string afterData = null)
+        public async Task LogActionAsync(string entityName, DatabaseAction action, string beforeData = null, string afterData = null)
         {
-            Task.Run(async () =>
+            var logHariciTablolar = new[] { "LoginLogoutLog", "Siralar", "HubConnection", "HubTvConnection" };
+            if (!logHariciTablolar.Contains(entityName))
             {
-                var logHariciTablolar = new[] { "LoginLogoutLog", "Siralar" , "HubConnection" };
-                if (!logHariciTablolar.Contains(entityName))
+                try
                 {
                     string tcKimlikNo = GetUserTcKimlikNo();
                     var log = new DatabaseLog
@@ -33,14 +33,23 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
                         TcKimlikNo = tcKimlikNo ?? "ANONİM!",
                         DatabaseAction = action,
                         TableName = entityName,
-                        ActionTime = DateTime.UtcNow,
+                        ActionTime = DateTime.Now,
                         BeforeData = beforeData ?? string.Empty,
                         AfterData = afterData ?? string.Empty
                     };
                     _context.DatabaseLog.Add(log);
                     await _context.SaveChangesAsync();
                 }
-            });
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                    throw;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Tablo: {entityName}");
+            }
         }
 
         private string GetUserTcKimlikNo()
@@ -48,6 +57,12 @@ namespace SocialSecurityInstitution.DataAccessLayer.ConcreteDataServices
             var claims = _httpContextAccessor.HttpContext?.User?.Claims;
             string TcKimlikNo = claims?.FirstOrDefault(c => c.Type == "TcKimlikNo")?.Value;
             return TcKimlikNo;
+        }
+
+        private void HandleException(Exception ex)
+        {
+            // Bu metot ileride log dosyasına yazdırma işlevi için genişletilebilir.
+            Console.WriteLine($"Hata: {ex.Message}");
         }
     }
 }

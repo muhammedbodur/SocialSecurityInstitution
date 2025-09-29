@@ -1,0 +1,215 @@
+﻿@{
+    string RandomString(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+}
+
+@section Styles {
+    <style>
+        .cursor-move {
+            cursor: move;
+        }
+
+        .selected {
+            background-color: #f0f0f0;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .sortable-chosen {
+            background-color: #e0e0e0;
+        }
+
+        .sortable-drag {
+            opacity: 0.6;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tvler li:first-child').addClass('selected');
+
+            // Kanallar ve alt kanalları saklamak için dict oluştur
+            var tvEslesmeler = {};
+            var tumBankolar = [];
+
+            // Her bir personelin alt kanallarını sakla
+            $('#tvler li').each(function () {
+                var tvId = $(this).attr('id');
+                tvEslesmeler[tvId] = [];
+            });
+
+            // Tüm alt kanalları topla
+            $('#completed-tasks li').each(function () {
+                var bankoId = parseInt($(this).attr('data-bs-whatever'));
+                var bankoText = $(this).text().trim();
+                tumBankolar.push({ id: bankoId, text: bankoText });
+            });
+
+            function ul_li_select_kaldir() {
+                $('#tvler li').removeClass('selected');
+            }
+
+            function ul_li_select_ekle(select) {
+                $(select).addClass('selected');
+            }
+
+            function updateCompletedTasks(tvId) {
+                $('#completed-tasks').empty(); // Önceki alt kanalları temizle
+
+                // Mevcut eslesme alt kanalları topla
+                var selectedBankolar = tvEslesmeler[tvId];
+
+                // Kalan alt kanalları completed-tasks listesine ekle
+                tumBankolar.forEach(function (banko) {
+                    if (!selectedBankolar.some(function (selectedAltKanal) {
+                        return selectedAltKanal.id === banko.id;
+                    })) {
+                        $('#completed-tasks').append('<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="' + banko.id + '"><span>' + banko.text + '</span></li>');
+                    }
+                });
+            }
+
+            $('#tvler li').click(function () {
+                var tvId = $(this).attr('id');
+
+                // Daha önce seçili olan personelin alt kanallarını sakla
+                if ($('#tvler .selected').length > 0) {
+                    var oncekiPersonelId = $('#tvler .selected').attr('id');
+                    tvEslesmeler[oncekiPersonelId] = [];
+                    $('#pending-tasks li').each(function () {
+                        var bankoId = parseInt($(this).attr('data-bs-whatever'));
+                        var bankoText = $(this).text().trim();
+                        tvEslesmeler[oncekiPersonelId].push({ id: bankoId, text: bankoText });
+                    });
+                }
+
+                // Seçili öğelerin seçimini kaldır ve tıklananı seç
+                ul_li_select_kaldir();
+                ul_li_select_ekle(this);
+
+                // Tıklanan personelin alt kanallarını yükle
+                $('#pending-tasks').empty(); // Önceki alt kanalları temizle
+                tvEslesmeler[tvId].forEach(function (banko) {
+                    $('#pending-tasks').append('<li class="list-group-item drag-item" data-bs-whatever="' + banko.id + '">' + banko.text + '</li>');
+                });
+
+                updateCompletedTasks(tvId);
+            });
+
+            const pendingTasks = document.getElementById('pending-tasks');
+            const completedTasks = document.getElementById('completed-tasks');
+
+            function createSortable(el, type = null) {
+                return Sortable.create(el, {
+                    group: {
+                        name: 'shared',
+                        pull: true,
+                        put: true
+                    },
+                    animation: 150,
+                    handle: '.drag-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onAdd: function (evt) {
+                        var selectedChannel = $('#tvler .selected');
+                        if (selectedChannel.length > 0) {
+                            var tvId = selectedChannel.attr('id');
+                            var item = evt.item; // Sürüklenen öğe
+                            var itemId = parseInt($(item).attr('data-bs-whatever'));
+                            var itemText = $(item).text().trim();
+                            var itemObj = { id: itemId, text: itemText };
+
+                            tvEslesmeler[tvId].push(itemObj);
+                        }
+                    },
+                    onRemove: function (evt) {
+                        // Alt kanalları seçili personelden çıkar
+                        var selectedChannel = $('#tvler .selected');
+                        if (selectedChannel.length > 0) {
+                            var tvId = selectedChannel.attr('id');
+                            var item = evt.item; // Sürüklenen öğe
+                            var itemId = parseInt($(item).attr('data-bs-whatever'));
+
+                            // Alt kanallardan öğeyi çıkar
+                            tvEslesmeler[tvId] = tvEslesmeler[tvId].filter(function (banko) {
+                                return banko.id !== itemId;
+                            });
+                        }
+                    }
+                });
+            }
+
+            createSortable(pendingTasks, 'eslesme');
+            createSortable(completedTasks);
+        });
+    </script>
+}
+
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header text-center">
+                <h5 class="m-0">Tv / Banko Eşleştirme</h5>
+            </div>
+            <div class="card-body pb-0">
+                <div class="row">
+                    <div class="col-md-4 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">TVler</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="tvler">
+                                    @for (int i = 1; i <= 2; i++)
+                                    {
+                                        <li class="list-group-item" id="kisi_@i">TvId: @i</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Eşleştirmeler</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="pending-tasks">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 col-12 mb-3">
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <h6 class="m-0">Bankolar</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush" id="completed-tasks">
+                                    @for (int i = 1; i <= 20; i++)
+                                    {
+                                        <li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" data-bs-whatever="@i">
+                                            <span data-bs-whatever="@i">@("Banko - " + i.ToString())</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

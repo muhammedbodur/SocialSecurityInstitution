@@ -1,208 +1,223 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SocialSecurityInstitution.BusinessLogicLayer.CustomAbstractLogicService;
-using SocialSecurityInstitution.BusinessObjectLayer;
 using SocialSecurityInstitution.BusinessObjectLayer.CommonDtoEntities;
-using SocialSecurityInstitution.BusinessObjectLayer.DataBaseEntities;
-using SocialSecurityInstitution.DataAccessLayer.ConcreteDatabase;
+using SocialSecurityInstitution.DataAccessLayer.AbstractDataServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SocialSecurityInstitution.BusinessLogicLayer.CustomConcreteLogicService
 {
     public class KioskIslemGruplariCustomService : IKioskIslemGruplariCustomService
     {
-        private readonly IMapper _mapper;
-        private readonly Context _context;
+        private readonly IKioskIslemGruplariDal _kioskIslemGruplariDal;
+        private readonly IKanalAltIslemleriDal _kanalAltIslemleriDal;
+        private readonly ILogger<KioskIslemGruplariCustomService> _logger;
 
-        public KioskIslemGruplariCustomService(IMapper mapper, Context context)
+        public KioskIslemGruplariCustomService(
+            IKioskIslemGruplariDal kioskIslemGruplariDal,
+            IKanalAltIslemleriDal kanalAltIslemleriDal,
+            ILogger<KioskIslemGruplariCustomService> logger)
         {
-            _mapper = mapper;
-            _context = context;
+            _kioskIslemGruplariDal = kioskIslemGruplariDal;
+            _kanalAltIslemleriDal = kanalAltIslemleriDal;
+            _logger = logger;
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskAltKanalIslemleriEslestirmeYapilmamisAsync(int hizmetBinasiId)
         {
-            var query = from kai in _context.KanalAltIslemleri
-                join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId
-                join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                join kig in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kig.KioskIslemGrupId into kigGroup
-                from kig in kigGroup.DefaultIfEmpty()
-                where kai.HizmetBinasiId == hizmetBinasiId && kai.KioskIslemGrupId == null
-                    select new KanalAltIslemleriRequestDto
-                    {
-                        KanalAltIslemId = kai.KanalAltIslemId,
-                        KanalAltIslemAdi = ka.KanalAltAdi,
-                        KanalAltId = ka.KanalAltId,
-                        KanalAltAdi = ka.KanalAltAdi,
-                        KanalIslemId = kai.KanalIslemId, //null olabilir
-                        HizmetBinasiId = kai.HizmetBinasiId,
-                        HizmetBinasiAdi = hb.HizmetBinasiAdi,
-                        DepartmanId = hb.DepartmanId,
-                        DepartmanAdi = d.DepartmanAdi,
-                        KioskIslemGrupId = kai.KioskIslemGrupId, //null olabilir
-                        KioskIslemGrupAdi = kig.KioskGruplari.KioskGrupAdi, // null olabilir
-                        EklenmeTarihi = kai.EklenmeTarihi,
-                        DuzenlenmeTarihi = kai.DuzenlenmeTarihi,
-                        KanalAltIslemAktiflik = kai.KanalAltIslemAktiflik
-                    };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            var requestDtos = await query.ToListAsync();
+                // Repository'den kiosk alt kanal işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKioskAltKanalIslemleriEslestirmeYapilmamisAsync(hizmetBinasiId);
 
-            return requestDtos;
+                _logger.LogInformation("Retrieved {Count} unmatched kiosk alt kanal islemleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving unmatched kiosk alt kanal islemleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto>> GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(int hizmetBinasiId)
         {
-            var query = from kig in _context.KioskIslemGruplari
-                        join hb in _context.HizmetBinalari on kig.HizmetBinasiId equals hb.HizmetBinasiId
-                        join kg in _context.KioskGruplari on kig.KioskGrupId equals kg.KioskGrupId
-                        join kai in _context.KanalAltIslemleri on kig.KioskIslemGrupId equals kai.KioskIslemGrupId into kaiGroup
-                        from kai in kaiGroup.DefaultIfEmpty()
-                        join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
-                        from ki in kiGroup.DefaultIfEmpty()
-                        where kig.HizmetBinasiId == hizmetBinasiId
-                        group new { kig, kg , kai } by new { kig.KioskIslemGrupId, kg.KioskGrupAdi, kig.KioskIslemGrupSira } into g
-                        select new KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto
-                        {
-                            KioskIslemGrupId = g.Key.KioskIslemGrupId,
-                            KioskIslemGrupAdi = g.Key.KioskGrupAdi,
-                            KioskIslemGrupSira = g.Key.KioskIslemGrupSira,
-                            EslestirmeSayisi = g.Count(k => k.kai.KioskIslemGrupId != null)
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto>();
+                }
 
-            var resultList = await query.ToListAsync();
+                // Repository'den kiosk işlem grupları alt işlemler eşleştirme sayısını al
+                var result = await _kioskIslemGruplariDal.GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(hizmetBinasiId);
 
-            return resultList;
+                _logger.LogInformation("Retrieved {Count} kiosk islem gruplari alt islemler eslestirme sayisi for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kiosk islem gruplari alt islemler eslestirme sayisi for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<KioskIslemGruplariRequestDto>> GetKioskIslemGruplariAsync(int hizmetBinasiId)
         {
-            var result = await _context.KioskIslemGruplari
-            .Include(kig => kig.KioskGruplari)
-            .Include(kig => kig.HizmetBinalari)
-                .ThenInclude(hb => hb.Departman)
-            .Where(kig => kig.HizmetBinasiId == hizmetBinasiId)
-            .ToListAsync();
-
-            var requestDtos = result.Select(ki => new KioskIslemGruplariRequestDto
+            try
             {
-                KioskIslemGrupId = ki.KioskIslemGrupId,
-                KioskIslemGrupAdi = ki.KioskGruplari.KioskGrupAdi,
-                KioskGrupId = ki.KioskGrupId,
-                HizmetBinasiId = ki.HizmetBinasiId,
-                HizmetBinasiAdi = ki.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = ki.HizmetBinalari.Departman.DepartmanId,
-                DepartmanAdi = ki.HizmetBinalari.Departman.DepartmanAdi,
-                KioskIslemGrupSira = ki.KioskIslemGrupSira,
-                KioskIslemGrupAktiflik = ki.KioskIslemGrupAktiflik,
-                EklenmeTarihi = ki.EklenmeTarihi,
-                DuzenlenmeTarihi = ki.DuzenlenmeTarihi
-            }).ToList();
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KioskIslemGruplariRequestDto>();
+                }
 
-            return requestDtos;
+                // Repository'den kiosk işlem gruplarını al
+                var result = await _kioskIslemGruplariDal.GetKioskIslemGruplariByHizmetBinasiIdAsync(hizmetBinasiId);
+
+                _logger.LogInformation("Retrieved {Count} kiosk islem gruplari for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kiosk islem gruplari for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<KioskIslemGruplariRequestDto> GetKioskIslemGruplariByIdAsync(int kioskIslemGrupId)
         {
-            var result = await _context.KioskIslemGruplari
-            .Include(kig => kig.KioskGruplari)
-            .Include(kig => kig.HizmetBinalari)
-                .ThenInclude(hb => hb.Departman)
-            .Where(kig => kig.KioskIslemGrupId == kioskIslemGrupId)
-            .AsNoTracking().FirstOrDefaultAsync();
-
-            if (result == null)
+            try
             {
-                return null; // veya başka bir işlem yapılabilir
+                // Business validation
+                if (kioskIslemGrupId <= 0)
+                {
+                    _logger.LogWarning("Invalid kioskIslemGrupId provided: {KioskIslemGrupId}", kioskIslemGrupId);
+                    return null;
+                }
+
+                // Repository'den kiosk işlem grubunu al
+                var result = await _kioskIslemGruplariDal.GetKioskIslemGruplariByIdWithDetailsAsync(kioskIslemGrupId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Kiosk islem grubu not found with ID: {KioskIslemGrupId}", kioskIslemGrupId);
+                }
+                else
+                {
+                    _logger.LogInformation("Kiosk islem grubu retrieved: {KioskIslemGrupAdi} for ID: {KioskIslemGrupId}",
+                                         result.KioskIslemGrupAdi, kioskIslemGrupId);
+                }
+
+                return result;
             }
-
-            var requestDtos = new KioskIslemGruplariRequestDto
+            catch (Exception ex)
             {
-                KioskIslemGrupId = result.KioskIslemGrupId,
-                KioskIslemGrupAdi = result.KioskGruplari.KioskGrupAdi,
-                KioskGrupId = result.KioskGrupId,
-                HizmetBinasiId = result.HizmetBinasiId,
-                HizmetBinasiAdi = result.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = result.HizmetBinalari.Departman.DepartmanId,
-                DepartmanAdi = result.HizmetBinalari.Departman.DepartmanAdi,
-                KioskIslemGrupSira = result.KioskIslemGrupSira,
-                KioskIslemGrupAktiflik = result.KioskIslemGrupAktiflik,
-                EklenmeTarihi = result.EklenmeTarihi,
-                DuzenlenmeTarihi = result.DuzenlenmeTarihi
-            };
-
-            return requestDtos;
+                _logger.LogError(ex, "Error retrieving kiosk islem grubu by ID: {KioskIslemGrupId}", kioskIslemGrupId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskIslemGruplariKanalAltIslemleriEslestirmeYapilmamisAsync(int hizmetBinasiId)
         {
-            var query = from kai in _context.KanalAltIslemleri
-                        join ka in _context.KanallarAlt on kai.KanalAltId equals ka.KanalAltId
-                        join hb in _context.HizmetBinalari on kai.HizmetBinasiId equals hb.HizmetBinasiId
-                        join d in _context.Departmanlar on hb.DepartmanId equals d.DepartmanId
-                        join ki in _context.KanalIslemleri on kai.KanalIslemId equals ki.KanalIslemId into kiGroup
-                        from ki in kiGroup.DefaultIfEmpty()
-                        join kg in _context.KioskIslemGruplari on kai.KioskIslemGrupId equals kg.KioskIslemGrupId into kgGroup
-                        from kg in kgGroup.DefaultIfEmpty()
-                        where kai.HizmetBinasiId == hizmetBinasiId && kai.KioskIslemGrupId == null
-                        select new KanalAltIslemleriRequestDto
-                        {
-                            KanalAltIslemId = kai.KanalAltIslemId,
-                            KanalAltIslemAdi = ka.KanalAltAdi,
-                            KanalAltId = ka.KanalAltId,
-                            KanalAltAdi = ka.KanalAltAdi,
-                            KanalIslemId = kai.KanalIslemId, //null olabilir
-                            HizmetBinasiId = kai.HizmetBinasiId,
-                            HizmetBinasiAdi = hb.HizmetBinasiAdi,
-                            DepartmanId = hb.DepartmanId,
-                            DepartmanAdi = d.DepartmanAdi,
-                            KioskIslemGrupId = kai.KioskIslemGrupId, //null olacak
-                            KioskIslemGrupAdi = kg.KioskGruplari.KioskGrupAdi, // null olacak
-                            EklenmeTarihi = kai.EklenmeTarihi,
-                            DuzenlenmeTarihi = kai.DuzenlenmeTarihi,
-                            KanalAltIslemAktiflik = kai.KanalAltIslemAktiflik
-                        };
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            var requestDtos = await query.ToListAsync();
+                // Repository'den kiosk işlem grupları kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKioskIslemGruplariKanalAltIslemleriEslestirmeYapilmamisAsync(hizmetBinasiId);
 
-            return requestDtos;
+                _logger.LogInformation("Retrieved {Count} unmatched kiosk islem gruplari kanal alt islemleri for hizmet binasi: {HizmetBinasiId}",
+                                     result.Count, hizmetBinasiId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving unmatched kiosk islem gruplari kanal alt islemleri for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
 
         public async Task<List<KanalAltIslemleriRequestDto>> GetKioskKanalAltIslemleriByKioskIslemGrupIdAsync(int kioskIslemGrupId)
         {
-            var result = await _context.KanalAltIslemleri
-            .Include(kai => kai.HizmetBinalari)
-                .ThenInclude(hb => hb.Departman)
-            .Include(kai => kai.KanallarAlt)
-            .Include(kai => kai.KanalIslem)
-                .ThenInclude(ki => ki.Kanallar)
-            .Include(kai => kai.KioskIslemGruplari)
-                .ThenInclude(kai => kai.KioskGruplari)
-            .Where(kai => kai.KioskIslemGrupId == kioskIslemGrupId)
-            .ToListAsync();
-
-            var requestDtos = result.Select(k => new KanalAltIslemleriRequestDto
+            try
             {
-                KanalAltIslemId = k.KanalAltIslemId,
-                KanalAltIslemAdi = k.KanallarAlt.KanalAltAdi,
-                KanalAltIslemAktiflik = k.KanalAltIslemAktiflik,
-                KanalAltAdi = k.KanallarAlt.KanalAltAdi,
-                KanalAltId = k.KanalAltId,
-                KioskIslemGrupAdi = k.KioskIslemGruplari.KioskGruplari.KioskGrupAdi,
-                KioskIslemGrupId = k.KioskIslemGrupId,
-                HizmetBinasiAdi = k.HizmetBinalari.HizmetBinasiAdi,
-                DepartmanId = k.HizmetBinalari.DepartmanId,
-                DepartmanAdi = k.HizmetBinalari.Departman.DepartmanAdi
-            }).ToList();
+                // Business validation
+                if (kioskIslemGrupId <= 0)
+                {
+                    _logger.LogWarning("Invalid kioskIslemGrupId provided: {KioskIslemGrupId}", kioskIslemGrupId);
+                    return new List<KanalAltIslemleriRequestDto>();
+                }
 
-            return requestDtos;
+                // Repository'den kiosk kanal alt işlemlerini al
+                var result = await _kanalAltIslemleriDal.GetKioskKanalAltIslemleriByKioskIslemGrupIdAsync(kioskIslemGrupId);
+
+                _logger.LogInformation("Retrieved {Count} kiosk kanal alt islemleri for kiosk islem grup: {KioskIslemGrupId}",
+                                     result.Count, kioskIslemGrupId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving kiosk kanal alt islemleri for kiosk islem grup: {KioskIslemGrupId}", kioskIslemGrupId);
+                throw;
+            }
+        }
+
+        public async Task<List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto>> GetActiveKioskGruplariWithSortingAsync(int hizmetBinasiId)
+        {
+            try
+            {
+                // Business validation
+                if (hizmetBinasiId <= 0)
+                {
+                    _logger.LogWarning("Invalid hizmetBinasiId provided: {HizmetBinasiId}", hizmetBinasiId);
+                    return new List<KioskIslemGruplariAltIslemlerEslestirmeSayisiRequestDto>();
+                }
+
+                // Repository'den kiosk işlem grupları alt işlemler eşleştirme sayısını al
+                var result = await _kioskIslemGruplariDal.GetKioskIslemGruplariAltIslemlerEslestirmeSayisiAsync(hizmetBinasiId);
+
+                // ✅ Business logic: Sadece aktif (eşleştirme sayısı > 0) olanları filtrele ve sırala
+                var filteredAndSortedResult = result
+                    .Where(x => x.EslestirmeSayisi > 0)
+                    .OrderBy(x => x.KioskIslemGrupSira)
+                    .ToList();
+
+                _logger.LogInformation("Retrieved and filtered {Count} active kiosk gruplari (out of {TotalCount}) for hizmet binasi: {HizmetBinasiId}",
+                                     filteredAndSortedResult.Count, result.Count, hizmetBinasiId);
+
+                return filteredAndSortedResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving active kiosk gruplari with sorting for hizmet binasi: {HizmetBinasiId}", hizmetBinasiId);
+                throw;
+            }
         }
     }
 }
